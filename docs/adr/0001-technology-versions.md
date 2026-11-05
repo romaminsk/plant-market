@@ -30,33 +30,33 @@
 
 ### Целевые версии
 
-| Компонент            | Версия     | Источник проверки                                | Примечание                                     |
-| -------------------- | ---------- | ------------------------------------------------ | ---------------------------------------------- |
-| Java                 | 25.0.5.0.3 | локально                                         | toolchain 25                                   |
-| Gradle (wrapper)     | 9.8.2      | `gradle/wrapper/gradle-wrapper.properties`       | скачан и запущен в этой сессии                 |
-| Spring Boot          | 4.1.2      | Maven Central POM, HTTP 200                      | GA, поддерживает Java 17–27 и Gradle 8.14+/9.x |
-| Spring Cloud         | 2025.1.4   | Maven Central BOM, HTTP 200                      | совместим с Boot 4.0.x/4.1.x                   |
-| Spring Cloud Gateway | 5.0.4      | BOM 2025.1.4 + артефакт стартера, HTTP 200       | `spring-cloud-starter-gateway-server-webflux`  |
-| PostgreSQL           | 18.6       | `docker manifest inspect postgres:18.6`          | образ официальный                              |
-| Apache Kafka         | 4.4.0      | `docker manifest inspect apache/kafka:4.4.0`     | Phase 2+, KRaft                                |
-| JUnit Jupiter        | 6.0.3      | Boot BOM (`junit-jupiter.version`)               | версия BOM, не пинуется вручную                |
-| Testcontainers       | 2.0.5      | Boot BOM + Maven Central                         | programmatic API, см. ADR-0004                 |
-| Playwright Java      | 1.64.0     | Maven Central, HTTP 200                          | programmatic API, см. ADR-0004                 |
-| Allure               | 3.1.1      | Maven Central (`allure-jupiter`), HTTP 200       | CLI 2.46.1                                     |
-| Next.js              | 16.4.5     | npm registry, HTTP 200                           | Task 0.5                                       |
-| React                | 19.3.1     | npm registry, HTTP 200                           | Task 0.5                                       |
+| Компонент            | Версия     | Источник проверки                                | Примечание                                                              |
+| -------------------- | ---------- | ------------------------------------------------ | ----------------------------------------------------------------------- |
+| Java                 | 25.0.5.0.3 | локально                                         | toolchain 25                                                            |
+| Gradle (wrapper)     | 9.8.2      | `gradle/wrapper/gradle-wrapper.properties`       | скачан и запущен в этой сессии                                          |
+| Spring Boot          | 4.1.2      | Maven Central POM, HTTP 200                      | GA, поддерживает Java 17–27 и Gradle 8.14+/9.x                          |
+| Spring Cloud         | 2025.1.4   | Maven Central BOM, HTTP 200                      | совместим с Boot 4.0.x/4.1.x                                            |
+| Spring Cloud Gateway | 5.0.4      | BOM 2025.1.4 + артефакт стартера, HTTP 200       | `spring-cloud-starter-gateway-server-webflux`                           |
+| PostgreSQL           | 18.6       | `docker manifest inspect postgres:18.6`          | образ официальный                                                       |
+| Apache Kafka         | 4.4.0      | `docker manifest inspect apache/kafka:4.4.0`     | Phase 2+, KRaft                                                         |
+| JUnit Jupiter        | 6.0.3      | Boot BOM (`junit-jupiter.version`)               | версия BOM, не пинуется вручную                                         |
+| Testcontainers       | 2.0.5      | Boot BOM + Maven Central                         | programmatic API, см. ADR-0004                                          |
+| Playwright Java      | 1.64.0     | Maven Central, HTTP 200                          | programmatic API, см. ADR-0004                                          |
+| Allure               | 3.1.1      | Maven Central (`allure-jupiter`), HTTP 200       | CLI 2.46.1                                                              |
+| Next.js              | 16.4.5     | npm registry, HTTP 200                           | Task 0.5                                                                |
+| React                | 19.3.1     | npm registry, HTTP 200                           | Task 0.5                                                                |
 | Flyway               | 13.12.1    | Maven Central, HTTP 200                          | Boot BOM даёт 12.4.0 без поддержки PostgreSQL 18; версия переопределена |
-| PostgreSQL JDBC      | 42.7.14    | Boot BOM                                         |                                                |
-| MapStruct            | 1.6.3      | Maven Central, HTTP 200                          | Task 0.4+                                      |
-| Springdoc OpenAPI    | 3.2.0      | Maven Central, HTTP 200                          | линия 3.x под Boot 4                           |
-| WireMock             | 3.13.2     | Maven Central + `wiremock/wiremock:3.13.2`       | образ проверен                                 |
-| Awaitility           | 4.3.0      | Boot BOM                                         |                                                |
-| ArchUnit             | 1.5.1      | Maven Central, HTTP 200                          |                                                |
-| JaCoCo               | 0.8.16     | Maven Central, HTTP 200                          |                                                |
-| Spotless             | 8.11.0     | Maven Central, HTTP 200                          |                                                |
-| google-java-format   | 2.0.0      | Maven Central, HTTP 200                          | формат Spotless                                |
-| Checkstyle           | 14.4.0     | Maven Central, HTTP 200                          |                                                |
-| MailHog              | v1.0.1     | `docker manifest inspect mailhog/mailhog:v1.0.1` | только локальная разработка                    |
+| PostgreSQL JDBC      | 42.7.14    | Boot BOM                                         |                                                                         |
+| MapStruct            | 1.6.3      | Maven Central, HTTP 200                          | Task 0.4+                                                               |
+| Springdoc OpenAPI    | 3.2.0      | Maven Central, HTTP 200                          | линия 3.x под Boot 4                                                    |
+| WireMock             | 3.13.2     | Maven Central + `wiremock/wiremock:3.13.2`       | образ проверен                                                          |
+| Awaitility           | 4.3.0      | Boot BOM                                         |                                                                         |
+| ArchUnit             | 1.5.1      | Maven Central, HTTP 200                          |                                                                         |
+| JaCoCo               | 0.8.16     | Maven Central, HTTP 200                          |                                                                         |
+| Spotless             | 8.11.0     | Maven Central, HTTP 200                          |                                                                         |
+| google-java-format   | 2.0.0      | Maven Central, HTTP 200                          | формат Spotless                                                         |
+| Checkstyle           | 14.4.0     | Maven Central, HTTP 200                          |                                                                         |
+| MailHog              | v1.0.1     | `docker manifest inspect mailhog/mailhog:v1.0.1` | только локальная разработка                                             |
 
 ### Правила использования версий
 
