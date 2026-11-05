@@ -42,9 +42,12 @@
 | JUnit Jupiter        | 6.0.3      | Boot BOM (`junit-jupiter.version`)               | версия BOM, не пинуется вручную                                         |
 | Testcontainers       | 2.0.5      | Boot BOM + Maven Central                         | programmatic API, см. ADR-0004                                          |
 | Playwright Java      | 1.64.0     | Maven Central, HTTP 200                          | programmatic API, см. ADR-0004                                          |
-| Allure               | 3.1.1      | Maven Central (`allure-jupiter`), HTTP 200       | CLI 2.46.1                                                              |
+| Allure               | 3.1.1      | Maven Central (`allure-jupiter`), HTTP 200       | CLI `allure` 3.33.0 (npm)                                               |
 | Next.js              | 16.4.5     | npm registry, HTTP 200                           | Task 0.5                                                                |
 | React                | 19.3.1     | npm registry, HTTP 200                           | Task 0.5                                                                |
+| Vite                 | 8.3.6      | npm registry, HTTP 200                           | admin, Task 0.5                                                         |
+| @vitejs/plugin-react | 6.2.1      | npm registry, HTTP 200                           | peer: Vite ^8                                                           |
+| TypeScript           | 5.9.3      | npm registry, HTTP 200                           | strict mode                                                             |
 | Flyway               | 13.12.1    | Maven Central, HTTP 200                          | Boot BOM даёт 12.4.0 без поддержки PostgreSQL 18; версия переопределена |
 | PostgreSQL JDBC      | 42.7.14    | Boot BOM                                         |                                                                         |
 | MapStruct            | 1.6.3      | Maven Central, HTTP 200                          | Task 0.4+                                                               |
@@ -56,6 +59,7 @@
 | Spotless             | 8.11.0     | Maven Central, HTTP 200                          |                                                                         |
 | google-java-format   | 2.0.0      | Maven Central, HTTP 200                          | формат Spotless                                                         |
 | Checkstyle           | 14.4.0     | Maven Central, HTTP 200                          |                                                                         |
+| BouncyCastle         | 1.84       | Maven Central, HTTP 200                          | runtime для Argon2id                                                    |
 | MailHog              | v1.0.1     | `docker manifest inspect mailhog/mailhog:v1.0.1` | только локальная разработка                                             |
 
 ### Правила использования версий
