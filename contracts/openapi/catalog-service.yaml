@@ -1,0 +1,495 @@
+openapi: 3.1.0
+info:
+  title: Plant Market — Catalog Service
+  version: 0.1.0
+  description: |
+    Phase 0 catalog API: categories and products with pagination and filters.
+    Phase 1 adds ProductVariant and IndividualPlant; Phase 0 uses a flat product price
+    as a deliberate simplification.
+servers:
+  - url: http://localhost:8081
+    description: Direct service (local)
+  - url: http://localhost:8080
+    description: Through api-gateway (local)
+
+tags:
+  - name: categories
+  - name: products
+
+paths:
+  /api/v1/categories:
+    get:
+      operationId: listCategories
+      tags: [categories]
+      summary: List categories
+      responses:
+        '200':
+          description: Categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+    post:
+      operationId: createCategory
+      tags: [categories]
+      summary: Create a category
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Slug already exists
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /api/v1/categories/{id}:
+    parameters:
+      - $ref: '#/components/parameters/CategoryId'
+    get:
+      operationId: getCategory
+      tags: [categories]
+      summary: Get a category by id
+      responses:
+        '200':
+          description: Category
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: updateCategory
+      tags: [categories]
+      summary: Update a category
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: deleteCategory
+      tags: [categories]
+      summary: Delete an empty category
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Category contains products
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /api/v1/products:
+    get:
+      operationId: listProducts
+      tags: [products]
+      summary: List products with pagination and filters
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Sort'
+        - name: categoryId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: search
+          in: query
+          schema:
+            type: string
+            maxLength: 200
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/ProductStatus'
+      responses:
+        '200':
+          description: Page of products
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageProduct'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      operationId: createProduct
+      tags: [products]
+      summary: Create a product
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: SKU or slug already exists
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /api/v1/products/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ProductId'
+    get:
+      operationId: getProduct
+      tags: [products]
+      summary: Get a product by id
+      responses:
+        '200':
+          description: Product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: updateProduct
+      tags: [products]
+      summary: Update a product
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: deleteProduct
+      tags: [products]
+      summary: Archive a product
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Archived
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    Size:
+      name: size
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    Sort:
+      name: sort
+      in: query
+      description: 'Format: field,asc|desc. Allowed: name, priceMinor, createdAt.'
+      schema:
+        type: string
+        default: createdAt,desc
+    CategoryId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ProductId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    BadRequest:
+      description: Validation failed
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: Resource not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+
+  schemas:
+    Category:
+      type: object
+      additionalProperties: false
+      required: [id, name, slug, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
+          pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$'
+        description:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CategoryRequest:
+      type: object
+      additionalProperties: false
+      required: [name, slug]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        slug:
+          type: string
+          pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$'
+          maxLength: 120
+        description:
+          type: string
+          maxLength: 2000
+
+    ProductStatus:
+      type: string
+      enum: [DRAFT, PUBLISHED, ARCHIVED]
+
+    CareLevel:
+      type: string
+      enum: [EASY, MEDIUM, HARD]
+
+    LightLevel:
+      type: string
+      enum: [LOW, MEDIUM, BRIGHT, DIRECT]
+
+    Product:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          id,
+          sku,
+          name,
+          slug,
+          categoryId,
+          priceMinor,
+          currency,
+          status,
+          careLevel,
+          light,
+          petSafe,
+          createdAt,
+          updatedAt,
+        ]
+      properties:
+        id:
+          type: string
+          format: uuid
+        sku:
+          type: string
+          maxLength: 64
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        categoryId:
+          type: string
+          format: uuid
+        priceMinor:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Price in minor units (kopecks for BYN).
+        currency:
+          type: string
+          enum: [BYN]
+        status:
+          $ref: '#/components/schemas/ProductStatus'
+        careLevel:
+          $ref: '#/components/schemas/CareLevel'
+        light:
+          $ref: '#/components/schemas/LightLevel'
+        petSafe:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ProductRequest:
+      type: object
+      additionalProperties: false
+      required:
+        [sku, name, slug, categoryId, priceMinor, currency, status, careLevel, light, petSafe]
+      properties:
+        sku:
+          type: string
+          minLength: 1
+          maxLength: 64
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        slug:
+          type: string
+          pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$'
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 5000
+        categoryId:
+          type: string
+          format: uuid
+        priceMinor:
+          type: integer
+          format: int64
+          minimum: 0
+        currency:
+          type: string
+          enum: [BYN]
+        status:
+          $ref: '#/components/schemas/ProductStatus'
+        careLevel:
+          $ref: '#/components/schemas/CareLevel'
+        light:
+          $ref: '#/components/schemas/LightLevel'
+        petSafe:
+          type: boolean
+
+    PageProduct:
+      type: object
+      additionalProperties: false
+      required: [items, page, size, totalElements, totalPages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        page:
+          type: integer
+          minimum: 0
+        size:
+          type: integer
+          minimum: 1
+        totalElements:
+          type: integer
+          format: int64
+          minimum: 0
+        totalPages:
+          type: integer
+          minimum: 0
+
+    Problem:
+      type: object
+      additionalProperties: false
+      required: [type, title, status, detail, instance, traceId]
+      properties:
+        type:
+          type: string
+          format: uri
+          example: https://plant-market.by/problems/validation
+        title:
+          type: string
+          example: Validation failed
+        status:
+          type: integer
+          minimum: 400
+          maximum: 599
+        detail:
+          type: string
+        instance:
+          type: string
+          example: /api/v1/products
+        traceId:
+          type: string
+          example: 4bf92f3577b34da6a3ce929d0e0e4736
+        errors:
+          type: array
+          items:
+            type: object
+            required: [field, message]
+            properties:
+              field:
+                type: string
+              message:
+                type: string
