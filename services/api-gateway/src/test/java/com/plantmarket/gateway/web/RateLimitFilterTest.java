@@ -14,7 +14,7 @@ class RateLimitFilterTest {
   @Test
   void rejectsRequestsAboveTheWindowLimit() {
     RateLimitFilter filter =
-        new RateLimitFilter(new ProblemResponseWriter(new ObjectMapper()), 2, 1);
+        new RateLimitFilter(new ProblemResponseWriter(new ObjectMapper()), 2, 1, 10);
 
     MockServerWebExchange first = exchange();
     MockServerWebExchange second = exchange();
@@ -36,7 +36,7 @@ class RateLimitFilterTest {
   @Test
   void ignoresNonApiPaths() {
     RateLimitFilter filter =
-        new RateLimitFilter(new ProblemResponseWriter(new ObjectMapper()), 0, 0);
+        new RateLimitFilter(new ProblemResponseWriter(new ObjectMapper()), 0, 0, 0);
     MockServerWebExchange exchange =
         MockServerWebExchange.from(MockServerHttpRequest.get("/actuator/health").build());
 
@@ -48,7 +48,7 @@ class RateLimitFilterTest {
   @Test
   void authEndpointsUseStricterLimit() {
     RateLimitFilter filter =
-        new RateLimitFilter(new ProblemResponseWriter(new ObjectMapper()), 10, 1);
+        new RateLimitFilter(new ProblemResponseWriter(new ObjectMapper()), 10, 1, 10);
 
     MockServerWebExchange first = authExchange();
     MockServerWebExchange second = authExchange();

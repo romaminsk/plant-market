@@ -25,15 +25,18 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
   private final ProblemResponseWriter responseWriter;
   private final int publicRequestsPerMinute;
   private final int authRequestsPerMinute;
+  private final int authenticatedRequestsPerMinute;
   private final ConcurrentHashMap<String, Window> windows = new ConcurrentHashMap<>();
 
   public RateLimitFilter(
       ProblemResponseWriter responseWriter,
       @Value("${app.rate-limit.public-rpm:60}") int publicRequestsPerMinute,
-      @Value("${app.rate-limit.auth-rpm:10}") int authRequestsPerMinute) {
+      @Value("${app.rate-limit.auth-rpm:10}") int authRequestsPerMinute,
+      @Value("${app.rate-limit.authenticated-rpm:300}") int authenticatedRequestsPerMinute) {
     this.responseWriter = responseWriter;
     this.publicRequestsPerMinute = publicRequestsPerMinute;
     this.authRequestsPerMinute = authRequestsPerMinute;
+    this.authenticatedRequestsPerMinute = authenticatedRequestsPerMinute;
   }
 
   @Override
@@ -44,7 +47,8 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
     }
 
     long now = System.currentTimeMillis();
-    String key = clientKey(exchange) + ":" + routeKey(path);
+    boolean authenticated = isAuthenticated(exchange);
+    String key = clientKey(exchange) + ":" + (authenticated ? "auth:" : "public:") + routeKey(path);
     Window window =
         windows.compute(
             key,
@@ -53,7 +57,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
                     ? new Window(now)
                     : existing);
 
-    if (window.count.incrementAndGet() > limitFor(path)) {
+    if (window.count.incrementAndGet() > limitFor(path, authenticated)) {
       long retryAfterSeconds = Math.max(1, (WINDOW_MILLIS - (now - window.startMillis)) / 1000);
       exchange.getResponse().getHeaders().set("Retry-After", Long.toString(retryAfterSeconds));
       return responseWriter.write(
@@ -71,10 +75,16 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
     return Ordered.HIGHEST_PRECEDENCE + 10;
   }
 
-  private int limitFor(String path) {
-    return path.equals("/api/v1/auth/login") || path.equals("/api/v1/auth/register")
-        ? authRequestsPerMinute
-        : publicRequestsPerMinute;
+  private int limitFor(String path, boolean authenticated) {
+    if (path.equals("/api/v1/auth/login") || path.equals("/api/v1/auth/register")) {
+      return authRequestsPerMinute;
+    }
+    return authenticated ? authenticatedRequestsPerMinute : publicRequestsPerMinute;
+  }
+
+  private boolean isAuthenticated(ServerWebExchange exchange) {
+    String authorization = exchange.getRequest().getHeaders().getFirst("Authorization");
+    return authorization != null && authorization.startsWith("Bearer ");
   }
 
   private String clientKey(ServerWebExchange exchange) {

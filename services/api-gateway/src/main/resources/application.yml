@@ -27,3 +27,4 @@ app:
   rate-limit:
     public-rpm: ${RATE_LIMIT_PUBLIC_RPM:60}
     auth-rpm: ${RATE_LIMIT_AUTH_RPM:10}
+    authenticated-rpm: ${RATE_LIMIT_AUTHENTICATED_RPM:300}
