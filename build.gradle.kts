@@ -4,6 +4,9 @@ import org.gradle.api.plugins.quality.CheckstyleExtension
 import org.gradle.api.tasks.testing.Test
 import org.gradle.api.tasks.wrapper.Wrapper
 import org.gradle.jvm.toolchain.JavaLanguageVersion
+import org.gradle.testing.jacoco.plugins.JacocoPluginExtension
+import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
+import org.gradle.testing.jacoco.tasks.JacocoReport
 
 plugins {
     alias(libs.plugins.spring.boot) apply false
@@ -21,6 +24,11 @@ subprojects {
     apply(plugin = "java")
     apply(plugin = "checkstyle")
     apply(plugin = "com.diffplug.spotless")
+    apply(plugin = "jacoco")
+
+    extensions.configure<JacocoPluginExtension> {
+        toolVersion = catalog.versions.jacoco.get()
+    }
 
     extensions.configure<JavaPluginExtension> {
         toolchain {
@@ -49,6 +57,31 @@ subprojects {
 
     tasks.withType<Test>().configureEach {
         useJUnitPlatform()
+        finalizedBy("jacocoTestReport")
+    }
+
+    tasks.withType<JacocoReport>().configureEach {
+        reports {
+            xml.required.set(true)
+            html.required.set(true)
+        }
+    }
+
+    tasks.withType<JacocoCoverageVerification>().configureEach {
+        dependsOn(tasks.withType<Test>())
+        violationRules {
+            rule {
+                limit {
+                    counter = "LINE"
+                    value = "COVEREDRATIO"
+                    minimum = "0.70".toBigDecimal()
+                }
+            }
+        }
+    }
+
+    tasks.named("check") {
+        dependsOn(tasks.withType<JacocoCoverageVerification>())
     }
 }
 

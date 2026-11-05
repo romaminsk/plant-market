@@ -11,5 +11,6 @@ dependencies {
 
     testImplementation(libs.spring.boot.starter.test)
     testImplementation(libs.spring.boot.starter.webmvc.test)
+    testImplementation(libs.spring.boot.starter.validation)
     testImplementation(libs.jakarta.servlet.api)
 }
