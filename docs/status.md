@@ -19,20 +19,20 @@
 
 ## Phase 1 — прогресс
 
-| Направление                                 | Статус  |
-| ------------------------------------------- | ------- |
-| ProductVariant                              | ✅      |
-| IndividualPlant + state machine             | ✅      |
-| StockBatch + quarantine/release             | ✅      |
-| Seed Phase 1                                | ✅      |
-| Storefront: фильтры + WYSIWYG               | ✅      |
-| SEO (metadata, robots, sitemap)             | ✅      |
-| Admin CRUD (create/read/transition/release) | ✅      |
-| Lighthouse A11y                             | ✅ 1.0  |
-| OAuth2 Authorization Code + PKCE            | ⬜      |
-| Cookie security / CSRF                      | ⬜      |
-| Admin update/delete UI                      | ⬜      |
-| J5 order/reserve/cancel                     | Phase 2 |
+| Направление                                                | Статус  |
+| ---------------------------------------------------------- | ------- |
+| ProductVariant                                             | ✅      |
+| IndividualPlant + state machine                            | ✅      |
+| StockBatch + quarantine/release                            | ✅      |
+| Seed Phase 1                                               | ✅      |
+| Storefront: фильтры + WYSIWYG                              | ✅      |
+| SEO (metadata, robots, sitemap)                            | ✅      |
+| Admin CRUD (create/read/archive/delete/transition/release) | ✅      |
+| Lighthouse A11y                                            | ✅ 1.0  |
+| OAuth2 Authorization Code + PKCE                           | ⬜      |
+| Cookie security / CSRF                                     | ⬜      |
+| Admin update forms                                         | ⬜      |
+| J5 order/reserve/cancel                                    | Phase 2 |
 
 ## Сделано
 
@@ -48,8 +48,10 @@
 - API: варианты продукта, индивидуальные растения с фильтрами `variegated/light/maxPriceMinor/status`, партии с `release` и `adjust`.
 - `scripts/seed.sh`: 3 категории, 10 продуктов, 2 варианта, 5 индивидуальных растений (IP-001…IP-005), партия на 10 единиц; идемпотентен.
 - Storefront: фильтры (вариегатные, свет, цена), карточки WYSIWYG, `/plants/[id]`, SEO metadata, `robots.txt`, `sitemap.xml`.
-- Admin: вкладки продуктов, категорий, экземпляров, вариантов, партий; создание, перевод в карантин/публикацию, выпуск партии.
+- Admin: вкладки продуктов, категорий, экземпляров, вариантов, партий; создание, архивирование/удаление, перевод в карантин/публикацию, списание, выпуск партии.
 - Lighthouse accessibility: **1.0** (порог 0.95).
+- Rate limit: 60 rpm публично, 10 rpm login/register, 300 rpm для запросов с Bearer-токеном (admin).
+- CI run `42077865504` — success, E2E 4/4 passed; security run `42077865673` — success.
 
 ## Тесты и покрытие
 
@@ -66,7 +68,7 @@
 ## Следующие 3 шага
 
 1. Auth Phase 1: OAuth2 Authorization Code + PKCE, cookie `__Host-`/HttpOnly/SameSite, CSRF.
-2. Admin: update/archive для продуктов, вариантов и категорий; удаление/списание экземпляров.
+2. Admin: update-формы для продуктов, вариантов и категорий.
 3. J5 E2E: партия → карантин → публикация → резерв/отмена (резерв — Phase 2), затем CI-прогон Phase 1.
 
 ## Блокеры и риски
@@ -84,3 +86,4 @@
 - **Ruling:** партии и экземпляры проходят явные state transitions; недопустимый переход — 409.
 - **Ruling:** J1-фильтр реализован на `/api/v1/individual-plants` (variegated + light + maxPriceMinor).
 - **Ruling:** Lighthouse запускается `scripts/lighthouse-a11y.sh`, порог 0.95.
+- **Ruling:** rate limit: 60 rpm публично, 10 rpm login/register, 300 rpm для запросов с Bearer-токеном.
