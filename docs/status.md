@@ -67,8 +67,8 @@
 - GitHub Actions `ci`: lint → frontend build → backend unit/integration → docker images → compose → seed → frontends → E2E → Allure artifact.
 - `security`: Trivy fs, `pnpm audit`, dependency-review, TruffleHog.
 - Dependabot: gradle, npm, github-actions, docker.
-- **CI run 42062040017 — success**, E2E 2/2 passed, Allure artifact 2.6 MB, e2e-artifacts 447 KB.
-- **Security run 42061015668 — success** (trivy, audit, secrets).
+- **CI run 42063576730 — success**, E2E 2/2 passed, Allure artifact 2.6 MB, e2e-artifacts 447 KB.
+- **Security run 42063576990 — success** (trivy, audit, secrets).
 
 ### Task 0.8 — документация (✅)
 
@@ -86,7 +86,7 @@
 | `api-gateway`     |     8 |           96% |
 | `tests:e2e`       |     2 |             — |
 
-Итого **23 backend-теста + 2 E2E, 0 падений**. `jacocoTestCoverageVerification` с порогом 70% подключён к `check`.
+Итого **21 backend-тест + 2 E2E = 23 теста, 0 падений**. `jacocoTestCoverageVerification` с порогом 70% подключён к `check`.
 
 ## В работе
 
