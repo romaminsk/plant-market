@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import {
+  archiveProduct,
+  archiveVariant,
   createCategory,
   createIndividualPlant,
   createProduct,
   createStockBatch,
   createVariant,
+  deleteCategory,
   fetchCategories,
   fetchIndividualPlants,
   fetchProducts,
@@ -407,6 +410,7 @@ export default function App() {
                   <th>Название</th>
                   <th>Цена</th>
                   <th>Статус</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -419,6 +423,21 @@ export default function App() {
                       <span className={`badge badge-${product.status.toLowerCase()}`}>
                         {product.status}
                       </span>
+                    </td>
+                    <td>
+                      {product.status !== 'ARCHIVED' ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            void run(
+                              () => archiveProduct(accessToken, product.id),
+                              'Продукт архивирован',
+                            )
+                          }
+                        >
+                          Архивировать
+                        </button>
+                      ) : null}
                     </td>
                   </tr>
                 ))}
@@ -471,6 +490,7 @@ export default function App() {
                 <tr>
                   <th>Slug</th>
                   <th>Название</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -478,6 +498,19 @@ export default function App() {
                   <tr key={category.id}>
                     <td className="mono">{category.slug}</td>
                     <td>{category.name}</td>
+                    <td>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          void run(
+                            () => deleteCategory(accessToken, category.id),
+                            'Категория удалена',
+                          )
+                        }
+                      >
+                        Удалить
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -612,6 +645,19 @@ export default function App() {
                           Опубликовать
                         </button>
                       ) : null}
+                      {plant.status !== 'MORTALITY' && plant.status !== 'DELIVERED' ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            void run(
+                              () => transitionPlant(accessToken, plant.id, 'MORTALITY'),
+                              'Экземпляр списан',
+                            )
+                          }
+                        >
+                          Списать
+                        </button>
+                      ) : null}
                     </td>
                   </tr>
                 ))}
@@ -714,6 +760,7 @@ export default function App() {
                   <th>Название</th>
                   <th>Цена</th>
                   <th>Статус</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -723,6 +770,21 @@ export default function App() {
                     <td>{variant.name}</td>
                     <td>{formatPrice(variant.priceMinor, variant.currency)}</td>
                     <td>{variant.status}</td>
+                    <td>
+                      {variant.status !== 'ARCHIVED' ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            void run(
+                              () => archiveVariant(accessToken, variant.id),
+                              'Вариант архивирован',
+                            )
+                          }
+                        >
+                          Архивировать
+                        </button>
+                      ) : null}
+                    </td>
                   </tr>
                 ))}
               </tbody>

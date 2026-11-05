@@ -143,6 +143,14 @@ export async function createCategory(accessToken: string, body: JsonBody): Promi
   });
 }
 
+export async function deleteCategory(accessToken: string, categoryId: string): Promise<void> {
+  await request<void>(`/api/v1/categories/${categoryId}`, accessToken, { method: 'DELETE' });
+}
+
+export async function archiveProduct(accessToken: string, productId: string): Promise<void> {
+  await request<void>(`/api/v1/products/${productId}`, accessToken, { method: 'DELETE' });
+}
+
 export async function createProduct(accessToken: string, body: JsonBody): Promise<Product> {
   return request<Product>('/api/v1/products', accessToken, {
     method: 'POST',
@@ -163,6 +171,10 @@ export async function createVariant(
     method: 'POST',
     body: JSON.stringify(body),
   });
+}
+
+export async function archiveVariant(accessToken: string, variantId: string): Promise<void> {
+  await request<void>(`/api/v1/variants/${variantId}`, accessToken, { method: 'DELETE' });
 }
 
 export async function fetchIndividualPlants(accessToken: string): Promise<IndividualPlant[]> {

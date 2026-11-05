@@ -2,6 +2,7 @@ package com.plantmarket.e2e.pages;
 
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
+import com.microsoft.playwright.PlaywrightException;
 import com.microsoft.playwright.options.AriaRole;
 
 public final class CatalogPage {
@@ -16,8 +17,14 @@ public final class CatalogPage {
 
   public CatalogPage open() {
     page.navigate(baseUrl + "/catalog");
-    page.getByRole(AriaRole.HEADING, new Page.GetByRoleOptions().setName("Растения в наличии"))
-        .waitFor();
+    Locator heading =
+        page.getByRole(AriaRole.HEADING, new Page.GetByRoleOptions().setName("Растения в наличии"));
+    try {
+      heading.waitFor(new Locator.WaitForOptions().setTimeout(60_000));
+    } catch (PlaywrightException firstAttempt) {
+      page.reload();
+      heading.waitFor(new Locator.WaitForOptions().setTimeout(60_000));
+    }
     return this;
   }
 

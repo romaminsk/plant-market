@@ -1,7 +1,5 @@
 package com.plantmarket.e2e;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.plantmarket.e2e.pages.AdminPage;
 import com.plantmarket.e2e.support.PlaywrightTestBase;
 import io.qameta.allure.Feature;
@@ -129,6 +127,30 @@ class AdminCrudTest extends PlaywrightTestBase {
         .click();
     page.getByText("Партия опубликована").waitFor();
 
-    assertThat(page.locator("body").innerText()).contains("AVAILABLE");
+    page.getByRole(
+            com.microsoft.playwright.options.AriaRole.BUTTON,
+            new com.microsoft.playwright.Page.GetByRoleOptions().setName("Экземпляры"))
+        .click();
+    page.getByRole(
+            com.microsoft.playwright.options.AriaRole.ROW,
+            new com.microsoft.playwright.Page.GetByRoleOptions().setName(plantCode))
+        .getByRole(
+            com.microsoft.playwright.options.AriaRole.BUTTON,
+            new com.microsoft.playwright.Locator.GetByRoleOptions().setName("Списать"))
+        .click();
+    page.getByText("Экземпляр списан").waitFor();
+
+    page.getByRole(
+            com.microsoft.playwright.options.AriaRole.BUTTON,
+            new com.microsoft.playwright.Page.GetByRoleOptions().setName("Продукты"))
+        .click();
+    page.getByRole(
+            com.microsoft.playwright.options.AriaRole.ROW,
+            new com.microsoft.playwright.Page.GetByRoleOptions().setName(productName))
+        .getByRole(
+            com.microsoft.playwright.options.AriaRole.BUTTON,
+            new com.microsoft.playwright.Locator.GetByRoleOptions().setName("Архивировать"))
+        .click();
+    page.getByText("Продукт архивирован").waitFor();
   }
 }

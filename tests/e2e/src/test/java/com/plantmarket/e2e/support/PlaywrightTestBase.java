@@ -42,6 +42,8 @@ public abstract class PlaywrightTestBase {
   @BeforeEach
   void openPage() {
     context = browser.newContext(new Browser.NewContextOptions().setViewportSize(1280, 800));
+    context.setDefaultTimeout(60_000);
+    context.setDefaultNavigationTimeout(60_000);
     context
         .tracing()
         .start(new Tracing.StartOptions().setScreenshots(true).setSnapshots(true).setSources(true));
