@@ -23,20 +23,23 @@
 
 ## Быстрый старт
 
-> Команды появятся по мере выполнения Phase 0. Актуальный статус — в `docs/status.md`.
-
 ```bash
-# 1. Инфраструктура (Task 0.3)
+# 1. Собрать jar-файлы, поднять инфраструктуру и три сервиса
 cp .env.example .env
 ./scripts/dev-up.sh
 
-# 2. Сборка backend (Task 0.2–0.4)
-export JAVA_HOME="$(/usr/libexec/java_home -v 25)"
-./gradlew build
+# 2. Проверить health
+curl http://localhost:8080/actuator/health
 
-# 3. Остановка
+# 3. Прогнать backend-тесты (Testcontainers + Colima)
+./scripts/test-backend.sh build
+
+# 4. Остановить
 ./scripts/dev-down.sh
 ```
+
+Первый запуск скачивает Gradle-зависимости и Docker-образы; это занимает несколько минут.
+`dev-up.sh` собирает boot-jar и пересобирает образы сервисов при изменении кода.
 
 ## Структура репозитория
 
@@ -48,7 +51,7 @@ clients/             # storefront (Next.js), admin (React + Vite)
 tests/               # e2e, api, db, grpc, kafka, contract
 infra/               # postgres, wiremock, mailhog; minio — Phase 3
 docs/                # статус, архитектура, домен, API, тесты, compliance, ADR, runbooks
-scripts/             # dev-up.sh, dev-down.sh, seed.sh
+scripts/             # dev-up.sh, dev-down.sh, test-backend.sh, seed.sh
 ```
 
 ## Документация

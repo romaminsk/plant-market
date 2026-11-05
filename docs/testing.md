@@ -24,6 +24,18 @@
 - Flaky: максимум 1 повторный прогон в CI. Тест, упавший повторно без изменения кода, в тот же день уходит в карантин + issue.
 - Архитектурные правила проверяются ArchUnit-тестом: сервис не импортирует пакет другого сервиса и не обращается к чужой БД.
 
+## Локальный запуск тестов
+
+Testcontainers на Colima требует явного Docker-сокета и override для Ryuk:
+
+```bash
+./scripts/test-backend.sh build
+```
+
+Скрипт выставляет `JAVA_HOME` (Java 25), `DOCKER_HOST` из текущего docker context и
+`TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock`. В CI с обычным
+`/var/run/docker.sock` достаточно `./gradlew build`.
+
 ## Definition of Done
 
 Тест написан до или вместе с кодом → `./gradlew build` зелёный → покрытие не упало → статический анализ без новых предупреждений → токены и i18n соблюдены → a11y проверен для UI → документация и ADR обновлены → миграция обратима или это задокументировано → в diff нет секретов → коммит в Conventional Commits → PR ≤ 400 строк.
