@@ -1,0 +1,12 @@
+node_modules
+pnpm-lock.yaml
+dist
+.next
+build
+target
+coverage
+allure-results
+allure-report
+MASTER_PROMPT.md
+.env
+.env.*
