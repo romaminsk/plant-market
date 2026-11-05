@@ -9,6 +9,7 @@ dependencies {
 }
 
 tasks.test {
+    outputs.upToDateWhen { false }
     doFirst {
         delete(layout.buildDirectory.dir("allure-results"))
     }
