@@ -73,7 +73,7 @@
 
 ## Блокеры и риски
 
-- Workflow-файлы с `actions/*@v7` не запушены: у gh-токена нет scope `workflow`; remote CI на `@v4` зелёный.
+- Remote workflow использует `actions/*@v4`; обновление до `@v7`/`setup-java@v6` требует `gh auth refresh -s workflow`. CI на `@v4` зелёный.
 - A11 T1/T2 (PKCE, cookie security) пока не реализованы — это следующий шаг.
 - In-memory rate limit не разделяется между экземплярами gateway (ADR-0005).
 - Прямые порты auth/catalog открыты на localhost; перед prod закрыть.
