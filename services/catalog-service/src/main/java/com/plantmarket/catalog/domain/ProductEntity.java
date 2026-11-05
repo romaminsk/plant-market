@@ -59,6 +59,15 @@ public class ProductEntity {
   @Column(name = "pet_safe", nullable = false)
   private boolean petSafe;
 
+  @Column(name = "variegated", nullable = false)
+  private boolean variegated;
+
+  @Column(name = "size", length = 32)
+  private String size;
+
+  @Column(name = "care_guide", length = 5000)
+  private String careGuide;
+
   @Column(name = "created_at", nullable = false)
   private Instant createdAt;
 
@@ -78,7 +87,10 @@ public class ProductEntity {
       ProductStatus status,
       CareLevel careLevel,
       LightLevel light,
-      boolean petSafe) {
+      boolean petSafe,
+      boolean variegated,
+      String size,
+      String careGuide) {
     this.sku = sku;
     this.name = name;
     this.slug = slug;
@@ -90,6 +102,9 @@ public class ProductEntity {
     this.careLevel = careLevel;
     this.light = light;
     this.petSafe = petSafe;
+    this.variegated = variegated;
+    this.size = size;
+    this.careGuide = careGuide;
   }
 
   @PrePersist
@@ -118,7 +133,10 @@ public class ProductEntity {
       ProductStatus status,
       CareLevel careLevel,
       LightLevel light,
-      boolean petSafe) {
+      boolean petSafe,
+      boolean variegated,
+      String size,
+      String careGuide) {
     this.sku = sku;
     this.name = name;
     this.slug = slug;
@@ -130,6 +148,9 @@ public class ProductEntity {
     this.careLevel = careLevel;
     this.light = light;
     this.petSafe = petSafe;
+    this.variegated = variegated;
+    this.size = size;
+    this.careGuide = careGuide;
   }
 
   public void archive() {
@@ -182,6 +203,18 @@ public class ProductEntity {
 
   public boolean isPetSafe() {
     return petSafe;
+  }
+
+  public boolean isVariegated() {
+    return variegated;
+  }
+
+  public String getSize() {
+    return size;
+  }
+
+  public String getCareGuide() {
+    return careGuide;
   }
 
   public Instant getCreatedAt() {

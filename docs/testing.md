@@ -38,7 +38,7 @@ Testcontainers на Colima требует явного Docker-сокета и ov
 
 ## E2E (Task 0.6)
 
-E2E-тесты пропускаются, пока не задан `E2E_BASE_URL`; admin-тест дополнительно требует
+E2E-тесты пропускаются, пока не задан `E2E_BASE_URL`; admin-тесты дополнительно требуют
 `E2E_ADMIN_URL`. Перед запуском подняты compose-сервисы, выполнен seed и запущены frontend-приложения:
 
 ```bash
@@ -53,8 +53,20 @@ pnpm exec allure generate tests/e2e/build/allure-results \
   --output tests/e2e/build/allure-report --clean
 ```
 
+Покрытые сценарии: J1-smoke (каталог → карточка → цена), J1-фильтр (вариегатные, средний свет,
+до 150 BYN → WYSIWYG-карточка), admin login + storageState, admin CRUD (категория → продукт →
+экземпляр → карантин → публикация → вариант → партия → выпуск).
+
 Seed-данные: `admin@plantmarket.local` / `AdminPassword123!` и
 `customer@plantmarket.local` / `CustomerPassword123!`. Скрипт идемпотентен.
+
+## A11y
+
+```bash
+./scripts/lighthouse-a11y.sh http://localhost:3000/catalog
+```
+
+Скрипт запускает Lighthouse 13.6.0 и падает, если accessibility score < 0.95. Текущий результат — 1.0.
 
 ## Definition of Done
 

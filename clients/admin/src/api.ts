@@ -1,3 +1,10 @@
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+}
+
 export interface Product {
   id: string;
   sku: string;
@@ -10,10 +17,68 @@ export interface Product {
   careLevel: 'EASY' | 'MEDIUM' | 'HARD';
   light: 'LOW' | 'MEDIUM' | 'BRIGHT' | 'DIRECT';
   petSafe: boolean;
+  variegated: boolean;
+  size: string | null;
+  careGuide: string | null;
+}
+
+export interface Variant {
+  id: string;
+  productId: string;
+  sku: string;
+  name: string;
+  size: string | null;
+  potSize: string | null;
+  form: string | null;
+  priceMinor: number;
+  currency: string;
+  status: 'DRAFT' | 'ACTIVE' | 'ARCHIVED';
+}
+
+export interface IndividualPlant {
+  id: string;
+  productId: string;
+  productName: string;
+  variegated: boolean;
+  code: string;
+  description: string | null;
+  photoUrl: string | null;
+  priceMinor: number;
+  currency: string;
+  status:
+    | 'ACQUIRED'
+    | 'QUARANTINE'
+    | 'AVAILABLE'
+    | 'RESERVED'
+    | 'SOLD'
+    | 'DELIVERED'
+    | 'RETURNED'
+    | 'MORTALITY';
+  careLevel: 'EASY' | 'MEDIUM' | 'HARD';
+  light: 'LOW' | 'MEDIUM' | 'BRIGHT' | 'DIRECT';
+  petSafe: boolean;
+}
+
+export interface StockBatch {
+  id: string;
+  productVariantId: string;
+  supplier: string;
+  quantity: number;
+  remainingQuantity: number;
+  unitCostMinor: number;
+  currency: string;
+  receivedAt: string;
+  quarantineUntil: string;
+  status: 'QUARANTINE' | 'AVAILABLE' | 'DEPLETED';
 }
 
 interface ProductPage {
   items: Product[];
+  totalElements: number;
+}
+
+interface IndividualPlantPage {
+  items: IndividualPlant[];
   totalElements: number;
 }
 
@@ -28,6 +93,8 @@ interface Problem {
   title?: string;
   detail?: string;
 }
+
+type JsonBody = Record<string, unknown>;
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
 
@@ -44,15 +111,105 @@ export async function login(email: string, password: string): Promise<TokenRespo
   return (await response.json()) as TokenResponse;
 }
 
-export async function fetchProducts(accessToken: string): Promise<Product[]> {
-  const response = await fetch(`${API_URL}/api/v1/products?page=0&size=100`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  if (!response.ok) {
-    throw new Error(`Products request failed (${response.status})`);
+async function request<T>(path: string, accessToken: string, init: RequestInit = {}): Promise<T> {
+  const headers: Record<string, string> = { Authorization: `Bearer ${accessToken}` };
+  if (init.body) {
+    headers['Content-Type'] = 'application/json';
   }
-  const page = (await response.json()) as ProductPage;
+  const response = await fetch(`${API_URL}${path}`, { ...init, headers });
+  if (!response.ok) {
+    const problem = (await response.json().catch(() => ({}))) as Problem;
+    throw new Error(problem.detail ?? problem.title ?? `Request failed (${response.status})`);
+  }
+  if (response.status === 204) {
+    return undefined as T;
+  }
+  return (await response.json()) as T;
+}
+
+export async function fetchProducts(accessToken: string): Promise<Product[]> {
+  const page = await request<ProductPage>('/api/v1/products?page=0&size=100', accessToken);
   return page.items;
+}
+
+export async function fetchCategories(accessToken: string): Promise<Category[]> {
+  return request<Category[]>('/api/v1/categories', accessToken);
+}
+
+export async function createCategory(accessToken: string, body: JsonBody): Promise<Category> {
+  return request<Category>('/api/v1/categories', accessToken, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
+export async function createProduct(accessToken: string, body: JsonBody): Promise<Product> {
+  return request<Product>('/api/v1/products', accessToken, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
+export async function fetchVariants(accessToken: string, productId: string): Promise<Variant[]> {
+  return request<Variant[]>(`/api/v1/products/${productId}/variants`, accessToken);
+}
+
+export async function createVariant(
+  accessToken: string,
+  productId: string,
+  body: JsonBody,
+): Promise<Variant> {
+  return request<Variant>(`/api/v1/products/${productId}/variants`, accessToken, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
+export async function fetchIndividualPlants(accessToken: string): Promise<IndividualPlant[]> {
+  const page = await request<IndividualPlantPage>(
+    '/api/v1/individual-plants?page=0&size=100',
+    accessToken,
+  );
+  return page.items;
+}
+
+export async function createIndividualPlant(
+  accessToken: string,
+  productId: string,
+  body: JsonBody,
+): Promise<IndividualPlant> {
+  return request<IndividualPlant>(`/api/v1/products/${productId}/individual-plants`, accessToken, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
+export async function transitionPlant(
+  accessToken: string,
+  plantId: string,
+  status: string,
+): Promise<IndividualPlant> {
+  return request<IndividualPlant>(`/api/v1/individual-plants/${plantId}/transitions`, accessToken, {
+    method: 'POST',
+    body: JSON.stringify({ status }),
+  });
+}
+
+export async function fetchStockBatches(accessToken: string): Promise<StockBatch[]> {
+  return request<StockBatch[]>('/api/v1/stock-batches', accessToken);
+}
+
+export async function createStockBatch(accessToken: string, body: JsonBody): Promise<StockBatch> {
+  return request<StockBatch>('/api/v1/stock-batches', accessToken, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
+export async function releaseStockBatch(accessToken: string, batchId: string): Promise<StockBatch> {
+  return request<StockBatch>(`/api/v1/stock-batches/${batchId}/release`, accessToken, {
+    method: 'POST',
+  });
 }
 
 export function formatPrice(priceMinor: number, currency: string): string {

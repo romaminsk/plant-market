@@ -41,7 +41,12 @@ public class SecurityConfig {
                 .permitAll()
                 .pathMatchers("/api/v1/auth/**")
                 .permitAll()
-                .pathMatchers(HttpMethod.GET, "/api/v1/categories/**", "/api/v1/products/**")
+                .pathMatchers(
+                    HttpMethod.GET,
+                    "/api/v1/categories/**",
+                    "/api/v1/products/**",
+                    "/api/v1/variants/**",
+                    "/api/v1/individual-plants/**")
                 .permitAll()
                 .anyExchange()
                 .authenticated())

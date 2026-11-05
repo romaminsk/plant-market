@@ -37,7 +37,10 @@ curl http://localhost:8080/actuator/health
 # 4. Прогнать backend-тесты (Testcontainers + Colima)
 ./scripts/test-backend.sh build
 
-# 5. Остановить
+# 5. Проверить доступность каталога
+./scripts/lighthouse-a11y.sh http://localhost:3000/catalog
+
+# 6. Остановить
 ./scripts/dev-down.sh
 ```
 

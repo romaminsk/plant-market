@@ -78,7 +78,10 @@ class CatalogFlowIntegrationTest {
             ProductStatus.PUBLISHED,
             CareLevel.EASY,
             LightLevel.BRIGHT,
-            false);
+            false,
+            false,
+            null,
+            null);
 
     ResponseEntity<ProductResponse> created =
         restTemplate.postForEntity("/api/v1/products", productRequest, ProductResponse.class);
@@ -116,7 +119,10 @@ class CatalogFlowIntegrationTest {
             ProductStatus.PUBLISHED,
             CareLevel.MEDIUM,
             LightLevel.BRIGHT,
-            true);
+            true,
+            false,
+            null,
+            null);
     ResponseEntity<ProductResponse> updatedResponse =
         restTemplate.exchange(
             "/api/v1/products/" + productId,
@@ -167,7 +173,10 @@ class CatalogFlowIntegrationTest {
             ProductStatus.DRAFT,
             CareLevel.MEDIUM,
             LightLevel.MEDIUM,
-            true);
+            true,
+            false,
+            null,
+            null);
     assertThat(
             restTemplate
                 .postForEntity("/api/v1/products", product, ProductResponse.class)

@@ -20,5 +20,8 @@ public record ProductResponse(
     CareLevel careLevel,
     LightLevel light,
     boolean petSafe,
+    boolean variegated,
+    String size,
+    String careGuide,
     Instant createdAt,
     Instant updatedAt) {}

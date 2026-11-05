@@ -25,4 +25,7 @@ public record ProductRequest(
     @NotNull ProductStatus status,
     @NotNull CareLevel careLevel,
     @NotNull LightLevel light,
-    @NotNull Boolean petSafe) {}
+    @NotNull Boolean petSafe,
+    Boolean variegated,
+    @Size(max = 32) String size,
+    @Size(max = 5000) String careGuide) {}

@@ -15,6 +15,9 @@ servers:
 tags:
   - name: categories
   - name: products
+  - name: variants
+  - name: individual-plants
+  - name: stock-batches
 
 paths:
   /api/v1/categories:
@@ -227,6 +230,376 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /api/v1/products/{productId}/variants:
+    parameters:
+      - $ref: '#/components/parameters/ProductId'
+    get:
+      operationId: listVariants
+      tags: [variants]
+      summary: List product variants
+      responses:
+        '200':
+          description: Variants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Variant'
+    post:
+      operationId: createVariant
+      tags: [variants]
+      summary: Create a product variant
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VariantRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Variant'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: SKU already exists
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /api/v1/variants/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getVariant
+      tags: [variants]
+      responses:
+        '200':
+          description: Variant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Variant'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: updateVariant
+      tags: [variants]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VariantRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Variant'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: archiveVariant
+      tags: [variants]
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Archived
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/individual-plants:
+    get:
+      operationId: listIndividualPlants
+      tags: [individual-plants]
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Sort'
+        - name: productId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/IndividualPlantStatus'
+        - name: light
+          in: query
+          schema:
+            $ref: '#/components/schemas/LightLevel'
+        - name: variegated
+          in: query
+          schema:
+            type: boolean
+        - name: maxPriceMinor
+          in: query
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+        - name: search
+          in: query
+          schema:
+            type: string
+            maxLength: 200
+      responses:
+        '200':
+          description: Page of individual plants
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageIndividualPlant'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/products/{productId}/individual-plants:
+    parameters:
+      - $ref: '#/components/parameters/ProductId'
+    post:
+      operationId: createIndividualPlant
+      tags: [individual-plants]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IndividualPlantRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IndividualPlant'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Plant code already exists
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /api/v1/individual-plants/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getIndividualPlant
+      tags: [individual-plants]
+      responses:
+        '200':
+          description: Individual plant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IndividualPlant'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: updateIndividualPlant
+      tags: [individual-plants]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IndividualPlantRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IndividualPlant'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/individual-plants/{id}/transitions:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: transitionIndividualPlant
+      tags: [individual-plants]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlantTransitionRequest'
+      responses:
+        '200':
+          description: New state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IndividualPlant'
+        '409':
+          description: Illegal state transition
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /api/v1/stock-batches:
+    get:
+      operationId: listStockBatches
+      tags: [stock-batches]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: variantId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Stock batches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StockBatch'
+    post:
+      operationId: createStockBatch
+      tags: [stock-batches]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StockBatchRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockBatch'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/stock-batches/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getStockBatch
+      tags: [stock-batches]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Stock batch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockBatch'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/stock-batches/{id}/release:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: releaseStockBatch
+      tags: [stock-batches]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Released
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockBatch'
+        '409':
+          description: Batch is not in quarantine
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /api/v1/stock-batches/{id}/adjust:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: adjustStockBatch
+      tags: [stock-batches]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdjustStockRequest'
+      responses:
+        '200':
+          description: Adjusted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockBatch'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -354,6 +727,7 @@ components:
           careLevel,
           light,
           petSafe,
+          variegated,
           createdAt,
           updatedAt,
         ]
@@ -389,6 +763,14 @@ components:
           $ref: '#/components/schemas/LightLevel'
         petSafe:
           type: boolean
+        variegated:
+          type: boolean
+        size:
+          type: string
+          maxLength: 32
+        careGuide:
+          type: string
+          maxLength: 5000
         createdAt:
           type: string
           format: date-time
@@ -435,6 +817,14 @@ components:
           $ref: '#/components/schemas/LightLevel'
         petSafe:
           type: boolean
+        variegated:
+          type: boolean
+        size:
+          type: string
+          maxLength: 32
+        careGuide:
+          type: string
+          maxLength: 5000
 
     PageProduct:
       type: object
@@ -456,6 +846,295 @@ components:
           format: int64
           minimum: 0
         totalPages:
+          type: integer
+          minimum: 0
+
+    VariantStatus:
+      type: string
+      enum: [DRAFT, ACTIVE, ARCHIVED]
+
+    VariantRequest:
+      type: object
+      additionalProperties: false
+      required: [sku, name, priceMinor, currency, status]
+      properties:
+        sku:
+          type: string
+          minLength: 1
+          maxLength: 64
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        size:
+          type: string
+          maxLength: 32
+        potSize:
+          type: string
+          maxLength: 32
+        form:
+          type: string
+          maxLength: 32
+        priceMinor:
+          type: integer
+          format: int64
+          minimum: 0
+        currency:
+          type: string
+          enum: [BYN]
+        status:
+          $ref: '#/components/schemas/VariantStatus'
+
+    Variant:
+      type: object
+      additionalProperties: false
+      required: [id, productId, sku, name, priceMinor, currency, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+        sku:
+          type: string
+        name:
+          type: string
+        size:
+          type: string
+        potSize:
+          type: string
+        form:
+          type: string
+        priceMinor:
+          type: integer
+          format: int64
+          minimum: 0
+        currency:
+          type: string
+          enum: [BYN]
+        status:
+          $ref: '#/components/schemas/VariantStatus'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    IndividualPlantStatus:
+      type: string
+      enum: [ACQUIRED, QUARANTINE, AVAILABLE, RESERVED, SOLD, DELIVERED, RETURNED, MORTALITY]
+
+    IndividualPlantRequest:
+      type: object
+      additionalProperties: false
+      required: [code, priceMinor, currency, careLevel, light, petSafe]
+      properties:
+        code:
+          type: string
+          minLength: 1
+          maxLength: 64
+        description:
+          type: string
+          maxLength: 5000
+        photoUrl:
+          type: string
+          maxLength: 1000
+        priceMinor:
+          type: integer
+          format: int64
+          minimum: 0
+        currency:
+          type: string
+          enum: [BYN]
+        careLevel:
+          $ref: '#/components/schemas/CareLevel'
+        light:
+          $ref: '#/components/schemas/LightLevel'
+        petSafe:
+          type: boolean
+
+    IndividualPlant:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          id,
+          productId,
+          productName,
+          variegated,
+          code,
+          priceMinor,
+          currency,
+          status,
+          careLevel,
+          light,
+          petSafe,
+          createdAt,
+          updatedAt,
+        ]
+      properties:
+        id:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+        productName:
+          type: string
+        variegated:
+          type: boolean
+        code:
+          type: string
+        description:
+          type: string
+        photoUrl:
+          type: string
+        priceMinor:
+          type: integer
+          format: int64
+          minimum: 0
+        currency:
+          type: string
+          enum: [BYN]
+        status:
+          $ref: '#/components/schemas/IndividualPlantStatus'
+        careLevel:
+          $ref: '#/components/schemas/CareLevel'
+        light:
+          $ref: '#/components/schemas/LightLevel'
+        petSafe:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    PlantTransitionRequest:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status:
+          $ref: '#/components/schemas/IndividualPlantStatus'
+
+    PageIndividualPlant:
+      type: object
+      additionalProperties: false
+      required: [items, page, size, totalElements, totalPages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/IndividualPlant'
+        page:
+          type: integer
+          minimum: 0
+        size:
+          type: integer
+          minimum: 1
+        totalElements:
+          type: integer
+          format: int64
+          minimum: 0
+        totalPages:
+          type: integer
+          minimum: 0
+
+    StockBatchStatus:
+      type: string
+      enum: [QUARANTINE, AVAILABLE, DEPLETED]
+
+    StockBatchRequest:
+      type: object
+      additionalProperties: false
+      required: [productVariantId, supplier, quantity, unitCostMinor, currency, quarantineUntil]
+      properties:
+        productVariantId:
+          type: string
+          format: uuid
+        supplier:
+          type: string
+          minLength: 1
+          maxLength: 200
+        quantity:
+          type: integer
+          minimum: 1
+        unitCostMinor:
+          type: integer
+          format: int64
+          minimum: 0
+        currency:
+          type: string
+          enum: [BYN]
+        receivedAt:
+          type: string
+          format: date-time
+        quarantineUntil:
+          type: string
+          format: date-time
+
+    StockBatch:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          id,
+          productVariantId,
+          supplier,
+          quantity,
+          remainingQuantity,
+          unitCostMinor,
+          currency,
+          receivedAt,
+          quarantineUntil,
+          status,
+          createdAt,
+          updatedAt,
+        ]
+      properties:
+        id:
+          type: string
+          format: uuid
+        productVariantId:
+          type: string
+          format: uuid
+        supplier:
+          type: string
+        quantity:
+          type: integer
+        remainingQuantity:
+          type: integer
+        unitCostMinor:
+          type: integer
+          format: int64
+        currency:
+          type: string
+          enum: [BYN]
+        receivedAt:
+          type: string
+          format: date-time
+        quarantineUntil:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/StockBatchStatus'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    AdjustStockRequest:
+      type: object
+      additionalProperties: false
+      required: [remainingQuantity]
+      properties:
+        remainingQuantity:
           type: integer
           minimum: 0
 

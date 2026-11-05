@@ -19,7 +19,15 @@ public class RouteConfig {
         .route("auth-service", route -> route.path("/api/v1/auth/**").uri(authUri))
         .route(
             "catalog-service",
-            route -> route.path("/api/v1/categories/**", "/api/v1/products/**").uri(catalogUri))
+            route ->
+                route
+                    .path(
+                        "/api/v1/categories/**",
+                        "/api/v1/products/**",
+                        "/api/v1/variants/**",
+                        "/api/v1/individual-plants/**",
+                        "/api/v1/stock-batches/**")
+                    .uri(catalogUri))
         .build();
   }
 }

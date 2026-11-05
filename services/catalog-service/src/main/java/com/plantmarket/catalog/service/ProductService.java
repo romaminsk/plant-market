@@ -39,11 +39,18 @@ public class ProductService {
 
   @Transactional(readOnly = true)
   public PageResponse<ProductResponse> list(
-      int page, int size, String sort, UUID categoryId, String search, ProductStatus status) {
+      int page,
+      int size,
+      String sort,
+      UUID categoryId,
+      String search,
+      ProductStatus status,
+      Boolean variegated) {
     validatePage(page, size);
     Page<ProductEntity> result =
         productRepository.findAll(
-            filter(categoryId, search, status), PageRequest.of(page, size, parseSort(sort)));
+            filter(categoryId, search, status, variegated),
+            PageRequest.of(page, size, parseSort(sort)));
     List<ProductResponse> items = result.getContent().stream().map(this::toResponse).toList();
     return PageResponse.of(items, result.getNumber(), result.getSize(), result.getTotalElements());
   }
@@ -76,7 +83,10 @@ public class ProductService {
             request.status(),
             request.careLevel(),
             request.light(),
-            request.petSafe());
+            request.petSafe(),
+            Boolean.TRUE.equals(request.variegated()),
+            normalizeOptional(request.size()),
+            normalizeOptional(request.careGuide()));
     return toResponse(productRepository.save(product));
   }
 
@@ -103,7 +113,10 @@ public class ProductService {
         request.status(),
         request.careLevel(),
         request.light(),
-        request.petSafe());
+        request.petSafe(),
+        Boolean.TRUE.equals(request.variegated()),
+        normalizeOptional(request.size()),
+        normalizeOptional(request.careGuide()));
     return toResponse(product);
   }
 
@@ -126,7 +139,7 @@ public class ProductService {
   }
 
   private Specification<ProductEntity> filter(
-      UUID categoryId, String search, ProductStatus status) {
+      UUID categoryId, String search, ProductStatus status, Boolean variegated) {
     return (root, query, builder) -> {
       List<Predicate> predicates = new ArrayList<>();
       if (categoryId != null) {
@@ -134,6 +147,9 @@ public class ProductService {
       }
       if (status != null) {
         predicates.add(builder.equal(root.get("status"), status));
+      }
+      if (variegated != null) {
+        predicates.add(builder.equal(root.get("variegated"), variegated));
       }
       if (search != null && !search.isBlank()) {
         String pattern = "%" + search.trim().toLowerCase(Locale.ROOT) + "%";
@@ -193,7 +209,14 @@ public class ProductService {
         product.getCareLevel(),
         product.getLight(),
         product.isPetSafe(),
+        product.isVariegated(),
+        product.getSize(),
+        product.getCareGuide(),
         product.getCreatedAt(),
         product.getUpdatedAt());
+  }
+
+  private static String normalizeOptional(String value) {
+    return value == null || value.isBlank() ? null : value.trim();
   }
 }

@@ -36,8 +36,9 @@ public class ProductController {
       @RequestParam(defaultValue = "createdAt,desc") String sort,
       @RequestParam(required = false) UUID categoryId,
       @RequestParam(required = false) String search,
-      @RequestParam(required = false) ProductStatus status) {
-    return productService.list(page, size, sort, categoryId, search, status);
+      @RequestParam(required = false) ProductStatus status,
+      @RequestParam(required = false) Boolean variegated) {
+    return productService.list(page, size, sort, categoryId, search, status, variegated);
   }
 
   @PostMapping
