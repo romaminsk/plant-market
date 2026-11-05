@@ -157,7 +157,7 @@ components:
           type: string
           minLength: 12
           maxLength: 128
-          description: Hashed with BCrypt cost 12; never logged.
+          description: Hashed with Argon2id; never logged.
         fullName:
           type: string
           minLength: 1
