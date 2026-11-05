@@ -55,7 +55,7 @@ pnpm exec allure generate tests/e2e/build/allure-results \
 
 Покрытые сценарии: J1-smoke (каталог → карточка → цена), J1-фильтр (вариегатные, средний свет,
 до 150 BYN → WYSIWYG-карточка), admin login + storageState, admin CRUD (категория → продукт →
-экземпляр → карантин → публикация → вариант → партия → выпуск).
+экземпляр → карантин → публикация → вариант → партия → выпуск), Lighthouse accessibility ≥ 0.95.
 
 Seed-данные: `admin@plantmarket.local` / `AdminPassword123!` и
 `customer@plantmarket.local` / `CustomerPassword123!`. Скрипт идемпотентен.

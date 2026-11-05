@@ -4,6 +4,7 @@ plugins {
 
 dependencies {
     testImplementation(libs.spring.boot.starter.test)
+    testImplementation(libs.spring.boot.starter.jackson)
     testImplementation(libs.playwright)
     testImplementation(libs.allure.jupiter)
 }
