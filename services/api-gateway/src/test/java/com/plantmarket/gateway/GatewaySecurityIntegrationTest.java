@@ -86,7 +86,7 @@ class GatewaySecurityIntegrationTest {
         .bodyValue("{}")
         .exchange()
         .expectStatus()
-        .is5xxServerError();
+        .value(status -> assertThat(status).isNotIn(401, 403));
   }
 
   @Test

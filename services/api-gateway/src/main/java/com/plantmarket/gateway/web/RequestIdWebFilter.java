@@ -36,7 +36,12 @@ public class RequestIdWebFilter implements WebFilter {
             .headers(headers -> headers.set(HEADER, resolvedRequestId))
             .build();
     exchange.getAttributes().put(ATTRIBUTE, resolvedRequestId);
-    exchange.getResponse().getHeaders().set(HEADER, resolvedRequestId);
+    exchange
+        .getResponse()
+        .beforeCommit(() -> {
+          exchange.getResponse().getHeaders().set(HEADER, resolvedRequestId);
+          return Mono.empty();
+        });
     return chain.filter(exchange.mutate().request(request).build());
   }
 
