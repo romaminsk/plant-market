@@ -44,6 +44,7 @@ subprojects {
     dependencies {
         "implementation"(platform(catalog.spring.boot.bom))
         "testImplementation"(platform(catalog.spring.boot.bom))
+        "testRuntimeOnly"(catalog.junit.platform.launcher)
     }
 
     tasks.withType<Test>().configureEach {
