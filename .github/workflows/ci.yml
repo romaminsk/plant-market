@@ -1,0 +1,117 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.24.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: pnpm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Install JS dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint and format
+        run: |
+          pnpm lint
+          pnpm format:check
+
+      - name: Build frontends
+        run: pnpm build
+
+      - name: Backend build, unit and integration tests
+        run: ./gradlew build --console=plain
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-1.64.0
+
+      - name: Build service images
+        run: |
+          cp .env.example .env
+          docker compose build
+
+      - name: Start infrastructure and services
+        run: docker compose up -d --wait
+
+      - name: Seed database
+        run: ./scripts/seed.sh
+
+      - name: Start frontends
+        run: |
+          pnpm --filter @plant-market/storefront exec next start -p 3000 > /tmp/storefront.log 2>&1 &
+          pnpm --filter @plant-market/admin exec vite preview --port 5173 > /tmp/admin.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            if curl -fsS http://localhost:3000/catalog >/dev/null \
+              && curl -fsS http://localhost:5173 >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Frontends did not become ready" >&2
+          exit 1
+
+      - name: E2E (Playwright + Allure)
+        env:
+          E2E_BASE_URL: http://localhost:3000
+          E2E_ADMIN_URL: http://localhost:5173
+        run: ./gradlew :tests:e2e:test --console=plain
+
+      - name: Generate Allure report
+        if: always()
+        run: |
+          pnpm exec allure generate tests/e2e/build/allure-results \
+            --output tests/e2e/build/allure-report --clean
+
+      - name: Upload Allure report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: allure-report
+          path: tests/e2e/build/allure-report
+          if-no-files-found: warn
+
+      - name: Upload E2E traces and screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-artifacts
+          path: tests/e2e/build/e2e-artifacts
+          if-no-files-found: warn
+
+      - name: Dump compose logs
+        if: failure()
+        run: docker compose logs --no-color
+
+      - name: Stop stack
+        if: always()
+        run: docker compose down -v

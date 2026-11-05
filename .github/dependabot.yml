@@ -1,0 +1,44 @@
+version: 2
+
+updates:
+  - package-ecosystem: gradle
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      gradle-minor-patch:
+        patterns: ['*']
+        update-types: ['minor', 'patch']
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      npm-minor-patch:
+        patterns: ['*']
+        update-types: ['minor', 'patch']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions-minor-patch:
+        patterns: ['*']
+        update-types: ['minor', 'patch']
+
+  - package-ecosystem: docker
+    directory: /services/api-gateway
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: docker
+    directory: /services/auth-service
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: docker
+    directory: /services/catalog-service
+    schedule:
+      interval: weekly
