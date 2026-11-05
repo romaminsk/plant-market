@@ -1,5 +1,6 @@
-# CI/throwaway override: no host ports, no persistent data.
-# Usage: docker compose -f docker-compose.yml -f docker-compose.test.yml up -d --wait
+# CI/throwaway override: no host ports for infrastructure or internal services,
+# no persistent data. The gateway keeps its port so host-run E2E can reach it.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.test.yml up -d --build --wait
 name: plant-market-test
 
 services:
@@ -17,4 +18,10 @@ services:
     ports: !reset []
 
   mailhog:
+    ports: !reset []
+
+  auth-service:
+    ports: !reset []
+
+  catalog-service:
     ports: !reset []

@@ -1,0 +1,16 @@
+.git
+.gradle
+.idea
+node_modules
+clients
+tests
+docs
+contracts
+.env
+*.md
+**/build/classes
+**/build/tmp
+**/build/reports
+**/build/resources
+**/build/generated
+**/build/test-results
