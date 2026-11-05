@@ -1,2 +1,4 @@
 packages:
   - 'clients/*'
+minimumReleaseAgeExclude:
+  - vite@8.3.6
