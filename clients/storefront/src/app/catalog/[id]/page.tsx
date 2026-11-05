@@ -3,11 +3,7 @@ import { fetchProduct, formatPrice } from '@/lib/api';
 
 export const dynamic = 'force-dynamic';
 
-export default async function ProductDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const product = await fetchProduct(id);
 
