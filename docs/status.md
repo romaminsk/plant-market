@@ -29,8 +29,8 @@
 | SEO (metadata, robots, sitemap)                            | ✅      |
 | Admin CRUD (create/read/archive/delete/transition/release) | ✅      |
 | Lighthouse A11y                                            | ✅ 1.0  |
-| OAuth2 Authorization Code + PKCE                           | ⬜      |
-| Cookie security / CSRF                                     | ⬜      |
+| OAuth2 Authorization Code + PKCE                           | ✅      |
+| Cookie security / CSRF                                     | ⚠️      |
 | Admin update forms                                         | ⬜      |
 | J5 order/reserve/cancel                                    | Phase 2 |
 
@@ -52,6 +52,7 @@
 - Lighthouse accessibility: **1.0** (порог 0.95).
 - Rate limit: 60 rpm публично, 10 rpm login/register, 300 rpm для запросов с Bearer-токеном (admin).
 - CI run `42077865504` — success, E2E 4/4 passed; security run `42077865673` — success.
+- **Auth Phase 1:** OAuth2 Authorization Code + PKCE (SAS 7.1.2), публичные клиенты storefront/admin, refresh rotation, сессионная cookie и CSRF на форме логина; ADR-0006. `OAuth2PkceIntegrationTest` проходит.
 
 ## Тесты и покрытие
 
@@ -63,18 +64,19 @@
 | `api-gateway`     |     8 |           96% |
 | `tests:e2e`       |     4 |             — |
 
-Итого **22 backend-теста + 4 E2E = 26 тестов, 0 падений**. JaCoCo-порог 70% проходит.
+Итого **23 backend-теста + 4 E2E = 27 тестов, 0 падений**. JaCoCo-порог 70% проходит.
 
 ## Следующие 3 шага
 
-1. Auth Phase 1: OAuth2 Authorization Code + PKCE, cookie `__Host-`/HttpOnly/SameSite, CSRF.
-2. Admin: update-формы для продуктов, вариантов и категорий.
-3. J5 E2E: партия → карантин → публикация → резерв/отмена (резерв — Phase 2), затем CI-прогон Phase 1.
+1. Admin: update-формы для продуктов, вариантов и категорий.
+2. J5 E2E: партия → карантин → публикация → резерв/отмена (резерв — Phase 2).
+3. Прогнать CI для Phase 1 auth и закрыть оставшиеся пункты Phase 1 gate.
 
 ## Блокеры и риски
 
 - Remote workflow использует `actions/*@v4`; обновление до `@v7`/`setup-java@v6` требует `gh auth refresh -s workflow`. CI на `@v4` зелёный.
-- A11 T1/T2 (PKCE, cookie security) пока не реализованы — это следующий шаг.
+- A11 T2: CSRF double-submit и `__Host-`/Secure cookie включаются в prod-конфиге; в Phase 1 используется synchronizer token и `PM-SESSION`.
+- In-memory SAS authorizations теряются при рестарте auth-service; для одного экземпляра Phase 1 допустимо (ADR-0006).
 - In-memory rate limit не разделяется между экземплярами gateway (ADR-0005).
 - Прямые порты auth/catalog открыты на localhost; перед prod закрыть.
 - MailHog `v1.0.1` — только `linux/amd64`.
@@ -87,3 +89,4 @@
 - **Ruling:** J1-фильтр реализован на `/api/v1/individual-plants` (variegated + light + maxPriceMinor).
 - **Ruling:** Lighthouse запускается `scripts/lighthouse-a11y.sh`, порог 0.95.
 - **Ruling:** rate limit: 60 rpm публично, 10 rpm login/register, 300 rpm для запросов с Bearer-токеном.
+- **Ruling:** OAuth2 PKCE — SAS 7.1.2 с публичными клиентами и кастомным refresh-token генератором; ADR-0006.

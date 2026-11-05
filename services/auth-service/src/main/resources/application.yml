@@ -19,6 +19,13 @@ spring:
 server:
   port: ${AUTH_SERVICE_PORT:8090}
   shutdown: graceful
+  servlet:
+    session:
+      cookie:
+        name: ${SESSION_COOKIE_NAME:PM-SESSION}
+        http-only: true
+        same-site: lax
+        secure: ${SESSION_COOKIE_SECURE:false}
 
 management:
   endpoints:

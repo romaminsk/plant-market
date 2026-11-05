@@ -5,18 +5,18 @@
 
 ## Технические требования A11
 
-| #   | Требование                                                                              | Статус          | Комментарий                                                      |
-| --- | --------------------------------------------------------------------------------------- | --------------- | ---------------------------------------------------------------- |
-| T1  | OAuth2 Authorization Code + PKCE; access 10 мин, refresh с ротацией                     | ⬜ не проверено | Phase 0: password login + JWT; Authorization Code + PKCE до prod |
-| T2  | Cookie `__Host-`, `Secure`, `HttpOnly`, `SameSite=Lax`; CSRF double-submit              | ⬜ не проверено | Phase 1: сейчас Bearer-токены без cookie                         |
-| T3  | Пароли Argon2id                                                                         | ✅ Phase 0      | `Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8`           |
-| T4  | Роли `CUSTOMER/OPERATOR/MANAGER/ADMIN/SYSTEM`; фильтр по `tenant_id` + тест на изоляцию | ⚠️ частично     | роли и ADMIN seed есть; tenant_id — Phase 4                      |
-| T5  | Rate limit на gateway: 60/мин публично, 10/мин login/register                           | ✅ Phase 0      | in-memory fixed-window, один экземпляр gateway (ADR-0005)        |
-| T6  | HSTS, CSP, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`            | ⬜ не проверено | Phase 1                                                          |
-| T7  | Секреты — `.env` в `.gitignore`, `.env.example` без секретов; prod — Vault/SOPS         | ⚠️ частично     | dev-дефолты в `.env.example`; prod-хранилище — Phase 3+          |
-| T8  | Логи без PII, токенов, номеров карт, полных адресов                                     | ⚠️ частично     | тела запросов не логируются; аудит логов — Phase 1               |
-| T9  | Платежи — hosted page / redirect, SAQ-A; PAN не хранить и не логировать                 | ⬜ не проверено | Phase 2                                                          |
-| T10 | 0 секретов в репозитории (gitleaks/trufflehog)                                          | ⚠️ CI           | TruffleHog добавлен в `security.yml`; нужен первый прогон        |
+| #   | Требование                                                                              | Статус          | Комментарий                                                                                        |
+| --- | --------------------------------------------------------------------------------------- | --------------- | -------------------------------------------------------------------------------------------------- |
+| T1  | OAuth2 Authorization Code + PKCE; access 10 мин, refresh с ротацией                     | ✅ Phase 1      | SAS 7.1.2, публичные клиенты storefront/admin; refresh rotation (ADR-0006)                         |
+| T2  | Cookie `__Host-`, `Secure`, `HttpOnly`, `SameSite=Lax`; CSRF double-submit              | ⚠️ частично     | HttpOnly/SameSite=Lax и CSRF включены; `__Host-`/Secure — prod-конфиг; double-submit не реализован |
+| T3  | Пароли Argon2id                                                                         | ✅ Phase 0      | `Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8`                                             |
+| T4  | Роли `CUSTOMER/OPERATOR/MANAGER/ADMIN/SYSTEM`; фильтр по `tenant_id` + тест на изоляцию | ⚠️ частично     | роли и ADMIN seed есть; tenant_id — Phase 4                                                        |
+| T5  | Rate limit на gateway: 60/мин публично, 10/мин login/register                           | ✅ Phase 0      | in-memory fixed-window, один экземпляр gateway (ADR-0005)                                          |
+| T6  | HSTS, CSP, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`            | ⬜ не проверено | Phase 1                                                                                            |
+| T7  | Секреты — `.env` в `.gitignore`, `.env.example` без секретов; prod — Vault/SOPS         | ⚠️ частично     | dev-дефолты в `.env.example`; prod-хранилище — Phase 3+                                            |
+| T8  | Логи без PII, токенов, номеров карт, полных адресов                                     | ⚠️ частично     | тела запросов не логируются; аудит логов — Phase 1                                                 |
+| T9  | Платежи — hosted page / redirect, SAQ-A; PAN не хранить и не логировать                 | ⬜ не проверено | Phase 2                                                                                            |
+| T10 | 0 секретов в репозитории (gitleaks/trufflehog)                                          | ⚠️ CI           | TruffleHog добавлен в `security.yml`; нужен первый прогон                                          |
 
 ## Юридический чек-лист РБ
 
