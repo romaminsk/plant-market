@@ -45,7 +45,7 @@
 | Allure               | 3.1.1      | Maven Central (`allure-jupiter`), HTTP 200       | CLI 2.46.1                                     |
 | Next.js              | 16.4.5     | npm registry, HTTP 200                           | Task 0.5                                       |
 | React                | 19.3.1     | npm registry, HTTP 200                           | Task 0.5                                       |
-| Flyway               | 12.4.0     | Boot BOM                                         | 13.12.1 существует; не используем вне BOM      |
+| Flyway               | 13.12.1    | Maven Central, HTTP 200                          | Boot BOM даёт 12.4.0 без поддержки PostgreSQL 18; версия переопределена |
 | PostgreSQL JDBC      | 42.7.14    | Boot BOM                                         |                                                |
 | MapStruct            | 1.6.3      | Maven Central, HTTP 200                          | Task 0.4+                                      |
 | Springdoc OpenAPI    | 3.2.0      | Maven Central, HTTP 200                          | линия 3.x под Boot 4                           |
