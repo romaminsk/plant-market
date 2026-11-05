@@ -13,7 +13,8 @@ class RateLimitFilterTest {
 
   @Test
   void rejectsRequestsAboveTheWindowLimit() {
-    RateLimitFilter filter = new RateLimitFilter(new ProblemResponseWriter(new ObjectMapper()), 2);
+    RateLimitFilter filter =
+        new RateLimitFilter(new ProblemResponseWriter(new ObjectMapper()), 2, 1);
 
     MockServerWebExchange first = exchange();
     MockServerWebExchange second = exchange();
@@ -34,7 +35,8 @@ class RateLimitFilterTest {
 
   @Test
   void ignoresNonApiPaths() {
-    RateLimitFilter filter = new RateLimitFilter(new ProblemResponseWriter(new ObjectMapper()), 0);
+    RateLimitFilter filter =
+        new RateLimitFilter(new ProblemResponseWriter(new ObjectMapper()), 0, 0);
     MockServerWebExchange exchange =
         MockServerWebExchange.from(MockServerHttpRequest.get("/actuator/health").build());
 
@@ -43,7 +45,26 @@ class RateLimitFilterTest {
     assertThat(exchange.getResponse().getStatusCode()).isNull();
   }
 
+  @Test
+  void authEndpointsUseStricterLimit() {
+    RateLimitFilter filter =
+        new RateLimitFilter(new ProblemResponseWriter(new ObjectMapper()), 10, 1);
+
+    MockServerWebExchange first = authExchange();
+    MockServerWebExchange second = authExchange();
+
+    filter.filter(first, exchange -> Mono.empty()).block();
+    filter.filter(second, exchange -> Mono.empty()).block();
+
+    assertThat(first.getResponse().getStatusCode()).isNull();
+    assertThat(second.getResponse().getStatusCode()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
+  }
+
   private MockServerWebExchange exchange() {
     return MockServerWebExchange.from(MockServerHttpRequest.get("/api/v1/products").build());
+  }
+
+  private MockServerWebExchange authExchange() {
+    return MockServerWebExchange.from(MockServerHttpRequest.post("/api/v1/auth/login").build());
   }
 }

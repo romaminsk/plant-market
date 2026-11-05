@@ -15,7 +15,8 @@ Task 0.4 требует rate limit на `api-gateway`. Штатный `RequestRa
 
 - окно — 60 секунд;
 - ключ — IP клиента + первый сегмент маршрута (`auth`, `categories`, `products`);
-- лимит — 100 запросов в минуту на ключ, настраивается через `RATE_LIMIT_RPM`;
+- лимит — 60 запросов в минуту на публичные API и 10 запросов в минуту на `login`/`register`
+  (A11), настраивается через `RATE_LIMIT_PUBLIC_RPM` и `RATE_LIMIT_AUTH_RPM`;
 - при превышении — `429 Too Many Requests` в формате RFC 7807 и заголовок `Retry-After`;
 - состояние хранится в `ConcurrentHashMap` процесса; просроченные окна удаляются.
 
@@ -27,5 +28,6 @@ Task 0.4 требует rate limit на `api-gateway`. Штатный `RequestRa
 
 ## Проверка
 
-- `RateLimitFilterTest` — третий запрос при лимите 2 получает 429 и `Retry-After`.
-- Ручная проверка: 101 запрос к `/api/v1/products` с одного IP даёт 429.
+- `RateLimitFilterTest` — третий запрос при публичном лимите 2 получает 429 и `Retry-After`;
+  второй запрос на `login` при auth-лимите 1 получает 429.
+- Ручная проверка: 61 запрос к `/api/v1/products` с одного IP даёт 429.
