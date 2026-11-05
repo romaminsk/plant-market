@@ -19,4 +19,5 @@ include(
     "services:api-gateway",
     "services:auth-service",
     "services:catalog-service",
+    "tests:e2e",
 )

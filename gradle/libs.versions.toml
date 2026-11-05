@@ -5,6 +5,8 @@ flyway = "13.12.1"
 spotless = "8.11.0"
 google-java-format = "2.0.0"
 checkstyle = "14.4.0"
+playwright = "1.64.0"
+allure = "3.1.1"
 
 [libraries]
 spring-boot-bom = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
@@ -30,6 +32,8 @@ flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
 flyway-database-postgresql = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
 postgresql = { module = "org.postgresql:postgresql" }
 testcontainers-postgresql = { module = "org.testcontainers:testcontainers-postgresql" }
+playwright = { module = "com.microsoft.playwright:playwright", version.ref = "playwright" }
+allure-jupiter = { module = "io.qameta.allure:allure-jupiter", version.ref = "allure" }
 
 [plugins]
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }

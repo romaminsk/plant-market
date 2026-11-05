@@ -1,4 +1,5 @@
 import { fetchPublishedProducts, formatPrice } from '@/lib/api';
+import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,7 +30,9 @@ export default async function CatalogPage() {
               </div>
               <div className="product-body">
                 <p className="sku">{product.sku}</p>
-                <h2>{product.name}</h2>
+                <h2>
+                  <Link href={`/catalog/${product.id}`}>{product.name}</Link>
+                </h2>
                 {product.description ? <p className="muted">{product.description}</p> : null}
                 <dl className="facts">
                   <div>

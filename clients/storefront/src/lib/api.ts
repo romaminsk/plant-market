@@ -35,6 +35,14 @@ export async function fetchPublishedProducts(): Promise<ProductPage> {
   return (await response.json()) as ProductPage;
 }
 
+export async function fetchProduct(id: string): Promise<Product> {
+  const response = await fetch(`${API_URL}/api/v1/products/${id}`, { cache: 'no-store' });
+  if (!response.ok) {
+    throw new Error(`Product request failed with status ${response.status}`);
+  }
+  return (await response.json()) as Product;
+}
+
 export function formatPrice(priceMinor: number, currency: string): string {
   return new Intl.NumberFormat('be-BY', {
     style: 'currency',

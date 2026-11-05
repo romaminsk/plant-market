@@ -36,6 +36,26 @@ Testcontainers на Colima требует явного Docker-сокета и ov
 `TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock`. В CI с обычным
 `/var/run/docker.sock` достаточно `./gradlew build`.
 
+## E2E (Task 0.6)
+
+E2E-тесты пропускаются, пока не задан `E2E_BASE_URL`; admin-тест дополнительно требует
+`E2E_ADMIN_URL`. Перед запуском подняты compose-сервисы, выполнен seed и запущены frontend-приложения:
+
+```bash
+./scripts/seed.sh
+pnpm --filter @plant-market/storefront build
+pnpm --filter @plant-market/storefront start -p 3000 &
+pnpm --filter @plant-market/admin build
+pnpm --filter @plant-market/admin preview --port 5173 &
+E2E_BASE_URL=http://localhost:3000 E2E_ADMIN_URL=http://localhost:5173 \
+  ./gradlew :tests:e2e:test
+pnpm exec allure generate tests/e2e/build/allure-results \
+  --output tests/e2e/build/allure-report --clean
+```
+
+Seed-данные: `admin@plantmarket.local` / `AdminPassword123!` и
+`customer@plantmarket.local` / `CustomerPassword123!`. Скрипт идемпотентен.
+
 ## Definition of Done
 
 Тест написан до или вместе с кодом → `./gradlew build` зелёный → покрытие не упало → статический анализ без новых предупреждений → токены и i18n соблюдены → a11y проверен для UI → документация и ADR обновлены → миграция обратима или это задокументировано → в diff нет секретов → коммит в Conventional Commits → PR ≤ 400 строк.

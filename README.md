@@ -31,10 +31,13 @@ cp .env.example .env
 # 2. Проверить health
 curl http://localhost:8080/actuator/health
 
-# 3. Прогнать backend-тесты (Testcontainers + Colima)
+# 3. Наполнить БД seed-данными (идемпотентно)
+./scripts/seed.sh
+
+# 4. Прогнать backend-тесты (Testcontainers + Colima)
 ./scripts/test-backend.sh build
 
-# 4. Остановить
+# 5. Остановить
 ./scripts/dev-down.sh
 ```
 

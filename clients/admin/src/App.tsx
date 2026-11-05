@@ -1,29 +1,69 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { fetchProducts, formatPrice, login } from './api';
 import type { Product } from './api';
 
+const TOKEN_KEY = 'pm.admin.accessToken';
+
 export default function App() {
-  const [email, setEmail] = useState('admin@example.com');
+  const [email, setEmail] = useState('admin@plantmarket.local');
   const [password, setPassword] = useState('');
-  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(() =>
+    localStorage.getItem(TOKEN_KEY),
+  );
   const [products, setProducts] = useState<Product[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loggingIn, setLoggingIn] = useState(false);
+
+  useEffect(() => {
+    if (accessToken) {
+      localStorage.setItem(TOKEN_KEY, accessToken);
+    } else {
+      localStorage.removeItem(TOKEN_KEY);
+    }
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (!accessToken) {
+      setProducts([]);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    fetchProducts(accessToken)
+      .then((loaded) => {
+        if (!cancelled) {
+          setProducts(loaded);
+        }
+      })
+      .catch((cause: unknown) => {
+        if (!cancelled) {
+          setError(cause instanceof Error ? cause.message : 'Неизвестная ошибка');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken]);
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setLoading(true);
+    setLoggingIn(true);
     setError(null);
     try {
       const tokens = await login(email, password);
-      const loaded = await fetchProducts(tokens.accessToken);
       setAccessToken(tokens.accessToken);
-      setProducts(loaded);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Неизвестная ошибка');
     } finally {
-      setLoading(false);
+      setLoggingIn(false);
     }
   }
 
@@ -80,8 +120,8 @@ export default function App() {
                 required
               />
             </label>
-            <button type="submit" disabled={loading}>
-              {loading ? 'Вход…' : 'Войти'}
+            <button type="submit" disabled={loading || loggingIn}>
+              {loggingIn ? 'Вход…' : 'Войти'}
             </button>
           </form>
           {error ? <p className="error">{error}</p> : null}

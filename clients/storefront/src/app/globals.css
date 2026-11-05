@@ -189,3 +189,48 @@ button {
   cursor: pointer;
   font: inherit;
 }
+
+.product-body h2 a {
+  text-decoration: none;
+}
+
+.product-body h2 a:hover {
+  text-decoration: underline;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 1rem;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.detail-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 2rem;
+  align-items: start;
+}
+
+.detail-photo {
+  display: grid;
+  place-items: center;
+  min-height: 280px;
+  background: linear-gradient(135deg, #dfe9d8, #c7dbc0);
+  border-radius: 16px;
+  font-size: 6rem;
+}
+
+.detail-price {
+  font-size: 2rem;
+}
+
+.detail-facts {
+  max-width: 420px;
+}
+
+@media (max-width: 700px) {
+  .detail-layout {
+    grid-template-columns: 1fr;
+  }
+}
