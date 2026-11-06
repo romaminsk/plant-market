@@ -83,6 +83,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-plantmarket}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-plantmarket}
       CATALOG_SERVICE_PORT: 8081
+      MAIL_HOST: mailhog
+      MAIL_PORT: 1025
     ports:
       - '127.0.0.1:${CATALOG_SERVICE_PORT:-8081}:8081'
     depends_on:

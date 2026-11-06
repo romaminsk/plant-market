@@ -31,11 +31,15 @@ public class IndividualPlantService {
 
   private final IndividualPlantRepository plantRepository;
   private final ProductRepository productRepository;
+  private final RestockSubscriptionService restockService;
 
   public IndividualPlantService(
-      IndividualPlantRepository plantRepository, ProductRepository productRepository) {
+      IndividualPlantRepository plantRepository,
+      ProductRepository productRepository,
+      RestockSubscriptionService restockService) {
     this.plantRepository = plantRepository;
     this.productRepository = productRepository;
+    this.restockService = restockService;
   }
 
   @Transactional(readOnly = true)
@@ -111,6 +115,9 @@ public class IndividualPlantService {
       throw ApiException.conflict("Illegal transition from " + plant.getStatus() + " to " + target);
     }
     plant.transitionTo(target);
+    if (target == IndividualPlantStatus.AVAILABLE) {
+      restockService.notifyPlantAvailable(id);
+    }
     return toResponse(plant);
   }
 

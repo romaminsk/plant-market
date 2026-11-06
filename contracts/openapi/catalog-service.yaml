@@ -18,6 +18,7 @@ tags:
   - name: variants
   - name: individual-plants
   - name: stock-batches
+  - name: restock
 
 paths:
   /api/v1/categories:
@@ -600,6 +601,63 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
+  /api/v1/restock-subscriptions:
+    post:
+      operationId: subscribeToRestock
+      tags: [restock]
+      summary: Subscribe an email to a sold-out variant or individual plant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestockSubscriptionRequest'
+      responses:
+        '201':
+          description: Subscription created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestockSubscription'
+        '200':
+          description: Subscription already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestockSubscription'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Target is already in stock
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /api/v1/restock-subscriptions/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getRestockSubscription
+      tags: [restock]
+      summary: Get a restock subscription status
+      responses:
+        '200':
+          description: Subscription
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestockSubscription'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -852,6 +910,53 @@ components:
     VariantStatus:
       type: string
       enum: [DRAFT, ACTIVE, ARCHIVED]
+
+    RestockTargetType:
+      type: string
+      enum: [VARIANT, INDIVIDUAL_PLANT]
+
+    RestockSubscriptionStatus:
+      type: string
+      enum: [PENDING, NOTIFIED]
+
+    RestockSubscriptionRequest:
+      type: object
+      additionalProperties: false
+      required: [targetType, targetId, email]
+      properties:
+        targetType:
+          $ref: '#/components/schemas/RestockTargetType'
+        targetId:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+          maxLength: 254
+
+    RestockSubscription:
+      type: object
+      additionalProperties: false
+      required: [id, targetType, targetId, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        targetType:
+          $ref: '#/components/schemas/RestockTargetType'
+        targetId:
+          type: string
+          format: uuid
+        email:
+          type: string
+        status:
+          $ref: '#/components/schemas/RestockSubscriptionStatus'
+        createdAt:
+          type: string
+          format: date-time
+        notifiedAt:
+          type: string
+          format: date-time
 
     VariantRequest:
       type: object

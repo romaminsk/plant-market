@@ -259,6 +259,35 @@ ensure_stock_batch() {
         "$API_URL/api/v1/stock-batches/$batch_id/release"
 }
 
+ensure_available_stock() {
+    local product_sku="$1"
+    local variant_sku="$2"
+    local threshold="$3"
+    local quantity="$4"
+    local product_id variant_id available batch_id
+
+    product_id="$(product_id_by_sku "$product_sku")"
+    variant_id="$(curl -sS "$API_URL/api/v1/products/$product_id/variants" \
+        | jq -r --arg sku "$variant_sku" '.[] | select(.sku == $sku) | .id')"
+    available="$(curl -sS -H "Authorization: Bearer $ADMIN_TOKEN" \
+        "$API_URL/api/v1/stock-batches?variantId=$variant_id" \
+        | jq -r '[.[] | select(.status == "AVAILABLE") | .remainingQuantity] | add // 0')"
+    if (( available >= threshold )); then
+        return 0
+    fi
+
+    batch_id="$(curl -sS \
+        -H "Authorization: Bearer $ADMIN_TOKEN" \
+        -H 'Content-Type: application/json' \
+        -d "$(jq -n --arg variantId "$variant_id" --argjson quantity "$quantity" \
+            '{productVariantId: $variantId, supplier: "Seed Top-up", quantity: $quantity,
+              unitCostMinor: 5000, currency: "BYN",
+              quarantineUntil: "2030-01-01T00:00:00Z"}')" \
+        "$API_URL/api/v1/stock-batches" | jq -r '.id')"
+    curl -sS -o /dev/null -X POST -H "Authorization: Bearer $ADMIN_TOKEN" \
+        "$API_URL/api/v1/stock-batches/$batch_id/release"
+}
+
 ensure_shipping_zone() {
     local name="$1"
     local city="$2"
@@ -326,6 +355,7 @@ ensure_individual_plant "PLANT-004" "IP-004" 159900 "EASY" "MEDIUM" false
 ensure_individual_plant "PLANT-005" "IP-005" 74900 "EASY" "MEDIUM" false
 
 ensure_stock_batch "MON-001" "MON-001-12" "Seed Supplier" 10 5000
+ensure_available_stock "MON-001" "MON-001-12" 5 10
 
 ensure_shipping_zone "Минск" "Минск" 500 10000 1 2 false 0
 ensure_shipping_zone "Гомель (зима)" "Гомель" 700 15000 2 4 true 500

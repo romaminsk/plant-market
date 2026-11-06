@@ -1,8 +1,8 @@
 # Plant Market — статус проекта
 
-**Обновлено:** 2026-11-05
-**Фаза:** 2 — orders, резервы, оплата, доставка и уведомления готовы
-**Текущая задача:** Phase 2 gate — J2/J3/J4 E2E и A11
+**Обновлено:** 2026-11-06
+**Фаза:** 2 — gate закрыт по коду: J2/J3/J4 зелёные, A11-техника закрыта
+**Текущая задача:** Phase 3 — WYSIWYG-галерея, waitlist, care-напоминания
 
 ## Состояние окружения
 
@@ -68,26 +68,35 @@
 - ADR-0007: платёжный sandbox; реальный провайдер и refund flow — перед prod/Phase 3.
 - Delivery zones + winter thermal rule; `CheckoutRequest` с `shippingZoneId`/`thermalPack`.
 - Outbox publisher на Spring events + MailHog-уведомления на PAID/CANCELLED (ADR-0008).
+- **J2 restock:** `restock_subscriptions` в `catalog-service`, публичная идемпотентная подписка,
+  уведомление при release/adjust/переходе в AVAILABLE, статус `PENDING → NOTIFIED` (ADR-0009).
+- **J4 claims:** `order_claims` + фото-URL в `order-service`, решения `REPLACEMENT/REFUND/REJECT`,
+  роли `ADMIN/OPERATOR/MANAGER`, письмо после коммита (ADR-0009).
+- **J3:** зимняя зона без термоупаковки → 409, с термоупаковкой — доплата в `shippingMinor`.
+- **A11 техника:** gateway отдаёт CSP, Referrer-Policy, Permissions-Policy, X-Frame-Options,
+  X-Content-Type-Options; HSTS — только на HTTPS. Логи новых модулей без e-mail.
+- CI run `42182462585` — success, E2E 8/8 на тот момент; security run `42182462495` — success
+  (trivy, secrets/TruffleHog, dependency audit).
 
 ## Тесты и покрытие
 
 | Модуль            | Тесты | Line coverage |
 | ----------------- | ----: | ------------: |
 | `platform-common` |     9 |           74% |
-| `auth-service`    |     3 |           88% |
-| `catalog-service` |     5 |           83% |
-| `order-service`   |     2 |           73% |
+| `auth-service`    |     3 |           89% |
+| `catalog-service` |     6 |           85% |
+| `order-service`   |     3 |           75% |
 | `payment-service` |     1 |           77% |
-| `api-gateway`     |     8 |           96% |
-| `tests:e2e`       |     8 |             — |
+| `api-gateway`     |     8 |           97% |
+| `tests:e2e`       |    10 |             — |
 
-Итого **28 backend-тестов + 8 E2E = 36 тестов, 0 падений**. JaCoCo-порог 70% проходит.
+Итого **30 backend-тестов + 10 E2E = 40 тестов, 0 падений**. JaCoCo-порог 70% проходит.
 
 ## Следующие 3 шага
 
-1. Phase 2 gate: J2 (restock), J3 (зимняя доставка UI), J4 (претензия) E2E.
-2. Phase 2: закрыть A11-чеклист и добавить retry/outbox dead-letter.
-3. Phase 3: WYSIWYG-галерея, waitlist, care-напоминания.
+1. Phase 3: WYSIWYG-галерея (4 ракурса), waitlist UI, care-напоминания.
+2. Phase 3: загрузка фото претензий в MinIO и outbox retry/dead-letter.
+3. Юридический A11 (L1–L8): передать владельцу/юристу; до подписи prod запрещён.
 
 ## Блокеры и риски
 
@@ -97,6 +106,11 @@
 - In-memory rate limit не разделяется между экземплярами gateway (ADR-0005).
 - Прямые порты auth/catalog открыты на localhost; перед prod закрыть.
 - MailHog `v1.0.1` — только `linux/amd64`.
+- A11 L1–L8 (торговый реестр, СКНО/ЕРИП, ПДн, CITES, оферта, налоги) не закрыты: нужен
+  владелец/юрист. Phase 2 закрыт по коду, но не является разрешением на prod.
+- Уведомления restock/claims best-effort: нет retry/dead-letter; при недоступном SMTP письмо
+  теряется (статус подписки/претензии при этом сохраняется).
+- Фото претензий принимаются только как URL; загрузка файлов — Phase 3 (MinIO).
 - Диск 29 GiB; чистить `docker system prune -f` после сессий.
 
 ## Решения сессии
@@ -108,3 +122,9 @@
 - **Ruling:** rate limit: 60 rpm публично, 10 rpm login/register, 300 rpm для запросов с Bearer-токеном.
 - **Ruling:** OAuth2 PKCE — SAS 7.1.2 с публичными клиентами и кастомным refresh-token генератором; ADR-0006.
 - **Ruling:** CSRF — double-submit cookie `XSRF-TOKEN`; session cookie `PM-SESSION`/`__Host-` prod.
+- **Ruling:** restock-подписки — в `catalog-service` (источник правды об остатках), претензии —
+  в `order-service` (привязка к заказу); отдельные сервисы не создаём до Phase 3+.
+- **Ruling:** роли из JWT claim `roles` маппятся в `ROLE_*` в order-service; `/api/v1/claims/**`
+  только `ADMIN/OPERATOR/MANAGER`.
+- **Ruling:** security-заголовки выставляет gateway; CSP `default-src 'none'` для API, HSTS
+  включается только на HTTPS.

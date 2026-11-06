@@ -6,11 +6,27 @@ import com.plantmarket.catalog.domain.CareLevel;
 import com.plantmarket.catalog.domain.Currency;
 import com.plantmarket.catalog.domain.LightLevel;
 import com.plantmarket.catalog.domain.ProductStatus;
+import com.plantmarket.catalog.domain.ReservationTargetType;
+import com.plantmarket.catalog.domain.RestockSubscriptionStatus;
+import com.plantmarket.catalog.domain.RestockTargetType;
+import com.plantmarket.catalog.domain.VariantStatus;
 import com.plantmarket.catalog.web.dto.CategoryRequest;
 import com.plantmarket.catalog.web.dto.CategoryResponse;
 import com.plantmarket.catalog.web.dto.ProductRequest;
 import com.plantmarket.catalog.web.dto.ProductResponse;
+import com.plantmarket.catalog.web.dto.ReservationItemRequest;
+import com.plantmarket.catalog.web.dto.ReservationRequest;
+import com.plantmarket.catalog.web.dto.ReservationResponse;
+import com.plantmarket.catalog.web.dto.RestockSubscriptionRequest;
+import com.plantmarket.catalog.web.dto.RestockSubscriptionResponse;
+import com.plantmarket.catalog.web.dto.StockBatchRequest;
+import com.plantmarket.catalog.web.dto.StockBatchResponse;
+import com.plantmarket.catalog.web.dto.VariantRequest;
+import com.plantmarket.catalog.web.dto.VariantResponse;
 import com.plantmarket.common.api.PageResponse;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -147,6 +163,129 @@ class CatalogFlowIntegrationTest {
         restTemplate.exchange(
             "/api/v1/categories/" + category.id(), HttpMethod.DELETE, null, String.class);
     assertThat(deleteCategory.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+  }
+
+  @Test
+  void restockSubscriptionNotifiesWhenBatchIsReleased() {
+    String suffix = UUID.randomUUID().toString().substring(0, 8);
+    CategoryResponse category =
+        restTemplate
+            .postForEntity(
+                "/api/v1/categories",
+                new CategoryRequest("Restock " + suffix, "restock-" + suffix, null),
+                CategoryResponse.class)
+            .getBody();
+    assertThat(category).isNotNull();
+
+    ProductResponse product =
+        restTemplate
+            .postForEntity(
+                "/api/v1/products",
+                new ProductRequest(
+                    "RS-" + suffix,
+                    "Restock Plant",
+                    "restock-plant-" + suffix,
+                    null,
+                    category.id(),
+                    5000L,
+                    Currency.BYN,
+                    ProductStatus.PUBLISHED,
+                    CareLevel.EASY,
+                    LightLevel.MEDIUM,
+                    true,
+                    false,
+                    null,
+                    null),
+                ProductResponse.class)
+            .getBody();
+    assertThat(product).isNotNull();
+
+    VariantResponse variant =
+        restTemplate
+            .postForEntity(
+                "/api/v1/products/" + product.id() + "/variants",
+                new VariantRequest(
+                    "RS-SKU-" + suffix,
+                    "Restock variant",
+                    null,
+                    null,
+                    null,
+                    5000L,
+                    Currency.BYN,
+                    VariantStatus.ACTIVE),
+                VariantResponse.class)
+            .getBody();
+    assertThat(variant).isNotNull();
+
+    String email = "restock-" + suffix + "@example.test";
+    RestockSubscriptionResponse subscription =
+        restTemplate
+            .postForEntity(
+                "/api/v1/restock-subscriptions",
+                new RestockSubscriptionRequest(RestockTargetType.VARIANT, variant.id(), email),
+                RestockSubscriptionResponse.class)
+            .getBody();
+    assertThat(subscription).isNotNull();
+    assertThat(subscription.status()).isEqualTo(RestockSubscriptionStatus.PENDING);
+
+    ResponseEntity<String> duplicate =
+        restTemplate.postForEntity(
+            "/api/v1/restock-subscriptions",
+            new RestockSubscriptionRequest(RestockTargetType.VARIANT, variant.id(), email),
+            String.class);
+    assertThat(duplicate.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+    StockBatchResponse batch =
+        restTemplate
+            .postForEntity(
+                "/api/v1/stock-batches",
+                new StockBatchRequest(
+                    variant.id(),
+                    "Restock Supplier",
+                    3,
+                    1000L,
+                    Currency.BYN,
+                    null,
+                    Instant.now().plus(1, ChronoUnit.DAYS)),
+                StockBatchResponse.class)
+            .getBody();
+    assertThat(batch).isNotNull();
+
+    ResponseEntity<String> released =
+        restTemplate.postForEntity(
+            "/api/v1/stock-batches/" + batch.id() + "/release", null, String.class);
+    assertThat(released.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+    RestockSubscriptionResponse notified =
+        restTemplate
+            .getForEntity(
+                "/api/v1/restock-subscriptions/" + subscription.id(),
+                RestockSubscriptionResponse.class)
+            .getBody();
+    assertThat(notified).isNotNull();
+    assertThat(notified.status()).isEqualTo(RestockSubscriptionStatus.NOTIFIED);
+    assertThat(notified.notifiedAt()).isNotNull();
+
+    ResponseEntity<String> subscribeWhenAvailable =
+        restTemplate.postForEntity(
+            "/api/v1/restock-subscriptions",
+            new RestockSubscriptionRequest(RestockTargetType.VARIANT, variant.id(), email),
+            String.class);
+    assertThat(subscribeWhenAvailable.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+
+    ReservationResponse reservation =
+        restTemplate
+            .postForEntity(
+                "/api/v1/reservations",
+                new ReservationRequest(
+                    UUID.randomUUID(),
+                    List.of(
+                        new ReservationItemRequest(
+                            ReservationTargetType.VARIANT, variant.id(), 1))),
+                ReservationResponse.class)
+            .getBody();
+    assertThat(reservation).isNotNull();
+    assertThat(reservation.reservations()).hasSize(1);
   }
 
   @Test

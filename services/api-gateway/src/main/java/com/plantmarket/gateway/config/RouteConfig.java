@@ -27,11 +27,16 @@ public class RouteConfig {
                         "/api/v1/products/**",
                         "/api/v1/variants/**",
                         "/api/v1/individual-plants/**",
-                        "/api/v1/stock-batches/**")
+                        "/api/v1/stock-batches/**",
+                        "/api/v1/reservations/**",
+                        "/api/v1/restock-subscriptions/**")
                     .uri(catalogUri))
         .route(
             "order-service",
-            route -> route.path("/api/v1/orders/**", "/api/v1/shipping/**").uri(orderUri))
+            route ->
+                route
+                    .path("/api/v1/orders/**", "/api/v1/shipping/**", "/api/v1/claims/**")
+                    .uri(orderUri))
         .build();
   }
 }

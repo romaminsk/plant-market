@@ -20,11 +20,15 @@ public class StockBatchService {
 
   private final StockBatchRepository batchRepository;
   private final ProductVariantRepository variantRepository;
+  private final RestockSubscriptionService restockService;
 
   public StockBatchService(
-      StockBatchRepository batchRepository, ProductVariantRepository variantRepository) {
+      StockBatchRepository batchRepository,
+      ProductVariantRepository variantRepository,
+      RestockSubscriptionService restockService) {
     this.batchRepository = batchRepository;
     this.variantRepository = variantRepository;
+    this.restockService = restockService;
   }
 
   @Transactional(readOnly = true)
@@ -71,6 +75,7 @@ public class StockBatchService {
       throw ApiException.conflict("Only quarantine batches can be released");
     }
     batch.release();
+    restockService.notifyVariantAvailable(batch.getProductVariant().getId());
     return toResponse(batch);
   }
 
@@ -81,7 +86,11 @@ public class StockBatchService {
       throw ApiException.badRequest(
           "remainingQuantity cannot exceed batch quantity " + batch.getQuantity());
     }
+    boolean increased = remainingQuantity > batch.getRemainingQuantity();
     batch.adjustRemaining(remainingQuantity);
+    if (increased) {
+      restockService.notifyVariantAvailable(batch.getProductVariant().getId());
+    }
     return toResponse(batch);
   }
 

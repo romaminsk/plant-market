@@ -24,6 +24,7 @@ class OrderApiE2ETest {
       System.getenv().getOrDefault("E2E_API_URL", "http://localhost:8080");
   private final HttpClient client = HttpClient.newHttpClient();
   private static String cachedToken;
+  private static String cachedAdminToken;
 
   @Test
   void createCheckoutAndCancelOrderReleasesReservation() throws Exception {
@@ -75,6 +76,44 @@ class OrderApiE2ETest {
 
     JsonNode paid = post("/api/v1/orders/" + orderId + "/pay", token, Map.of());
     assertThat(paid.path("status").asString()).isEqualTo("PAID");
+  }
+
+  @Test
+  void openClaimAndOperatorDecision() throws Exception {
+    String token = login();
+    String variantId = seedVariantId();
+    JsonNode created =
+        post(
+            "/api/v1/orders",
+            token,
+            Map.of("items", java.util.List.of(Map.of("variantId", variantId, "quantity", 1))));
+    String orderId = created.path("id").asString();
+    post("/api/v1/orders/" + orderId + "/checkout", token, Map.of());
+    JsonNode paid = post("/api/v1/orders/" + orderId + "/pay", token, Map.of());
+    assertThat(paid.path("status").asString()).isEqualTo("PAID");
+
+    HttpResponse<String> claimResponse =
+        postRaw(
+            "/api/v1/orders/" + orderId + "/claims",
+            token,
+            Map.of(
+                "reason",
+                "Damaged leaf on delivery",
+                "photoUrls",
+                java.util.List.of("https://example.test/photo-1.jpg")));
+    assertThat(claimResponse.statusCode()).isEqualTo(201);
+    JsonNode claim = OBJECT_MAPPER.readTree(claimResponse.body());
+    assertThat(claim.path("status").asString()).isEqualTo("OPEN");
+    String claimId = claim.path("id").asString();
+
+    String adminToken = adminLogin();
+    JsonNode decided =
+        post(
+            "/api/v1/claims/" + claimId + "/decision",
+            adminToken,
+            Map.of("decision", "REPLACEMENT", "comment", "Replacement approved"));
+    assertThat(decided.path("status").asString()).isEqualTo("REPLACEMENT");
+    assertThat(decided.path("decidedAt").isNull()).isFalse();
   }
 
   @Test
@@ -144,6 +183,19 @@ class OrderApiE2ETest {
             Map.of("email", "customer@plantmarket.local", "password", "CustomerPassword123!"));
     cachedToken = response.path("accessToken").asString();
     return cachedToken;
+  }
+
+  private String adminLogin() throws Exception {
+    if (cachedAdminToken != null) {
+      return cachedAdminToken;
+    }
+    JsonNode response =
+        post(
+            "/api/v1/auth/login",
+            null,
+            Map.of("email", "admin@plantmarket.local", "password", "AdminPassword123!"));
+    cachedAdminToken = response.path("accessToken").asString();
+    return cachedAdminToken;
   }
 
   private JsonNode get(String path, String token) throws Exception {

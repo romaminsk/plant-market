@@ -1,6 +1,7 @@
 package com.plantmarket.gateway.config;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -14,6 +15,7 @@ import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.header.ReferrerPolicyServerHttpHeadersWriter;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -33,13 +35,24 @@ public class SecurityConfig {
     return http.csrf(ServerHttpSecurity.CsrfSpec::disable)
         .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
         .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
+        .headers(headers ->
+            headers
+                .hsts(hsts -> hsts.includeSubdomains(true).maxAge(Duration.ofDays(365)))
+                .contentTypeOptions(Customizer.withDefaults())
+                .referrerPolicy(referrer ->
+                    referrer.policy(
+                        ReferrerPolicyServerHttpHeadersWriter.ReferrerPolicy.NO_REFERRER))
+                .permissionsPolicy(
+                    permissions -> permissions.policy("geolocation=(), microphone=(), camera=()"))
+                .contentSecurityPolicy(
+                    csp -> csp.policyDirectives("default-src 'none'; frame-ancestors 'none'")))
         .authorizeExchange(exchange ->
             exchange
                 .pathMatchers(HttpMethod.OPTIONS, "/**")
                 .permitAll()
                 .pathMatchers("/actuator/health/**", "/actuator/info")
                 .permitAll()
-                .pathMatchers("/api/v1/auth/**")
+                .pathMatchers("/api/v1/auth/**", "/api/v1/restock-subscriptions/**")
                 .permitAll()
                 .pathMatchers(
                     HttpMethod.GET,

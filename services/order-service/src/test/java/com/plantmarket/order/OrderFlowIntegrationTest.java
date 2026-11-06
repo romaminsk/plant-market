@@ -14,9 +14,15 @@ import com.plantmarket.order.client.PaymentClient;
 import com.plantmarket.order.client.PaymentResult;
 import com.plantmarket.order.client.ReservationRequest;
 import com.plantmarket.order.client.ReservationResult;
+import com.plantmarket.order.domain.ClaimDecision;
+import com.plantmarket.order.domain.ClaimStatus;
+import com.plantmarket.order.domain.OrderStatus;
 import com.plantmarket.order.notification.OutboxPublisher;
 import com.plantmarket.order.repository.OutboxEventRepository;
 import com.plantmarket.order.web.dto.CheckoutRequest;
+import com.plantmarket.order.web.dto.ClaimDecisionRequest;
+import com.plantmarket.order.web.dto.ClaimRequest;
+import com.plantmarket.order.web.dto.ClaimResponse;
 import com.plantmarket.order.web.dto.CreateOrderItemRequest;
 import com.plantmarket.order.web.dto.CreateOrderRequest;
 import com.plantmarket.order.web.dto.OrderResponse;
@@ -221,6 +227,81 @@ class OrderFlowIntegrationTest {
     assertThat(accepted.getBody().thermalPack()).isTrue();
   }
 
+  @Test
+  void customerOpensClaimAndAdminDecidesReplacement() {
+    UUID customerId = UUID.randomUUID();
+    HttpHeaders headers = headers(customerId);
+    UUID orderId = createVariantOrder(headers);
+    restTemplate.exchange(
+        "/api/v1/orders/" + orderId + "/checkout",
+        HttpMethod.POST,
+        new HttpEntity<>(headers),
+        OrderResponse.class);
+    ResponseEntity<OrderResponse> paid =
+        restTemplate.exchange(
+            "/api/v1/orders/" + orderId + "/pay",
+            HttpMethod.POST,
+            new HttpEntity<>(headers),
+            OrderResponse.class);
+    assertThat(paid.getBody()).isNotNull();
+    assertThat(paid.getBody().status()).isEqualTo(OrderStatus.PAID);
+
+    ResponseEntity<ClaimResponse> opened =
+        restTemplate.exchange(
+            "/api/v1/orders/" + orderId + "/claims",
+            HttpMethod.POST,
+            new HttpEntity<>(
+                new ClaimRequest(
+                    "Damaged leaf on delivery", List.of("https://example.test/photo-1.jpg")),
+                headers),
+            ClaimResponse.class);
+    assertThat(opened.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    assertThat(opened.getBody()).isNotNull();
+    assertThat(opened.getBody().status()).isEqualTo(ClaimStatus.OPEN);
+    assertThat(opened.getBody().photoUrls()).containsExactly("https://example.test/photo-1.jpg");
+    UUID claimId = opened.getBody().id();
+
+    ResponseEntity<ClaimResponse[]> claims =
+        restTemplate.exchange(
+            "/api/v1/orders/" + orderId + "/claims",
+            HttpMethod.GET,
+            new HttpEntity<>(headers),
+            ClaimResponse[].class);
+    assertThat(claims.getBody()).extracting(ClaimResponse::id).contains(claimId);
+
+    ResponseEntity<ClaimResponse> decided =
+        restTemplate.exchange(
+            "/api/v1/claims/" + claimId + "/decision",
+            HttpMethod.POST,
+            new HttpEntity<>(
+                new ClaimDecisionRequest(ClaimDecision.REPLACEMENT, "Replacement approved"),
+                adminHeaders()),
+            ClaimResponse.class);
+    assertThat(decided.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(decided.getBody()).isNotNull();
+    assertThat(decided.getBody().status()).isEqualTo(ClaimStatus.REPLACEMENT);
+    assertThat(decided.getBody().decidedAt()).isNotNull();
+
+    ResponseEntity<String> secondDecision =
+        restTemplate.exchange(
+            "/api/v1/claims/" + claimId + "/decision",
+            HttpMethod.POST,
+            new HttpEntity<>(new ClaimDecisionRequest(ClaimDecision.REFUND, null), adminHeaders()),
+            String.class);
+    assertThat(secondDecision.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+
+    UUID draftOrderId = createVariantOrder(headers);
+    ResponseEntity<String> rejected =
+        restTemplate.exchange(
+            "/api/v1/orders/" + draftOrderId + "/claims",
+            HttpMethod.POST,
+            new HttpEntity<>(
+                new ClaimRequest("Damaged leaf", List.of("https://example.test/photo-2.jpg")),
+                headers),
+            String.class);
+    assertThat(rejected.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+  }
+
   private UUID createVariantOrder(HttpHeaders headers) {
     ResponseEntity<OrderResponse> created =
         restTemplate.exchange(
@@ -240,11 +321,22 @@ class OrderFlowIntegrationTest {
     return headers;
   }
 
+  private HttpHeaders adminHeaders() {
+    HttpHeaders headers = new HttpHeaders();
+    headers.setBearerAuth(token(UUID.randomUUID(), List.of("ADMIN")));
+    return headers;
+  }
+
   private String token(UUID customerId) {
+    return token(customerId, List.of());
+  }
+
+  private String token(UUID customerId, List<String> roles) {
     try {
       JWTClaimsSet claims =
           new JWTClaimsSet.Builder()
               .subject(customerId.toString())
+              .claim("roles", roles)
               .issueTime(new Date())
               .expirationTime(Date.from(Instant.now().plusSeconds(300)))
               .build();

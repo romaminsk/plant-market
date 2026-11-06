@@ -13,6 +13,7 @@ servers:
 
 tags:
   - name: orders
+  - name: claims
 
 paths:
   /api/v1/orders:
@@ -146,6 +147,137 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
 
+  /api/v1/orders/{orderId}/claims:
+    parameters:
+      - name: orderId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: openClaim
+      tags: [claims]
+      summary: Open a damaged plant claim for a paid order
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClaimResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Claims are only allowed for paid orders
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+    get:
+      operationId: listOrderClaims
+      tags: [claims]
+      summary: List claims for an order of the current customer
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Claims
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClaimResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/claims:
+    get:
+      operationId: listClaims
+      tags: [claims]
+      summary: List claims (staff)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [OPEN, REPLACEMENT, REFUND, REJECTED]
+      responses:
+        '200':
+          description: Claims
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClaimResponse'
+
+  /api/v1/claims/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ClaimId'
+    get:
+      operationId: getClaim
+      tags: [claims]
+      summary: Get a claim (staff)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Claim
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClaimResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/claims/{id}/decision:
+    parameters:
+      - $ref: '#/components/parameters/ClaimId'
+    post:
+      operationId: decideClaim
+      tags: [claims]
+      summary: Decide an open claim (staff)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimDecisionRequest'
+      responses:
+        '200':
+          description: Decided claim
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClaimResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Claim is already decided
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
   /api/v1/shipping/zones:
     get:
       operationId: listShippingZones
@@ -231,6 +363,13 @@ components:
 
   parameters:
     OrderId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ClaimId:
       name: id
       in: path
       required: true
@@ -484,6 +623,72 @@ components:
           type: string
           format: date-time
         updatedAt:
+          type: string
+          format: date-time
+
+    ClaimRequest:
+      type: object
+      additionalProperties: false
+      required: [reason, photoUrls]
+      properties:
+        reason:
+          type: string
+          maxLength: 2000
+        photoUrls:
+          type: array
+          minItems: 1
+          maxItems: 8
+          items:
+            type: string
+            maxLength: 1000
+
+    ClaimDecision:
+      type: string
+      enum: [REPLACEMENT, REFUND, REJECT]
+
+    ClaimDecisionRequest:
+      type: object
+      additionalProperties: false
+      required: [decision]
+      properties:
+        decision:
+          $ref: '#/components/schemas/ClaimDecision'
+        comment:
+          type: string
+          maxLength: 2000
+
+    ClaimResponse:
+      type: object
+      additionalProperties: false
+      required: [id, orderId, customerId, status, reason, photoUrls, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        orderId:
+          type: string
+          format: uuid
+        customerId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [OPEN, REPLACEMENT, REFUND, REJECTED]
+        reason:
+          type: string
+        photoUrls:
+          type: array
+          items:
+            type: string
+        decisionComment:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        decidedAt:
           type: string
           format: date-time
 
