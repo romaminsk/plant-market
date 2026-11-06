@@ -20,9 +20,6 @@ services:
   mailhog:
     ports: !reset []
 
-  auth-service:
-    ports: !reset []
-
   catalog-service:
     ports: !reset []
 

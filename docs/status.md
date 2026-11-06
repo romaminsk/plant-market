@@ -81,6 +81,7 @@
 - CI run `42187187601` — success, E2E 11/11 с care-напоминаниями.
 - CI run `42188535932` — success, E2E 12/12 с media uploads и waitlist UI.
 - CI run `42189452781` — success, E2E 12/12 с outbox retry.
+- CI run `42191984783` — success, E2E 14/14 с админ-редактором галереи и панелью претензий.
 
 ### Phase 3 — WYSIWYG-галерея (✅ первый шаг)
 
@@ -141,6 +142,26 @@
 - E2E: создание, список, отключение; integration-тест проверяет отправку due-напоминания через
   мок `JavaMailSender` и 409 для неоплаченного заказа.
 
+### Phase 3 — storefront checkout MVP (✅)
+
+- OAuth2 PKCE через BFF в Next.js: `/api/auth/login` → auth-service `/oauth2/authorize` →
+  `/auth/callback` (обмен code → tokens, httpOnly cookies) → `/checkout`.
+- `POST /api/checkout`: create → checkout (зона/термоупаковка) → pay; ошибки order-service
+  пробрасываются как JSON.
+- Страница `/checkout` показывает зоны, зимнюю термоупаковку и итог; кнопка «Купить сейчас» на
+  карточке растения. Мульти-корзина и история заказов — следующая итерация (ADR-0013).
+- E2E `CheckoutFlowE2ETest`: гость → карточка → логин через форму auth-service → checkout →
+  sandbox pay → «Заказ оплачен».
+- Auth-service принимает redirect URI для storefront на `:3000` и `:3100` (dev/E2E).
+
+### Phase 3 — A15 perf smoke (✅ локально)
+
+- `scripts/perf-smoke.sh` измеряет p50/p95 через gateway для каталога, растений и зон доставки.
+- Локальный прогон (10 запросов на путь): products p95 191 ms, plants p95 28 ms, zones p95 68 ms
+  при бюджете 500 ms; скрипт возвращает non-zero при превышении.
+- На staging метрики нужно снимать под нагрузкой (k6/Playwright) и сравнивать с A15; это
+  следующий шаг после появления staging-окружения.
+
 ## Тесты и покрытие
 
 | Модуль            | Тесты | Line coverage |
@@ -151,14 +172,14 @@
 | `order-service`   |     5 |           77% |
 | `payment-service` |     1 |           77% |
 | `api-gateway`     |     8 |           97% |
-| `tests:e2e`       |    14 |             — |
+| `tests:e2e`       |    15 |             — |
 
-Итого **34 backend-теста + 14 E2E = 48 тестов, 0 падений**. JaCoCo-порог 70% проходит.
+Итого **34 backend-теста + 15 E2E = 49 тестов, 0 падений**. JaCoCo-порог 70% проходит.
 
 ## Следующие 3 шага
 
-1. Phase 3: redrive dead-letter и UI загрузки фото для претензий.
-2. Phase 3: staging-метрики A1 и p95 в бюджете A15; замена volume на MinIO/S3.
+1. Storefront: мульти-корзина, история заказов, refresh токена и CSRF для BFF (ADR-0013).
+2. Phase 3: redrive dead-letter, staging A1/A15, замена volume на MinIO/S3.
 3. Юридический A11 (L1–L8): передать владельцу/юристу; до подписи prod запрещён.
 
 ## Блокеры и риски
@@ -174,6 +195,8 @@
 - Уведомления restock/claims best-effort: нет retry/dead-letter; при недоступном SMTP письмо
   теряется (статус подписки/претензии при этом сохраняется). Order-уведомления ретраятся (ADR-0012).
 - Outbox at-least-once: возможны дубли писем; dead-letter без автоматического redrive.
+- Storefront checkout — MVP «Купить сейчас»: нет мульти-корзины, истории заказов и
+  автоматического refresh токена в BFF; CSRF для BFF POST ещё не добавлен (ADR-0013).
 - Фото принимаются как URL; API загрузки есть, UI загрузки в админке — следующий шаг.
 - Media volume не реплицируется и не бэкапится; публичные файлы без content sniffing (ADR-0011).
 - Галерея в seed использует placehold.co; фотостандарт (нейтральный фон, линейка, 4 ракурса)
@@ -201,3 +224,5 @@
   заменой bean, API `/api/v1/media` не меняется (ADR-0011).
 - **Ruling:** order-уведомления ретраятся через outbox (5 попыток, backoff, dead-letter);
   claim/restock остаются best-effort (ADR-0012).
+- **Ruling:** checkout — BFF в Next.js с OAuth2 PKCE и httpOnly cookies; MVP «Купить сейчас»,
+  мульти-корзина и refresh — следующая итерация (ADR-0013).

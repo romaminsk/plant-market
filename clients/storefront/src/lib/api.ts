@@ -65,6 +65,18 @@ export interface IndividualPlantPage {
   totalPages: number;
 }
 
+export interface ShippingZone {
+  id: string;
+  name: string;
+  city: string;
+  priceMinor: number;
+  freeFromMinor: number;
+  minDays: number;
+  maxDays: number;
+  winterRequiresThermal: boolean;
+  thermalPackMinor: number;
+}
+
 export interface PlantFilters {
   variegated?: boolean;
   light?: string;
@@ -121,6 +133,14 @@ export async function fetchIndividualPlant(id: string): Promise<IndividualPlant>
     throw new Error(`Individual plant request failed with status ${response.status}`);
   }
   return (await response.json()) as IndividualPlant;
+}
+
+export async function fetchShippingZones(): Promise<ShippingZone[]> {
+  const response = await fetch(`${API_URL}/api/v1/shipping/zones`, { cache: 'no-store' });
+  if (!response.ok) {
+    throw new Error(`Shipping zones request failed with status ${response.status}`);
+  }
+  return (await response.json()) as ShippingZone[];
 }
 
 export function formatPrice(priceMinor: number, currency: string): string {

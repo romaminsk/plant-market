@@ -154,10 +154,11 @@ public class SecurityConfig {
         registeredClient(
             "storefront",
             "Plant Market Storefront",
+            properties,
             "http://localhost:3000/auth/callback",
-            properties),
+            "http://localhost:3100/auth/callback"),
         registeredClient(
-            "admin", "Plant Market Admin", "http://localhost:5173/auth/callback", properties));
+            "admin", "Plant Market Admin", properties, "http://localhost:5173/auth/callback"));
   }
 
   @Bean
@@ -195,14 +196,18 @@ public class SecurityConfig {
   }
 
   private RegisteredClient registeredClient(
-      String clientId, String clientName, String redirectUri, JwtProperties properties) {
-    return RegisteredClient.withId(clientId)
-        .clientId(clientId)
-        .clientName(clientName)
-        .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
-        .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-        .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-        .redirectUri(redirectUri)
+      String clientId, String clientName, JwtProperties properties, String... redirectUris) {
+    RegisteredClient.Builder builder =
+        RegisteredClient.withId(clientId)
+            .clientId(clientId)
+            .clientName(clientName)
+            .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
+            .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+            .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN);
+    for (String redirectUri : redirectUris) {
+      builder.redirectUri(redirectUri);
+    }
+    return builder
         .scope("catalog.read")
         .scope("catalog.write")
         .clientSettings(
