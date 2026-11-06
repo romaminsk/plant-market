@@ -23,6 +23,7 @@ class OrderApiE2ETest {
   private final String apiUrl =
       System.getenv().getOrDefault("E2E_API_URL", "http://localhost:8080");
   private final HttpClient client = HttpClient.newHttpClient();
+  private static String cachedToken;
 
   @Test
   void createCheckoutAndCancelOrderReleasesReservation() throws Exception {
@@ -133,12 +134,16 @@ class OrderApiE2ETest {
   }
 
   private String login() throws Exception {
+    if (cachedToken != null) {
+      return cachedToken;
+    }
     JsonNode response =
         post(
             "/api/v1/auth/login",
             null,
             Map.of("email", "customer@plantmarket.local", "password", "CustomerPassword123!"));
-    return response.path("accessToken").asString();
+    cachedToken = response.path("accessToken").asString();
+    return cachedToken;
   }
 
   private JsonNode get(String path, String token) throws Exception {
