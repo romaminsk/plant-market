@@ -23,6 +23,7 @@ import com.plantmarket.order.repository.ShippingZoneRepository;
 import com.plantmarket.order.web.dto.CheckoutRequest;
 import com.plantmarket.order.web.dto.CreateOrderItemRequest;
 import com.plantmarket.order.web.dto.CreateOrderRequest;
+import com.plantmarket.order.web.dto.OrderHistoryEntry;
 import com.plantmarket.order.web.dto.OrderItemResponse;
 import com.plantmarket.order.web.dto.OrderResponse;
 import java.util.List;
@@ -180,6 +181,14 @@ public class OrderService {
   @Transactional(readOnly = true)
   public OrderResponse get(UUID customerId, UUID orderId) {
     return toResponse(findOwned(customerId, orderId));
+  }
+
+  @Transactional(readOnly = true)
+  public List<OrderHistoryEntry> history(UUID customerId, UUID orderId) {
+    findOwned(customerId, orderId);
+    return historyRepository.findByOrderIdOrderByCreatedAtAsc(orderId).stream()
+        .map(entry -> new OrderHistoryEntry(entry.getStatus(), entry.getCreatedAt()))
+        .toList();
   }
 
   @Transactional(readOnly = true)

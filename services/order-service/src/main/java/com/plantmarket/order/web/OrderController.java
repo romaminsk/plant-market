@@ -3,6 +3,7 @@ package com.plantmarket.order.web;
 import com.plantmarket.order.service.OrderService;
 import com.plantmarket.order.web.dto.CheckoutRequest;
 import com.plantmarket.order.web.dto.CreateOrderRequest;
+import com.plantmarket.order.web.dto.OrderHistoryEntry;
 import com.plantmarket.order.web.dto.OrderResponse;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -38,6 +39,11 @@ public class OrderController {
   @GetMapping
   public List<OrderResponse> list(@AuthenticationPrincipal Jwt jwt) {
     return orderService.list(customerId(jwt));
+  }
+
+  @GetMapping("/{id}/history")
+  public List<OrderHistoryEntry> history(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
+    return orderService.history(customerId(jwt), id);
   }
 
   @GetMapping("/{id}")

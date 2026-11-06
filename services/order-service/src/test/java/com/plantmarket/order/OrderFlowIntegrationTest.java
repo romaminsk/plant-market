@@ -34,6 +34,7 @@ import com.plantmarket.order.web.dto.ClaimRequest;
 import com.plantmarket.order.web.dto.ClaimResponse;
 import com.plantmarket.order.web.dto.CreateOrderItemRequest;
 import com.plantmarket.order.web.dto.CreateOrderRequest;
+import com.plantmarket.order.web.dto.OrderHistoryEntry;
 import com.plantmarket.order.web.dto.OrderResponse;
 import com.plantmarket.order.web.dto.OutboxEventResponse;
 import com.plantmarket.order.web.dto.ShippingZoneRequest;
@@ -186,6 +187,16 @@ class OrderFlowIntegrationTest {
         restTemplate.exchange(
             "/api/v1/orders", HttpMethod.GET, new HttpEntity<>(headers), OrderResponse[].class);
     assertThat(list.getBody()).hasSize(2);
+
+    ResponseEntity<OrderHistoryEntry[]> history =
+        restTemplate.exchange(
+            "/api/v1/orders/" + secondId + "/history",
+            HttpMethod.GET,
+            new HttpEntity<>(headers),
+            OrderHistoryEntry[].class);
+    assertThat(history.getBody())
+        .extracting(OrderHistoryEntry::status)
+        .containsExactly(OrderStatus.DRAFT, OrderStatus.PENDING_PAYMENT, OrderStatus.CANCELLED);
   }
 
   @Test

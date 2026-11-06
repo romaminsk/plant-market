@@ -143,6 +143,13 @@
 - E2E: создание, список, отключение; integration-тест проверяет отправку due-напоминания через
   мок `JavaMailSender` и 409 для неоплаченного заказа.
 
+### Phase 3 — timeline заказа (✅)
+
+- `GET /api/v1/orders/{id}/history` — статусы заказа с временем (DRAFT → PENDING_PAYMENT → PAID
+  → CANCELLED и т.д.), только владелец.
+- Storefront `/account/orders/{id}` показывает timeline; E2E проверяет его после оплаты.
+- Integration-тест проверяет порядок статусов для отменённого заказа.
+
 ### Phase 3 — адрес доставки (✅)
 
 - `orders.delivery_address` (V6); checkout с зоной требует непустой адрес, иначе 400.

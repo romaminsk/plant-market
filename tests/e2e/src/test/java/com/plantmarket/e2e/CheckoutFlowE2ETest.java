@@ -80,6 +80,12 @@ class CheckoutFlowE2ETest extends PlaywrightTestBase {
         .waitFor();
     page.getByText(orderId.substring(orderId.length() - 8)).first().waitFor();
     page.getByText("PAID").first().waitFor();
+    page.locator(".order-card h2 a").first().click();
+    page.getByRole(
+            AriaRole.LIST,
+            new com.microsoft.playwright.Page.GetByRoleOptions().setName("История статусов"))
+        .waitFor();
+    assertThat(page.locator(".order-timeline").innerText()).contains("PAID");
   }
 
   private void addToCart(String plantId) {

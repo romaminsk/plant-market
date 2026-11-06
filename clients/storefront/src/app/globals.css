@@ -379,6 +379,23 @@ button.secondary {
   border-radius: 14px;
 }
 
+.order-timeline {
+  display: grid;
+  gap: 0.35rem;
+  margin: 1rem 0;
+  padding-left: 1.1rem;
+}
+
+.order-timeline li {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+}
+
+.order-timeline span {
+  font-size: 0.8rem;
+}
+
 .order-card h2 {
   margin: 0.15rem 0;
   font-size: 1rem;

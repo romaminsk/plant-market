@@ -40,6 +40,13 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
     return <p className="error">Заказ не найден (HTTP {response.status}).</p>;
   }
   const order = (await response.json()) as OrderDetail;
+  const historyResponse = await fetch(`${apiUrl()}/api/v1/orders/${id}/history`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+  });
+  const history = historyResponse.ok
+    ? ((await historyResponse.json()) as { status: string; at: string }[])
+    : [];
   return (
     <section>
       <Link className="back-link" href="/account/orders">
@@ -49,6 +56,16 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       <p className="muted">
         {new Date(order.createdAt).toLocaleString('be-BY')} · {order.status}
       </p>
+      {history.length > 0 ? (
+        <ol className="order-timeline" aria-label="История статусов">
+          {history.map((entry) => (
+            <li key={`${entry.status}-${entry.at}`}>
+              <strong>{entry.status}</strong>
+              <span className="muted">{new Date(entry.at).toLocaleString('be-BY')}</span>
+            </li>
+          ))}
+        </ol>
+      ) : null}
       <ul className="cart-list">
         {order.items.map((item) => (
           <li key={item.id} className="cart-item">
