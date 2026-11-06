@@ -14,6 +14,7 @@ fi
 ./gradlew \
     :services:auth-service:bootJar \
     :services:catalog-service:bootJar \
+    :services:order-service:bootJar \
     :services:api-gateway:bootJar \
     --console=plain
 

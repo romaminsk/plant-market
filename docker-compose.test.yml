@@ -25,3 +25,6 @@ services:
 
   catalog-service:
     ports: !reset []
+
+  order-service:
+    ports: !reset []

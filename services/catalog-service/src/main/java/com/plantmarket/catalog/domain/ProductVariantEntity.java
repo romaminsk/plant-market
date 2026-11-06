@@ -43,6 +43,9 @@ public class ProductVariantEntity {
   @Column(name = "price_minor", nullable = false)
   private long priceMinor;
 
+  @Column(name = "reserved_quantity", nullable = false)
+  private int reservedQuantity;
+
   @Enumerated(EnumType.STRING)
   @Column(name = "currency", length = 3, nullable = false)
   private Currency currency;
@@ -118,6 +121,20 @@ public class ProductVariantEntity {
     this.status = VariantStatus.ARCHIVED;
   }
 
+  public void reserve(int quantity) {
+    if (quantity <= 0) {
+      throw new IllegalArgumentException("quantity must be positive");
+    }
+    this.reservedQuantity += quantity;
+  }
+
+  public void release(int quantity) {
+    if (quantity <= 0 || quantity > reservedQuantity) {
+      throw new IllegalArgumentException("invalid release quantity");
+    }
+    this.reservedQuantity -= quantity;
+  }
+
   public UUID getId() {
     return id;
   }
@@ -148,6 +165,10 @@ public class ProductVariantEntity {
 
   public long getPriceMinor() {
     return priceMinor;
+  }
+
+  public int getReservedQuantity() {
+    return reservedQuantity;
   }
 
   public Currency getCurrency() {

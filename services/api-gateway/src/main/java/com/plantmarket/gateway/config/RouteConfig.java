@@ -13,7 +13,8 @@ public class RouteConfig {
   public RouteLocator routes(
       RouteLocatorBuilder builder,
       @Value("${app.gateway.auth-uri}") String authUri,
-      @Value("${app.gateway.catalog-uri}") String catalogUri) {
+      @Value("${app.gateway.catalog-uri}") String catalogUri,
+      @Value("${app.gateway.order-uri}") String orderUri) {
     return builder
         .routes()
         .route("auth-service", route -> route.path("/api/v1/auth/**").uri(authUri))
@@ -28,6 +29,7 @@ public class RouteConfig {
                         "/api/v1/individual-plants/**",
                         "/api/v1/stock-batches/**")
                     .uri(catalogUri))
+        .route("order-service", route -> route.path("/api/v1/orders/**").uri(orderUri))
         .build();
   }
 }

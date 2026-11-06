@@ -27,6 +27,10 @@ tasks.test {
         providers.environmentVariable("E2E_ADMIN_URL").getOrElse(""),
     )
     environment(
+        "E2E_API_URL",
+        providers.environmentVariable("E2E_API_URL").getOrElse("http://localhost:8080"),
+    )
+    environment(
         "E2E_ADMIN_EMAIL",
         providers.environmentVariable("E2E_ADMIN_EMAIL").getOrElse("admin@plantmarket.local"),
     )
