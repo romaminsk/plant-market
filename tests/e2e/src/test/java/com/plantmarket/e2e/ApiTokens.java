@@ -36,6 +36,14 @@ final class ApiTokens {
     return adminToken;
   }
 
+  static String freshAdmin(String apiUrl) throws Exception {
+    return login(apiUrl, "admin@plantmarket.local", "AdminPassword123!", "admin-fresh");
+  }
+
+  static String freshCustomer(String apiUrl) throws Exception {
+    return login(apiUrl, "qa.customer@plantmarket.local", "QaCustomer123!", "qa-customer-fresh");
+  }
+
   static synchronized String qaCustomer(String apiUrl) throws Exception {
     if (qaCustomerToken == null) {
       qaCustomerToken =

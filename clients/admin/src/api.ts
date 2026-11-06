@@ -336,9 +336,7 @@ export async function releaseStockBatch(accessToken: string, batchId: string): P
 }
 
 export function formatPrice(priceMinor: number, currency: string): string {
-  return new Intl.NumberFormat('be-BY', {
-    style: 'currency',
-    currency,
-    maximumFractionDigits: 2,
-  }).format(priceMinor / 100);
+  // Keep admin prices identical to the storefront regardless of browser ICU data.
+  const amount = (priceMinor / 100).toFixed(2).replace('.', ',');
+  return `${amount} ${currency === 'BYN' ? 'Br' : currency}`;
 }

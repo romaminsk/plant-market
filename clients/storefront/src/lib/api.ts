@@ -178,9 +178,7 @@ export function productImage(sku: string): string {
 }
 
 export function formatPrice(priceMinor: number, currency: string): string {
-  return new Intl.NumberFormat('be-BY', {
-    style: 'currency',
-    currency,
-    maximumFractionDigits: 2,
-  }).format(priceMinor / 100);
+  // Deterministic formatting: Node and Chromium ship different ICU data for be-BY.
+  const amount = (priceMinor / 100).toFixed(2).replace('.', ',');
+  return `${amount} ${currency === 'BYN' ? 'Br' : currency}`;
 }
