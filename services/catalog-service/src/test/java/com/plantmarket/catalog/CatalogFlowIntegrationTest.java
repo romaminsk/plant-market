@@ -15,6 +15,7 @@ import com.plantmarket.catalog.web.dto.CategoryRequest;
 import com.plantmarket.catalog.web.dto.CategoryResponse;
 import com.plantmarket.catalog.web.dto.IndividualPlantRequest;
 import com.plantmarket.catalog.web.dto.IndividualPlantResponse;
+import com.plantmarket.catalog.web.dto.MediaResponse;
 import com.plantmarket.catalog.web.dto.PlantPhotoRequest;
 import com.plantmarket.catalog.web.dto.ProductRequest;
 import com.plantmarket.catalog.web.dto.ProductResponse;
@@ -29,6 +30,7 @@ import com.plantmarket.catalog.web.dto.UpdatePlantPhotosRequest;
 import com.plantmarket.catalog.web.dto.VariantRequest;
 import com.plantmarket.catalog.web.dto.VariantResponse;
 import com.plantmarket.common.api.PageResponse;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -41,13 +43,17 @@ import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -55,6 +61,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 class CatalogFlowIntegrationTest {
 
   private static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:18.6");
+  private static final Path MEDIA_ROOT = Path.of("build", "test-media");
 
   @BeforeAll
   static void startDatabase() {
@@ -71,6 +78,8 @@ class CatalogFlowIntegrationTest {
     registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
     registry.add("spring.datasource.username", POSTGRES::getUsername);
     registry.add("spring.datasource.password", POSTGRES::getPassword);
+    registry.add("app.media.root", () -> MEDIA_ROOT.toAbsolutePath().toString());
+    registry.add("app.media.public-base-url", () -> "http://test.local/media");
   }
 
   @Autowired private TestRestTemplate restTemplate;
@@ -168,6 +177,45 @@ class CatalogFlowIntegrationTest {
         restTemplate.exchange(
             "/api/v1/categories/" + category.id(), HttpMethod.DELETE, null, String.class);
     assertThat(deleteCategory.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+  }
+
+  @Test
+  void uploadsImageAndServesItFromMediaPath() {
+    byte[] png = new byte[] {(byte) 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A, 1, 2, 3};
+    HttpHeaders partHeaders = new HttpHeaders();
+    partHeaders.setContentType(MediaType.IMAGE_PNG);
+    ByteArrayResource file =
+        new ByteArrayResource(png) {
+          @Override
+          public String getFilename() {
+            return "plant.png";
+          }
+        };
+    MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+    body.add("file", new HttpEntity<>(file, partHeaders));
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+    ResponseEntity<MediaResponse> uploaded =
+        restTemplate.postForEntity(
+            "/api/v1/media", new HttpEntity<>(body, headers), MediaResponse.class);
+    assertThat(uploaded.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    assertThat(uploaded.getBody()).isNotNull();
+    assertThat(uploaded.getBody().url()).startsWith("http://test.local/media/").endsWith(".png");
+
+    String path = uploaded.getBody().url().substring("http://test.local".length());
+    ResponseEntity<byte[]> fetched = restTemplate.getForEntity(path, byte[].class);
+    assertThat(fetched.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(fetched.getBody()).isEqualTo(png);
+
+    HttpHeaders textPart = new HttpHeaders();
+    textPart.setContentType(MediaType.TEXT_PLAIN);
+    MultiValueMap<String, Object> invalid = new LinkedMultiValueMap<>();
+    invalid.add("file", new HttpEntity<>(file, textPart));
+    ResponseEntity<String> rejected =
+        restTemplate.postForEntity(
+            "/api/v1/media", new HttpEntity<>(invalid, headers), String.class);
+    assertThat(rejected.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
   }
 
   @Test

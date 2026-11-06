@@ -19,6 +19,7 @@ tags:
   - name: individual-plants
   - name: stock-batches
   - name: restock
+  - name: media
 
 paths:
   /api/v1/categories:
@@ -690,6 +691,35 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /api/v1/media:
+    post:
+      operationId: uploadMedia
+      tags: [media]
+      summary: Upload a JPEG, PNG or WebP image (max 10 MB)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Stored image URL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -942,6 +972,15 @@ components:
     VariantStatus:
       type: string
       enum: [DRAFT, ACTIVE, ARCHIVED]
+
+    MediaResponse:
+      type: object
+      additionalProperties: false
+      required: [url]
+      properties:
+        url:
+          type: string
+          format: uri
 
     RestockTargetType:
       type: string
