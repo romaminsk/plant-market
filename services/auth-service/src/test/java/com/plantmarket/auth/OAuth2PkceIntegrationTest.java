@@ -88,6 +88,8 @@ class OAuth2PkceIntegrationTest {
 
     HttpResponse<String> loginPage = get(client, "/login");
     assertThat(loginPage.statusCode()).isEqualTo(200);
+    assertThat(loginPage.body()).contains("Личный кабинет", "name=\"username\"");
+    assertThat(get(client, "/fonts/manrope-400-latin.woff2").statusCode()).isEqualTo(200);
     Matcher csrf = CSRF_PATTERN.matcher(loginPage.body());
     assertThat(csrf.find()).isTrue();
 

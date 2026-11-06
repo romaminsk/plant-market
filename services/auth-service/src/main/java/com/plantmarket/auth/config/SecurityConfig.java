@@ -135,8 +135,11 @@ public class SecurityConfig {
   @Order(3)
   public SecurityFilterChain webSecurityFilterChain(HttpSecurity http) throws Exception {
     http.authorizeHttpRequests(auth ->
-            auth.requestMatchers("/login", "/error").permitAll().anyRequest().authenticated())
-        .formLogin(Customizer.withDefaults())
+            auth.requestMatchers("/login", "/error", "/fonts/**", "/images/**", "/favicon.ico")
+                .permitAll()
+                .anyRequest()
+                .authenticated())
+        .formLogin(form -> form.loginPage("/login").permitAll())
         .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()));
     return http.build();
   }
