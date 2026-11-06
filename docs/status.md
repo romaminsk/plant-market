@@ -143,6 +143,13 @@
 - E2E: создание, список, отключение; integration-тест проверяет отправку due-напоминания через
   мок `JavaMailSender` и 409 для неоплаченного заказа.
 
+### Phase 3 — redrive dead-letter (✅)
+
+- `GET /api/v1/admin/outbox/dead` и `POST /api/v1/admin/outbox/{id}/redrive` (ADMIN/OPERATOR/MANAGER).
+- Redrive сбрасывает `dead`, `published_at`, `attempts`, `last_error`, `next_attempt_at`; событие
+  снова попадает в обычный цикл публикации (ADR-0012).
+- Integration-тест: dead-событие → redrive → attempts=0, publishedAt=null; customer получает 403.
+
 ### Phase 3 — storefront checkout MVP (✅)
 
 - OAuth2 PKCE через BFF в Next.js: `/api/auth/login` → auth-service `/oauth2/authorize` →
@@ -171,17 +178,17 @@
 | `platform-common` |     9 |           74% |
 | `auth-service`    |     3 |           89% |
 | `catalog-service` |     8 |           85% |
-| `order-service`   |     5 |           77% |
+| `order-service`   |     6 |           78% |
 | `payment-service` |     1 |           77% |
 | `api-gateway`     |     8 |           97% |
 | `tests:e2e`       |    15 |             — |
 
-Итого **34 backend-теста + 15 E2E = 49 тестов, 0 падений**. JaCoCo-порог 70% проходит.
+Итого **35 backend-тестов + 15 E2E = 50 тестов, 0 падений**. JaCoCo-порог 70% проходит.
 
 ## Следующие 3 шага
 
-1. Storefront: мульти-корзина, история заказов, refresh токена и CSRF для BFF (ADR-0013).
-2. Phase 3: redrive dead-letter, staging A1/A15, замена volume на MinIO/S3.
+1. Storefront: refresh-rotation в BFF, адреса/слоты доставки, отзывы (ADR-0013).
+2. Phase 3: staging A1/A15, замена volume на MinIO/S3, content sniffing загрузок.
 3. Юридический A11 (L1–L8): передать владельцу/юристу; до подписи prod запрещён.
 
 ## Блокеры и риски
@@ -196,7 +203,8 @@
   владелец/юрист. Phase 2 закрыт по коду, но не является разрешением на prod.
 - Уведомления restock/claims best-effort: нет retry/dead-letter; при недоступном SMTP письмо
   теряется (статус подписки/претензии при этом сохраняется). Order-уведомления ретраятся (ADR-0012).
-- Outbox at-least-once: возможны дубли писем; dead-letter без автоматического redrive.
+- Outbox at-least-once: возможны дубли писем; dead-letter разбирается вручную через admin
+  redrive, автоматического redrive нет.
 - Storefront checkout — MVP «Купить сейчас»: нет мульти-корзины, истории заказов и
   автоматического refresh токена в BFF (ADR-0013).
 - Фото принимаются как URL; API загрузки есть, UI загрузки в админке — следующий шаг.

@@ -17,4 +17,6 @@ public interface OutboxEventRepository extends JpaRepository<OutboxEventEntity, 
           + "and (event.nextAttemptAt is null or event.nextAttemptAt <= :now) "
           + "order by event.createdAt asc")
   List<OutboxEventEntity> findPending(@Param("now") Instant now, Pageable pageable);
+
+  List<OutboxEventEntity> findByDeadTrueOrderByCreatedAtDesc();
 }

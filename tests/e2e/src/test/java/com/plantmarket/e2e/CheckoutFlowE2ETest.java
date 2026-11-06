@@ -18,7 +18,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 @Feature("J1 checkout")
-@Story("Guest logs in with OAuth2 PKCE and pays for a WYSIWYG plant")
+@Story("Guest fills a cart, logs in with OAuth2 PKCE, pays and sees order history")
 @EnabledIfEnvironmentVariable(named = "E2E_BASE_URL", matches = ".+")
 class CheckoutFlowE2ETest extends PlaywrightTestBase {
 
@@ -28,18 +28,26 @@ class CheckoutFlowE2ETest extends PlaywrightTestBase {
   private final HttpClient client = HttpClient.newHttpClient();
 
   @Test
-  void guestCanLoginAndPayForPlant() throws Exception {
-    String plantId = createAvailablePlant();
+  void guestCanLoginAndPayForCart() throws Exception {
+    String firstPlant = createAvailablePlant();
+    String secondPlant = createAvailablePlant();
 
-    page.navigate(baseUrl + "/plants/" + plantId);
+    addToCart(firstPlant);
+    addToCart(secondPlant);
     page.getByRole(
             AriaRole.LINK,
-            new com.microsoft.playwright.Page.GetByRoleOptions().setName("Купить сейчас"))
+            new com.microsoft.playwright.Page.GetByRoleOptions().setName("Корзина (2)"))
         .click();
+
+    page.getByText("Checkout E2E plant").first().waitFor();
+    page.getByRole(
+            AriaRole.LINK,
+            new com.microsoft.playwright.Page.GetByRoleOptions().setName("Перейти к оформлению"))
+        .click();
+
     page.getByRole(
             AriaRole.HEADING,
-            new com.microsoft.playwright.Page.GetByRoleOptions()
-                .setName("Войдите, чтобы оформить заказ"))
+            new com.microsoft.playwright.Page.GetByRoleOptions().setName("Нужно войти"))
         .waitFor();
     page.getByRole(AriaRole.STATUS)
         .getByRole(
@@ -53,13 +61,35 @@ class CheckoutFlowE2ETest extends PlaywrightTestBase {
     page.getByRole(
             AriaRole.BUTTON,
             new com.microsoft.playwright.Page.GetByRoleOptions().setName("Оплатить"))
-        .waitFor();
+        .click();
     page.locator("select").selectOption(new SelectOption().setLabel("Минск · 1–2 дн."));
     page.getByRole(
             AriaRole.BUTTON,
             new com.microsoft.playwright.Page.GetByRoleOptions().setName("Оплатить"))
         .click();
     page.getByText("Заказ оплачен").waitFor();
+    String orderId = page.locator(".mono").innerText().trim();
+    assertThat(orderId).isNotBlank();
+
+    page.getByRole(AriaRole.STATUS)
+        .getByRole(
+            AriaRole.LINK,
+            new com.microsoft.playwright.Locator.GetByRoleOptions().setName("Мои заказы"))
+        .click();
+    page.getByRole(
+            AriaRole.HEADING,
+            new com.microsoft.playwright.Page.GetByRoleOptions().setName("Мои заказы"))
+        .waitFor();
+    page.getByText(orderId.substring(orderId.length() - 8)).first().waitFor();
+    page.getByText("PAID").first().waitFor();
+  }
+
+  private void addToCart(String plantId) {
+    page.navigate(baseUrl + "/plants/" + plantId);
+    page.getByRole(
+            AriaRole.BUTTON,
+            new com.microsoft.playwright.Page.GetByRoleOptions().setName("В корзину"))
+        .click();
   }
 
   private String createAvailablePlant() throws Exception {

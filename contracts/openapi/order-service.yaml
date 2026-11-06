@@ -441,6 +441,51 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /api/v1/admin/outbox/dead:
+    get:
+      operationId: listDeadOutboxEvents
+      tags: [admin]
+      summary: List dead-letter outbox events
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dead events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OutboxEvent'
+        '403':
+          description: Operator role required
+
+  /api/v1/admin/outbox/{id}/redrive:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: redriveOutboxEvent
+      tags: [admin]
+      summary: Reset a dead-letter event for another delivery attempt
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Event reset
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OutboxEvent'
+        '403':
+          description: Operator role required
+        '404':
+          $ref: '#/components/responses/NotFound'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -776,6 +821,35 @@ components:
           type: string
           format: date-time
         decidedAt:
+          type: string
+          format: date-time
+
+    OutboxEvent:
+      type: object
+      additionalProperties: false
+      required: [id, aggregateId, eventType, attempts, dead, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        aggregateId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+        attempts:
+          type: integer
+        lastError:
+          type: string
+        dead:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        publishedAt:
+          type: string
+          format: date-time
+        nextAttemptAt:
           type: string
           format: date-time
 

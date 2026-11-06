@@ -40,7 +40,8 @@ public class RouteConfig {
                         "/api/v1/orders/**",
                         "/api/v1/shipping/**",
                         "/api/v1/claims/**",
-                        "/api/v1/care-reminders/**")
+                        "/api/v1/care-reminders/**",
+                        "/api/v1/admin/**")
                     .uri(orderUri))
         .build();
   }

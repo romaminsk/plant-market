@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { fetchIndividualPlant, formatPrice } from '@/lib/api';
 import { PlantGallery } from './PlantGallery';
 import { RestockForm } from './RestockForm';
+import { AddToCart } from './AddToCart';
 
 export const dynamic = 'force-dynamic';
 
@@ -66,13 +67,7 @@ export default async function IndividualPlantPage({ params }: { params: Promise<
             Это конкретный экземпляр: фото общего плана, листа, корней и дефектов закреплены за
             кодом {plant.code}. После продажи позиция исчезает из каталога.
           </p>
-          {plant.status === 'AVAILABLE' ? (
-            <p>
-              <Link className="button-link" href={`/checkout?plantId=${plant.id}`}>
-                Купить сейчас
-              </Link>
-            </p>
-          ) : null}
+          {plant.status === 'AVAILABLE' ? <AddToCart plant={plant} /> : null}
           <ul className="trust-list">
             <li>Гарантия 48 часов после получения</li>
             <li>Зимняя доставка: термоупаковка для морозных городов</li>

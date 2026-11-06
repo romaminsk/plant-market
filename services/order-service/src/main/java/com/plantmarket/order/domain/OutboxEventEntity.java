@@ -79,6 +79,14 @@ public class OutboxEventEntity {
     this.nextAttemptAt = instant;
   }
 
+  public void resetForRedrive() {
+    this.dead = false;
+    this.publishedAt = null;
+    this.attempts = 0;
+    this.lastError = null;
+    this.nextAttemptAt = null;
+  }
+
   public UUID getId() {
     return id;
   }

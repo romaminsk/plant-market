@@ -35,6 +35,7 @@ import com.plantmarket.order.web.dto.ClaimResponse;
 import com.plantmarket.order.web.dto.CreateOrderItemRequest;
 import com.plantmarket.order.web.dto.CreateOrderRequest;
 import com.plantmarket.order.web.dto.OrderResponse;
+import com.plantmarket.order.web.dto.OutboxEventResponse;
 import com.plantmarket.order.web.dto.ShippingZoneRequest;
 import com.plantmarket.order.web.dto.ShippingZoneResponse;
 import java.time.Instant;
@@ -185,6 +186,46 @@ class OrderFlowIntegrationTest {
         restTemplate.exchange(
             "/api/v1/orders", HttpMethod.GET, new HttpEntity<>(headers), OrderResponse[].class);
     assertThat(list.getBody()).hasSize(2);
+  }
+
+  @Test
+  void adminCanRedriveDeadOutboxEvent() {
+    OutboxEventEntity event =
+        new OutboxEventEntity(
+            UUID.randomUUID(), "order.paid", "{\"orderId\":\"x\",\"status\":\"PAID\"}");
+    for (int attempt = 0; attempt < 5; attempt++) {
+      event.markFailed("smtp down", Instant.now());
+    }
+    event.markDead();
+    outboxEventRepository.save(event);
+
+    ResponseEntity<OutboxEventResponse> redriven =
+        restTemplate.exchange(
+            "/api/v1/admin/outbox/" + event.getId() + "/redrive",
+            HttpMethod.POST,
+            new HttpEntity<>(adminHeaders()),
+            OutboxEventResponse.class);
+    assertThat(redriven.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(redriven.getBody()).isNotNull();
+    assertThat(redriven.getBody().dead()).isFalse();
+    assertThat(redriven.getBody().attempts()).isZero();
+    assertThat(redriven.getBody().publishedAt()).isNull();
+
+    ResponseEntity<List<OutboxEventResponse>> dead =
+        restTemplate.exchange(
+            "/api/v1/admin/outbox/dead",
+            HttpMethod.GET,
+            new HttpEntity<>(adminHeaders()),
+            new ParameterizedTypeReference<>() {});
+    assertThat(dead.getBody()).noneMatch(item -> item.id().equals(event.getId()));
+
+    ResponseEntity<String> forbidden =
+        restTemplate.exchange(
+            "/api/v1/admin/outbox/" + event.getId() + "/redrive",
+            HttpMethod.POST,
+            new HttpEntity<>(headers(UUID.randomUUID())),
+            String.class);
+    assertThat(forbidden.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
   }
 
   @Test

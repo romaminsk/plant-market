@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { accessToken } from '@/lib/auth';
+import { CartLink } from './CartLink';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -28,6 +29,8 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           </Link>
           <nav aria-label="Основная навигация">
             <Link href="/catalog">Каталог</Link>
+            <CartLink />
+            {token ? <Link href="/account/orders">Мои заказы</Link> : null}
             {token ? (
               <form action="/api/auth/logout" method="post">
                 <button type="submit" className="nav-button">
