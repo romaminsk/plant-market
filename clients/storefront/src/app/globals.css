@@ -2513,3 +2513,27 @@ button:disabled {
     width: auto;
   }
 }
+
+/* Guest checkout */
+.guest-checkout {
+  display: grid;
+  gap: 0.55rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.guest-checkout .eyebrow {
+  margin: 0;
+}
+
+.checkout-login {
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.checkout-login:hover {
+  color: var(--accent-strong);
+  text-decoration: underline;
+}

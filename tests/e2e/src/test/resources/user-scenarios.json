@@ -1258,8 +1258,8 @@
     {
       "id": "SC-036",
       "area": "checkout",
-      "name": "Неавторизованный checkout просит войти",
-      "expected": "Экран «Нужно войти»",
+      "name": "Гость видит форму оформления без регистрации",
+      "expected": "Заголовок checkout и поле e-mail",
       "auth": "none",
       "steps": [
         {
@@ -1291,7 +1291,11 @@
         },
         {
           "action": "waitText",
-          "value": "Нужно войти"
+          "value": "Оформление заказа"
+        },
+        {
+          "action": "expectVisible",
+          "selector": "input[name='guestEmail']"
         }
       ]
     },
@@ -1331,7 +1335,7 @@
         },
         {
           "action": "click",
-          "selector": ".checkout-result a:has-text('Войти')"
+          "selector": ".checkout-login"
         },
         {
           "action": "fill",
@@ -1898,8 +1902,8 @@
     {
       "id": "SC-048",
       "area": "checkout",
-      "name": "Checkout с товаром требует авторизации",
-      "expected": "«Нужно войти»",
+      "name": "Checkout с товаром предлагает гостевую форму",
+      "expected": "Поле guestEmail и ссылка входа",
       "auth": "none",
       "steps": [
         {
@@ -1931,7 +1935,15 @@
         },
         {
           "action": "waitText",
-          "value": "Нужно войти"
+          "value": "Оформление заказа"
+        },
+        {
+          "action": "expectVisible",
+          "selector": "input[name='guestEmail']"
+        },
+        {
+          "action": "expectVisible",
+          "selector": ".checkout-login"
         }
       ]
     },

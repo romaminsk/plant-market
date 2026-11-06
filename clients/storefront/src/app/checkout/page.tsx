@@ -14,6 +14,7 @@ export default function CheckoutPage() {
   const [zoneId, setZoneId] = useState('');
   const [thermal, setThermal] = useState(false);
   const [address, setAddress] = useState('');
+  const [email, setEmail] = useState('');
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
   const [status, setStatus] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
   const [message, setMessage] = useState('');
@@ -49,6 +50,8 @@ export default function CheckoutPage() {
     : 0;
   const thermalRequired = Boolean(zone?.winterRequiresThermal);
   const thermalMissing = thermalRequired && !thermal;
+  const guest = authenticated === false;
+  const guestEmailValid = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim());
 
   async function submit() {
     setStatus('sending');
@@ -71,6 +74,7 @@ export default function CheckoutPage() {
           shippingZoneId: zoneId,
           thermalPack: thermal,
           deliveryAddress: address,
+          guestEmail: guest ? email.trim() : undefined,
         }),
       });
       const payload = (await response.json().catch(() => null)) as {
@@ -124,22 +128,18 @@ export default function CheckoutPage() {
             Оплачено: <strong>{formatPrice(paidTotal, items[0]?.currency ?? 'BYN')}</strong>
           </p>
         ) : null}
-        <p className="muted">Подтверждение отправлено на e-mail. Спасибо!</p>
-        <p>
-          <Link href="/account/orders">Мои заказы</Link>
+        <p className="muted">
+          {guest && email
+            ? `Подтверждение отправлено на ${email}. Спасибо!`
+            : 'Подтверждение отправлено на e-mail. Спасибо!'}
         </p>
-      </section>
-    );
-  }
-
-  if (authenticated === false) {
-    return (
-      <section className="checkout-result" role="status">
-        <h1>Нужно войти</h1>
-        <p className="muted">Войдите, чтобы оформить и оплатить заказ.</p>
-        <a className="button-link" href="/api/auth/login?returnTo=/checkout">
-          Войти
-        </a>
+        {guest ? (
+          <p className="muted">Сохраните номер заказа — он понадобится для связи.</p>
+        ) : (
+          <p>
+            <Link href="/account/orders">Мои заказы</Link>
+          </p>
+        )}
       </section>
     );
   }
@@ -160,6 +160,29 @@ export default function CheckoutPage() {
           </ul>
         </div>
         <div className="checkout-form">
+          {guest ? (
+            <div className="guest-checkout">
+              <p className="eyebrow">Быстрый заказ</p>
+              <label>
+                E-mail для подтверждения
+                <input
+                  type="email"
+                  name="guestEmail"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="you@example.com"
+                  required
+                />
+              </label>
+              <p className="muted">
+                Оформим заказ без аккаунта — подтверждение придёт на этот e-mail.
+              </p>
+              <a className="checkout-login" href="/api/auth/login?returnTo=/checkout">
+                Войти в аккаунт
+              </a>
+            </div>
+          ) : null}
           <label>
             Адрес доставки
             <textarea
@@ -215,7 +238,8 @@ export default function CheckoutPage() {
             disabled={
               status === 'sending' ||
               !zoneId ||
-              authenticated !== true ||
+              authenticated === null ||
+              (guest && !guestEmailValid) ||
               address.trim().length === 0 ||
               thermalMissing
             }

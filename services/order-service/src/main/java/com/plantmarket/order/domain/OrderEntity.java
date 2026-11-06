@@ -24,7 +24,7 @@ public class OrderEntity {
 
   @Id private UUID id;
 
-  @Column(name = "customer_id", nullable = false)
+  @Column(name = "customer_id")
   private UUID customerId;
 
   @Column(name = "customer_email", length = 254)

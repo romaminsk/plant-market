@@ -135,7 +135,14 @@ public class SecurityConfig {
   @Order(3)
   public SecurityFilterChain webSecurityFilterChain(HttpSecurity http) throws Exception {
     http.authorizeHttpRequests(auth ->
-            auth.requestMatchers("/login", "/error", "/fonts/**", "/images/**", "/favicon.ico")
+            auth.requestMatchers(
+                    "/login",
+                    "/register",
+                    "/auth.css",
+                    "/error",
+                    "/fonts/**",
+                    "/images/**",
+                    "/favicon.ico")
                 .permitAll()
                 .anyRequest()
                 .authenticated())

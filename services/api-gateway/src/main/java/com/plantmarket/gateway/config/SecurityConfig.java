@@ -69,6 +69,8 @@ public class SecurityConfig {
                 .permitAll()
                 .pathMatchers("/api/v1/auth/**", "/api/v1/restock-subscriptions/**")
                 .permitAll()
+                .pathMatchers(HttpMethod.POST, "/api/v1/orders/guest")
+                .permitAll()
                 .pathMatchers(
                     HttpMethod.GET,
                     "/api/v1/categories/**",

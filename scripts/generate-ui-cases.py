@@ -431,10 +431,13 @@ case(
 case(
     "TC-044",
     "checkout",
-    "Checkout с товаром требует вход",
+    "Checkout с товаром предлагает гостевую форму",
     "/checkout",
-    text("Нужно войти"),
-    "Экран «Нужно войти»",
+    [
+        {"action": "waitText", "value": "Оформление заказа"},
+        {"action": "waitSelector", "selector": "input[name='guestEmail']"},
+    ],
+    "Гостевая форма без регистрации",
     storage={
         "pm.cart.v1": (
             '[{"type":"INDIVIDUAL_PLANT","id":"{plantId}","name":"{plantName}",'

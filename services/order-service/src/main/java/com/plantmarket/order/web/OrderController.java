@@ -3,6 +3,7 @@ package com.plantmarket.order.web;
 import com.plantmarket.order.service.OrderService;
 import com.plantmarket.order.web.dto.CheckoutRequest;
 import com.plantmarket.order.web.dto.CreateOrderRequest;
+import com.plantmarket.order.web.dto.GuestCheckoutRequest;
 import com.plantmarket.order.web.dto.OrderHistoryEntry;
 import com.plantmarket.order.web.dto.OrderResponse;
 import jakarta.validation.Valid;
@@ -34,6 +35,12 @@ public class OrderController {
   public OrderResponse create(
       @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody CreateOrderRequest request) {
     return orderService.create(customerId(jwt), jwt.getClaimAsString("email"), request);
+  }
+
+  @PostMapping("/guest")
+  @ResponseStatus(HttpStatus.CREATED)
+  public OrderResponse guestCheckout(@Valid @RequestBody GuestCheckoutRequest request) {
+    return orderService.guestCheckout(request);
   }
 
   @GetMapping

@@ -739,9 +739,15 @@ sc(
 sc(
     "SC-036",
     "checkout",
-    "Неавторизованный checkout просит войти",
-    "Экран «Нужно войти»",
-    [plant_fixture(), cart_plant(), goto("/checkout"), wait_text("Нужно войти")],
+    "Гость видит форму оформления без регистрации",
+    "Заголовок checkout и поле e-mail",
+    [
+        plant_fixture(),
+        cart_plant(),
+        goto("/checkout"),
+        wait_text("Оформление заказа"),
+        visible("input[name='guestEmail']"),
+    ],
 )
 sc(
     "SC-037",
@@ -752,7 +758,7 @@ sc(
         plant_fixture(),
         cart_plant(),
         goto("/checkout"),
-        click(".checkout-result a:has-text('Войти')"),
+        click(".checkout-login"),
         fill("input[name='username']", "qa.customer@plantmarket.local"),
         fill("input[name='password']", "QaCustomer123!"),
         click("button[type='submit']"),
@@ -928,9 +934,15 @@ sc(
 sc(
     "SC-048",
     "checkout",
-    "Checkout с товаром требует авторизации",
-    "«Нужно войти»",
-    [plant_fixture(), cart_plant(), goto("/checkout"), wait_text("Нужно войти")],
+    "Checkout с товаром предлагает гостевую форму",
+    "Поле guestEmail и ссылка входа",
+    [
+        plant_fixture(),
+        cart_plant(),
+        goto("/checkout"),
+        wait_text("Оформление заказа"),
+        visible("input[name='guestEmail']", ".checkout-login"),
+    ],
 )
 sc(
     "SC-049",

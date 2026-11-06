@@ -63,17 +63,15 @@ class QaUiJourneyE2ETest extends PlaywrightTestBase {
 
     page.getByRole(
             AriaRole.HEADING,
-            new com.microsoft.playwright.Page.GetByRoleOptions().setName("Нужно войти"))
+            new com.microsoft.playwright.Page.GetByRoleOptions().setName("Оформление заказа"))
         .waitFor();
-    page.getByRole(AriaRole.STATUS)
-        .getByRole(AriaRole.LINK, new Locator.GetByRoleOptions().setName("Войти"))
-        .click();
+    page.locator(".checkout-login").click();
 
     page.getByRole(
             AriaRole.HEADING,
             new com.microsoft.playwright.Page.GetByRoleOptions().setName("Вход").setExact(true))
         .waitFor();
-    assertThat(page.locator("body").innerText()).contains("ЛИЧНЫЙ КАБИНЕТ");
+    assertThat(page.locator("body").innerText()).containsIgnoringCase("Личный кабинет");
     page.locator("input[name='username']").fill("qa.customer@plantmarket.local");
     page.locator("input[name='password']").fill("QaCustomer123!");
     page.locator("button[type='submit']").click();

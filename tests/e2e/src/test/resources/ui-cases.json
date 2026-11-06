@@ -609,15 +609,19 @@
     {
       "id": "TC-044",
       "area": "checkout",
-      "name": "Checkout с товаром требует вход",
+      "name": "Checkout с товаром предлагает гостевую форму",
       "start": "/checkout",
       "steps": [
         {
-          "action": "expectText",
-          "value": "Нужно войти"
+          "action": "waitText",
+          "value": "Оформление заказа"
+        },
+        {
+          "action": "waitSelector",
+          "selector": "input[name='guestEmail']"
         }
       ],
-      "expected": "Экран «Нужно войти»",
+      "expected": "Гостевая форма без регистрации",
       "storage": {
         "pm.cart.v1": "[{\"type\":\"INDIVIDUAL_PLANT\",\"id\":\"{plantId}\",\"name\":\"{plantName}\",\"priceMinor\":12000,\"currency\":\"BYN\",\"quantity\":1}]"
       }

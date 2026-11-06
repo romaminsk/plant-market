@@ -47,12 +47,9 @@ class WinterCheckoutE2ETest extends PlaywrightTestBase {
         .click();
     page.getByRole(
             AriaRole.HEADING,
-            new com.microsoft.playwright.Page.GetByRoleOptions().setName("Нужно войти"))
+            new com.microsoft.playwright.Page.GetByRoleOptions().setName("Оформление заказа"))
         .waitFor();
-    page.getByRole(AriaRole.STATUS)
-        .getByRole(
-            AriaRole.LINK, new com.microsoft.playwright.Locator.GetByRoleOptions().setName("Войти"))
-        .click();
+    page.locator(".checkout-login").click();
     page.locator("input[name='username']").fill("customer@plantmarket.local");
     page.locator("input[name='password']").fill("CustomerPassword123!");
     page.locator("button[type='submit']").click();

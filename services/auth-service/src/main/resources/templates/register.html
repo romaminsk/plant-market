@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Регистрация — Plant Market</title>
+    <link rel="stylesheet" href="/auth.css" />
+  </head>
+  <body>
+    <aside class="visual" aria-hidden="true">
+      <img src="/images/login-plant.jpg" alt="" />
+      <span class="brand">Plant Market</span>
+      <div class="visual-copy">
+        <p class="eyebrow">WYSIWYG · конкретный экземпляр</p>
+        <h2>Создайте свой Plant Market.</h2>
+        <p>
+          Аккаунт нужен, чтобы оформлять заказы, следить за доставкой и возвращаться к редким
+          растениям.
+        </p>
+      </div>
+    </aside>
+
+    <main class="auth">
+      <span class="brand mobile-brand">Plant Market</span>
+      <p class="eyebrow">Личный кабинет</p>
+      <h1>Регистрация</h1>
+      <p class="auth-subtitle">Создайте аккаунт, чтобы оформлять заказы и следить за доставкой.</p>
+
+      {{error}}
+
+      <form method="post" action="/register">
+        <input type="hidden" name="_csrf" value="{{csrfToken}}" />
+        <label>
+          Имя
+          <input
+            type="text"
+            name="fullName"
+            autocomplete="name"
+            value="{{fullName}}"
+            placeholder="Как к вам обращаться"
+            required
+          />
+        </label>
+        <label>
+          E-mail
+          <input
+            type="email"
+            name="email"
+            autocomplete="email"
+            value="{{email}}"
+            placeholder="you@example.com"
+            required
+          />
+        </label>
+        <label>
+          Пароль
+          <input
+            type="password"
+            name="password"
+            autocomplete="new-password"
+            minlength="12"
+            placeholder="Минимум 12 символов"
+            required
+          />
+        </label>
+        <button type="submit">Зарегистрироваться</button>
+      </form>
+
+      <p class="auth-switch">Уже есть аккаунт? <a href="/login">Войти</a></p>
+
+      <p class="auth-foot">
+        © 2026 Plant Market · редкие комнатные растения<br />
+        Регистрируясь, вы соглашаетесь с правилами магазина.
+      </p>
+    </main>
+  </body>
+</html>

@@ -16,10 +16,6 @@ interface CheckoutItem {
 const secure = COOKIE_SECURE;
 
 export async function POST(request: NextRequest) {
-  let token = request.cookies.get(ACCESS_COOKIE)?.value;
-  if (!token) {
-    return NextResponse.json({ detail: 'Authentication required' }, { status: 401 });
-  }
   const csrfCookie = request.cookies.get('pm.csrf')?.value;
   const csrfHeader = request.headers.get('x-csrf-token');
   if (!csrfCookie || csrfHeader !== csrfCookie) {
@@ -31,6 +27,7 @@ export async function POST(request: NextRequest) {
     shippingZoneId?: string;
     thermalPack?: boolean;
     deliveryAddress?: string;
+    guestEmail?: string;
   };
   const items = Array.isArray(payload.items) ? payload.items : [];
   if (items.length === 0 || items.length > 20) {
@@ -58,6 +55,42 @@ export async function POST(request: NextRequest) {
   }
 
   const base = apiUrl();
+  let token = request.cookies.get(ACCESS_COOKIE)?.value;
+  if (!token) {
+    const guestEmail = payload.guestEmail?.trim();
+    if (!guestEmail || guestEmail.length > 254 || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(guestEmail)) {
+      return NextResponse.json(
+        { detail: 'Укажите e-mail для подтверждения заказа' },
+        { status: 400 },
+      );
+    }
+    const guestResponse = await fetch(`${base}/api/v1/orders/guest`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        items: orderItems,
+        guestEmail,
+        shippingZoneId,
+        thermalPack: Boolean(payload.thermalPack),
+        deliveryAddress,
+      }),
+      cache: 'no-store',
+    });
+    if (!guestResponse.ok) {
+      return forward(guestResponse);
+    }
+    const paid = (await guestResponse.json()) as {
+      id: string;
+      status: string;
+      totalMinor: number;
+    };
+    return NextResponse.json({
+      orderId: paid.id,
+      status: paid.status,
+      totalMinor: paid.totalMinor,
+      guestEmail,
+    });
+  }
   const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
   let refreshed: RefreshedTokens | null = null;
 

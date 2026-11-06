@@ -41,7 +41,7 @@ Single source of truth: `scripts/generate-user-scenarios.py`.
 | SC-033 | cart       | Вариант отображается в корзине                            | Название варианта и цена                                        | none     |
 | SC-034 | cart       | Удаление всех товаров показывает пустую корзину           | После удаления — пусто                                          | none     |
 | SC-035 | cart       | Количество варианта увеличивает итог                      | Итого 300,00 за 2 шт.                                           | none     |
-| SC-036 | checkout   | Неавторизованный checkout просит войти                    | Экран «Нужно войти»                                             | none     |
+| SC-036 | checkout   | Гость видит форму оформления без регистрации              | Заголовок checkout и поле e-mail                                | none     |
 | SC-037 | checkout   | Логин из checkout возвращает к оформлению                 | После входа — форма checkout                                    | none     |
 | SC-038 | checkout   | Покупатель оплачивает экземпляр                           | «Заказ оплачен»                                                 | customer |
 | SC-039 | orders     | Оплаченный заказ виден в истории                          | Короткий ID и PAID                                              | customer |
@@ -53,7 +53,7 @@ Single source of truth: `scripts/generate-user-scenarios.py`.
 | SC-045 | checkout   | Термоупаковка добавляет стоимость                         | Итого 132,00 для Гомеля                                         | customer |
 | SC-046 | checkout   | Кнопка оплаты заблокирована без адреса                    | disabled до адреса, enabled после                               | customer |
 | SC-047 | checkout   | Пустой checkout показывает пустую корзину                 | «Корзина пуста»                                                 | none     |
-| SC-048 | checkout   | Checkout с товаром требует авторизации                    | «Нужно войти»                                                   | none     |
+| SC-048 | checkout   | Checkout с товаром предлагает гостевую форму              | Поле guestEmail и ссылка входа                                  | none     |
 | SC-049 | orders     | Новый покупатель видит пустую историю                     | «Заказов пока нет»                                              | none     |
 | SC-050 | orders     | История заказа показывает все статусы                     | DRAFT, PENDING_PAYMENT, PAID                                    | customer |
 | SC-051 | orders     | Чужой заказ недоступен                                    | «Заказ не найден»                                               | customer |

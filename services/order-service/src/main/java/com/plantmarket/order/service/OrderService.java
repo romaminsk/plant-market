@@ -23,6 +23,7 @@ import com.plantmarket.order.repository.ShippingZoneRepository;
 import com.plantmarket.order.web.dto.CheckoutRequest;
 import com.plantmarket.order.web.dto.CreateOrderItemRequest;
 import com.plantmarket.order.web.dto.CreateOrderRequest;
+import com.plantmarket.order.web.dto.GuestCheckoutRequest;
 import com.plantmarket.order.web.dto.OrderHistoryEntry;
 import com.plantmarket.order.web.dto.OrderItemResponse;
 import com.plantmarket.order.web.dto.OrderResponse;
@@ -106,6 +107,27 @@ public class OrderService {
   @Transactional
   public OrderResponse checkout(UUID customerId, UUID orderId, CheckoutRequest request) {
     OrderEntity order = findOwnedForUpdate(customerId, orderId);
+    checkoutOrder(order, request);
+    return toResponse(order);
+  }
+
+  @Transactional
+  public OrderResponse guestCheckout(GuestCheckoutRequest request) {
+    OrderResponse created =
+        create(null, request.guestEmail(), new CreateOrderRequest(request.items()));
+    OrderEntity order =
+        orderRepository
+            .findByIdForUpdate(created.id())
+            .orElseThrow(() -> ApiException.notFound("Order not found: " + created.id()));
+    checkoutOrder(
+        order,
+        new CheckoutRequest(
+            request.shippingZoneId(), request.thermalPack(), request.deliveryAddress()));
+    payOrder(order);
+    return toResponse(order);
+  }
+
+  private void checkoutOrder(OrderEntity order, CheckoutRequest request) {
     if (order.getStatus() != OrderStatus.DRAFT) {
       throw ApiException.conflict("Only DRAFT orders can be checked out");
     }
@@ -140,27 +162,30 @@ public class OrderService {
                     item.getTargetId(),
                     item.getQuantity()))
             .toList();
-    ReservationResult reservation = catalogClient.reserve(orderId, items);
+    ReservationResult reservation = catalogClient.reserve(order.getId(), items);
     order.markPendingPayment(reservation.expiresAt());
     record(order, OrderStatus.PENDING_PAYMENT, "order.pending_payment");
-    return toResponse(order);
   }
 
   @Transactional
   public OrderResponse pay(UUID customerId, UUID orderId) {
     OrderEntity order = findOwnedForUpdate(customerId, orderId);
+    payOrder(order);
+    return toResponse(order);
+  }
+
+  private void payOrder(OrderEntity order) {
     if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
       throw ApiException.conflict("Only PENDING_PAYMENT orders can be paid");
     }
     PaymentResult payment =
-        paymentClient.createPayment(orderId, order.getTotalMinor(), order.getCurrency());
+        paymentClient.createPayment(order.getId(), order.getTotalMinor(), order.getCurrency());
     if (!"CONFIRMED".equals(payment.status())) {
       throw ApiException.conflict("Payment is not confirmed: " + payment.status());
     }
-    catalogClient.confirm(orderId);
+    catalogClient.confirm(order.getId());
     order.markPaid();
     record(order, OrderStatus.PAID, "order.paid");
-    return toResponse(order);
   }
 
   @Transactional
@@ -201,14 +226,14 @@ public class OrderService {
   private OrderEntity findOwned(UUID customerId, UUID orderId) {
     return orderRepository
         .findById(orderId)
-        .filter(order -> order.getCustomerId().equals(customerId))
+        .filter(order -> customerId.equals(order.getCustomerId()))
         .orElseThrow(() -> ApiException.notFound("Order not found: " + orderId));
   }
 
   private OrderEntity findOwnedForUpdate(UUID customerId, UUID orderId) {
     return orderRepository
         .findByIdForUpdate(orderId)
-        .filter(order -> order.getCustomerId().equals(customerId))
+        .filter(order -> customerId.equals(order.getCustomerId()))
         .orElseThrow(() -> ApiException.notFound("Order not found: " + orderId));
   }
 
