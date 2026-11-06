@@ -83,6 +83,8 @@
 - CI run `42189452781` — success, E2E 12/12 с outbox retry.
 - CI run `42191984783` — success, E2E 14/14 с админ-редактором галереи и панелью претензий.
 - CI run `42193571529` — success, E2E 15/15 с OAuth2 PKCE checkout через storefront BFF.
+- CI run `42201784705` — success, E2E 16/16 с consent-баннером.
+- CI run `42203258263` — success, E2E 16/16 с адресом доставки.
 
 ### Phase 3 — WYSIWYG-галерея (✅ первый шаг)
 
@@ -183,14 +185,14 @@
   снова попадает в обычный цикл публикации (ADR-0012).
 - Integration-тест: dead-событие → redrive → attempts=0, publishedAt=null; customer получает 403.
 
-### Phase 3 — storefront checkout MVP (✅)
+### Phase 3 — storefront checkout (✅)
 
 - OAuth2 PKCE через BFF в Next.js: `/api/auth/login` → auth-service `/oauth2/authorize` →
   `/auth/callback` (обмен code → tokens, httpOnly cookies) → `/checkout`.
 - `POST /api/checkout`: create → checkout (зона/термоупаковка) → pay; ошибки order-service
   пробрасываются как JSON. POST защищён double-submit `pm.csrf` + `X-CSRF-Token`.
-- Страница `/checkout` показывает зоны, зимнюю термоупаковку и итог; кнопка «Купить сейчас» на
-  карточке растения. Мульти-корзина и история заказов — следующая итерация (ADR-0013).
+- Страница `/checkout` показывает состав корзины, зоны, зимнюю термоупаковку, адрес и итог;
+  корзина и история заказов реализованы (ADR-0013).
 - E2E `CheckoutFlowE2ETest`: гость → карточка → логин через форму auth-service → checkout →
   sandbox pay → «Заказ оплачен».
 - В шапке storefront — «Войти»/«Выйти»; access/refresh только в httpOnly cookie.

@@ -1,6 +1,6 @@
 # ADR-0013: Storefront checkout через BFF и OAuth2 PKCE
 
-- **Статус:** Accepted (MVP buy-now реализован)
+- **Статус:** Accepted (корзина, checkout, история заказов)
 - **Дата:** 2026-11-06
 - **Решающие:** AI-лид (автономный режим владельца)
 - **Связанные документы:** ADR-0006 (OAuth2 PKCE), ADR-0008 (доставка), Phase 2/3
@@ -37,7 +37,8 @@ Storefront умел каталог, карточку WYSIWYG, фильтры и 
 - `GET /api/auth/login` (PKCE verifier/state в httpOnly cookie) и `GET /auth/callback`
   (обмен code → tokens, access/refresh в httpOnly cookie, redirect на `returnTo`).
 - `POST /api/checkout`: create → checkout (зона/термоупаковка) → pay через order-service.
-- `POST /api/auth/logout`, кнопка «Купить сейчас», `/checkout` с зонами и итогом.
+- `POST /api/auth/logout`, корзина `/cart`, `/checkout` с зонами/адресом/итогом,
+  `/account/orders` и `/account/orders/{id}` с timeline.
 - BFF POST защищён double-submit: `pm.csrf` cookie + `X-CSRF-Token`; в шапке «Войти»/«Выйти».
 - E2E `CheckoutFlowE2ETest`: гость → карточка → логин через форму auth-service → checkout → pay →
   «Заказ оплачен».
@@ -55,7 +56,7 @@ Storefront умел каталог, карточку WYSIWYG, фильтры и 
 - CSRF для BFF POST — double-submit `pm.csrf` + `X-CSRF-Token`; cookie `Secure` включается
   переменной `COOKIE_SECURE=true` на HTTPS.
 - Next.js route handlers становятся точкой отказа checkout; health/readiness и логи обязательны.
-- Адреса, слоты доставки и отзывы — после MVP; корзина и история заказов уже есть.
+- Слоты доставки, получатель/телефон и отзывы — после MVP; адрес доставки уже есть.
 - E2E J1 расширен до полного сценария: логин PKCE → checkout → pay → подтверждение.
 
 ## Критерии готовности

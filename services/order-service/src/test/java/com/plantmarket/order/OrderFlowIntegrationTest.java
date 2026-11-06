@@ -389,6 +389,15 @@ class OrderFlowIntegrationTest {
             .getBody();
     assertThat(winterZone).isNotNull();
 
+    UUID missingAddressOrder = createVariantOrder(headers);
+    ResponseEntity<String> missingAddress =
+        restTemplate.exchange(
+            "/api/v1/orders/" + missingAddressOrder + "/checkout",
+            HttpMethod.POST,
+            new HttpEntity<>(new CheckoutRequest(normalZone.id(), false), headers),
+            String.class);
+    assertThat(missingAddress.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+
     UUID secondOrder = createVariantOrder(headers);
     ResponseEntity<String> rejected =
         restTemplate.exchange(
