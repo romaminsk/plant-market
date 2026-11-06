@@ -312,6 +312,58 @@ button {
   font-size: 0.9rem;
 }
 
+.restock-box {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.restock-box h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.1rem;
+}
+
+.restock-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: end;
+  margin-top: 0.75rem;
+}
+
+.restock-form label {
+  display: grid;
+  gap: 0.25rem;
+  flex: 1 1 220px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.restock-form input {
+  padding: 0.55rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font: inherit;
+}
+
+.restock-form button {
+  padding: 0.6rem 0.9rem;
+}
+
+.form-message {
+  min-height: 1.2em;
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.form-message.error {
+  color: #a12622;
+}
+
 .plant-photo img {
   display: block;
   width: 100%;

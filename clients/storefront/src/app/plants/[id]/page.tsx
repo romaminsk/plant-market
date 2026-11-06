@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { fetchIndividualPlant, formatPrice } from '@/lib/api';
 import { PlantGallery } from './PlantGallery';
+import { RestockForm } from './RestockForm';
 
 export const dynamic = 'force-dynamic';
 
@@ -70,6 +71,9 @@ export default async function IndividualPlantPage({ params }: { params: Promise<
             <li>Зимняя доставка: термоупаковка для морозных городов</li>
             <li>Остаток: 1 экземпляр</li>
           </ul>
+          {plant.status !== 'AVAILABLE' ? (
+            <RestockForm targetId={plant.id} code={plant.code} />
+          ) : null}
         </div>
       </div>
     </article>
