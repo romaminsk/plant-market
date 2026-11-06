@@ -31,7 +31,8 @@ export default function CheckoutPage() {
       .then((loaded) => {
         setZones(loaded);
         if (loaded.length > 0) {
-          setZoneId(loaded[0].id);
+          const preferred = loaded.find((zone) => !zone.winterRequiresThermal) ?? loaded[0];
+          setZoneId(preferred.id);
         }
       })
       .catch((cause: unknown) =>

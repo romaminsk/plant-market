@@ -66,6 +66,7 @@ class RegistrationGuestCheckoutE2ETest extends PlaywrightTestBase {
             AriaRole.HEADING,
             new com.microsoft.playwright.Page.GetByRoleOptions().setName("Оформление заказа"))
         .waitFor();
+    assertThat(page.locator(".checkout-form select option:checked").innerText()).contains("Минск");
     page.locator("input[name='guestEmail']").fill("guest-checkout@example.test");
     page.locator(".checkout-form textarea").fill("Минск, Независимости 1");
     page.locator(".checkout-form select")
