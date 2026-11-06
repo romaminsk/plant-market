@@ -49,7 +49,7 @@
 - ID — UUIDv7; время — UTC ISO-8601.
 - `tenant_id` — во всех бизнес-таблицах с первого дня (AR-7).
 - Оптимистичные блокировки — колонка `version`.
-- В Phase 0 реализуются `Product`, `ProductVariant`, `Category`; `IndividualPlant`, `StockBatch`, `Reservation` — Phase 1–2.
+- В Phase 2 реализуются `Product`, `ProductVariant`, `Category`, `IndividualPlant`, `StockBatch`, `Reservation` и `Order`; `Payment`, `Shipment`, `Claim` — следующие шаги.
 
 ## Ссылки
 
