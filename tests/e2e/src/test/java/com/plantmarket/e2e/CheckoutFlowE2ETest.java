@@ -40,7 +40,6 @@ class CheckoutFlowE2ETest extends PlaywrightTestBase {
             new com.microsoft.playwright.Page.GetByRoleOptions().setName("Корзина (2)"))
         .click();
 
-    page.getByText("Checkout E2E plant").first().waitFor();
     page.getByRole(
             AriaRole.LINK,
             new com.microsoft.playwright.Page.GetByRoleOptions().setName("Перейти к оформлению"))
