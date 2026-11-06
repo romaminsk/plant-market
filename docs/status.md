@@ -143,6 +143,16 @@
 - E2E: создание, список, отключение; integration-тест проверяет отправку due-напоминания через
   мок `JavaMailSender` и 409 для неоплаченного заказа.
 
+### Phase 3 — корзина, варианты и история заказов (✅)
+
+- Storefront: `localStorage`-корзина, счётчик в шапке, страница `/cart`, смешанная корзина
+  (индивидуальные растения + варианты), checkout на несколько позиций.
+- Карточка продукта показывает варианты с ценой и доступным остатком; `availableQuantity`
+  считается из партий и резервов в `catalog-service`.
+- `/account/orders` и `/account/orders/{id}` — история и детали заказов; ссылки в шапке.
+- BFF checkout обновляет access/refresh токены при 401 и повторяет запрос.
+- E2E `CheckoutFlowE2ETest`: 2 растения + вариант → корзина (3) → PKCE-логин → оплата → история.
+
 ### Phase 3 — redrive dead-letter (✅)
 
 - `GET /api/v1/admin/outbox/dead` и `POST /api/v1/admin/outbox/{id}/redrive` (ADMIN/OPERATOR/MANAGER).
@@ -234,5 +244,5 @@
   заменой bean, API `/api/v1/media` не меняется (ADR-0011).
 - **Ruling:** order-уведомления ретраятся через outbox (5 попыток, backoff, dead-letter);
   claim/restock остаются best-effort (ADR-0012).
-- **Ruling:** checkout — BFF в Next.js с OAuth2 PKCE и httpOnly cookies; MVP «Купить сейчас»,
-  мульти-корзина и refresh — следующая итерация (ADR-0013).
+- **Ruling:** checkout — BFF в Next.js с OAuth2 PKCE и httpOnly cookies; корзина на несколько
+  позиций, refresh в BFF и история заказов реализованы (ADR-0013).

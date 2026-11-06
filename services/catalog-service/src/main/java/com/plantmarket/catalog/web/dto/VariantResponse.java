@@ -16,5 +16,6 @@ public record VariantResponse(
     long priceMinor,
     Currency currency,
     VariantStatus status,
+    int availableQuantity,
     Instant createdAt,
     Instant updatedAt) {}

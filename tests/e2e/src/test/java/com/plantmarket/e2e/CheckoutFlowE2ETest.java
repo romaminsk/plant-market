@@ -94,7 +94,7 @@ class CheckoutFlowE2ETest extends PlaywrightTestBase {
 
   private String createAvailablePlant() throws Exception {
     String token = ApiTokens.admin(apiUrl);
-    String productId = findProductId(token);
+    String productId = findProductIdBySku("PLANT-001");
     String code = "CHK-" + Long.toString(System.currentTimeMillis(), 36);
     JsonNode plant =
         post(
@@ -122,14 +122,15 @@ class CheckoutFlowE2ETest extends PlaywrightTestBase {
     return plantId;
   }
 
-  private String findProductId(String token) throws Exception {
+  private String findProductIdBySku(String sku) throws Exception {
+    String token = ApiTokens.admin(apiUrl);
     JsonNode products = get("/api/v1/products?size=100", token);
     for (JsonNode item : products.path("items")) {
-      if ("PLANT-001".equals(item.path("sku").asString())) {
+      if (sku.equals(item.path("sku").asString())) {
         return item.path("id").asString();
       }
     }
-    throw new IllegalStateException("Seed product PLANT-001 is missing");
+    throw new IllegalStateException("Seed product " + sku + " is missing");
   }
 
   private JsonNode get(String path, String token) throws Exception {

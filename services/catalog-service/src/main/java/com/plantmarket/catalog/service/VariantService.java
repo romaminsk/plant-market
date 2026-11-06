@@ -2,8 +2,10 @@ package com.plantmarket.catalog.service;
 
 import com.plantmarket.catalog.domain.ProductEntity;
 import com.plantmarket.catalog.domain.ProductVariantEntity;
+import com.plantmarket.catalog.domain.StockBatchStatus;
 import com.plantmarket.catalog.repository.ProductRepository;
 import com.plantmarket.catalog.repository.ProductVariantRepository;
+import com.plantmarket.catalog.repository.StockBatchRepository;
 import com.plantmarket.catalog.web.dto.VariantRequest;
 import com.plantmarket.catalog.web.dto.VariantResponse;
 import com.plantmarket.common.error.ApiException;
@@ -17,18 +19,22 @@ public class VariantService {
 
   private final ProductVariantRepository variantRepository;
   private final ProductRepository productRepository;
+  private final StockBatchRepository batchRepository;
 
   public VariantService(
-      ProductVariantRepository variantRepository, ProductRepository productRepository) {
+      ProductVariantRepository variantRepository,
+      ProductRepository productRepository,
+      StockBatchRepository batchRepository) {
     this.variantRepository = variantRepository;
     this.productRepository = productRepository;
+    this.batchRepository = batchRepository;
   }
 
   @Transactional(readOnly = true)
   public List<VariantResponse> list(UUID productId) {
     findProduct(productId);
     return variantRepository.findByProductIdOrderByCreatedAtAsc(productId).stream()
-        .map(VariantService::toResponse)
+        .map(this::toResponse)
         .toList();
   }
 
@@ -98,7 +104,12 @@ public class VariantService {
     return value == null || value.isBlank() ? null : value.trim();
   }
 
-  private static VariantResponse toResponse(ProductVariantEntity variant) {
+  private VariantResponse toResponse(ProductVariantEntity variant) {
+    int available =
+        Math.max(
+            0,
+            batchRepository.availableQuantity(variant.getId(), StockBatchStatus.AVAILABLE)
+                - variant.getReservedQuantity());
     return new VariantResponse(
         variant.getId(),
         variant.getProduct().getId(),
@@ -110,6 +121,7 @@ public class VariantService {
         variant.getPriceMinor(),
         variant.getCurrency(),
         variant.getStatus(),
+        available,
         variant.getCreatedAt(),
         variant.getUpdatedAt());
   }

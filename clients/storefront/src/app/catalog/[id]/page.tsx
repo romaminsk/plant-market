@@ -1,11 +1,12 @@
 import Link from 'next/link';
-import { fetchProduct, formatPrice } from '@/lib/api';
+import { fetchProduct, fetchVariants, formatPrice } from '@/lib/api';
+import { AddVariantToCart } from './AddVariantToCart';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const product = await fetchProduct(id);
+  const [product, variants] = await Promise.all([fetchProduct(id), fetchVariants(id)]);
 
   return (
     <article className="product-detail">
@@ -39,6 +40,30 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           </dl>
         </div>
       </div>
+      {variants.length > 0 ? (
+        <section className="variant-section">
+          <h2>Варианты</h2>
+          <ul className="variant-list">
+            {variants.map((variant) => (
+              <li key={variant.id} className="variant-card">
+                <div>
+                  <h3>{variant.name}</h3>
+                  <p className="muted">
+                    {[variant.size, variant.potSize, variant.form].filter(Boolean).join(' · ')}
+                  </p>
+                  <p className="muted">
+                    {variant.availableQuantity > 0
+                      ? `В наличии: ${variant.availableQuantity}`
+                      : 'Нет в наличии'}
+                  </p>
+                </div>
+                <p className="price">{formatPrice(variant.priceMinor, variant.currency)}</p>
+                <AddVariantToCart variant={variant} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </article>
   );
 }

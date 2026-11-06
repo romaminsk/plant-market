@@ -23,11 +23,11 @@ Storefront умел каталог, карточку WYSIWYG, фильтры и 
     create → checkout (зона + термоупаковка) → pay; возвращает статус заказа.
   - При 401 BFF обновляет токен через refresh rotation и повторяет запрос; при повторном 401 —
     редирект на логин.
-- **Корзина (MVP)**: сценарий «Купить сейчас» — карточка растения ведёт на `/checkout?plantId=…`.
-  Мульти-корзина с `localStorage` остаётся следующей итерацией; цены и остатки в любом случае
-  валидирует order-service при создании заказа.
-- **Страницы**: `/checkout` (зоны, термоупаковка, итог) и `/plants/[id]` с кнопкой «Купить сейчас».
-  История заказов и `/order/[id]` — следующая итерация; письмо уже отправляет order-service.
+- **Корзина**: client-side `localStorage` (`pm.cart.v1`) с индивидуальными растениями и
+  вариантами; `/cart` и `/checkout` работают с несколькими позициями. Цены и остатки валидирует
+  order-service при создании заказа, поэтому подмена цены в браузере не влияет на сумму.
+- **Страницы**: `/cart`, `/checkout` (зоны, термоупаковка, итог), `/plants/[id]` и
+  `/catalog/[id]` с добавлением в корзину, `/account/orders` и `/account/orders/{id}`.
 - **CSRF**: double-submit `XSRF-TOKEN` для BFF POST; SameSite=Lax cookies.
 - **Redirect URI**: auth-service регистрирует `http://localhost:3000/auth/callback` (dev) и
   `http://localhost:3100/auth/callback` (E2E); prod — `https://plant-market.by/auth/callback`.
@@ -50,18 +50,18 @@ Storefront умел каталог, карточку WYSIWYG, фильтры и 
 
 ## Последствия
 
-- Access token живёт 10 минут и хранится в httpOnly cookie; refresh пока не используется BFF для
-  автоматического обновления — при истечении токена пользователь входит снова.
+- Access token живёт 10 минут и хранится в httpOnly cookie; checkout BFF обновляет его через
+  refresh при 401 и повторяет запрос. History-страницы при истёкшем токене просят войти снова.
 - CSRF для BFF POST — double-submit `pm.csrf` + `X-CSRF-Token`; cookie `Secure` включается
   переменной `COOKIE_SECURE=true` на HTTPS.
 - Next.js route handlers становятся точкой отказа checkout; health/readiness и логи обязательны.
-- Мульти-корзина, адреса, слоты доставки и история заказов — после MVP; сейчас один товар на заказ.
+- Адреса, слоты доставки и отзывы — после MVP; корзина и история заказов уже есть.
 - E2E J1 расширен до полного сценария: логин PKCE → checkout → pay → подтверждение.
 
 ## Критерии готовности
 
 - ✅ J1 E2E зелёный через UI, включая OAuth2 PKCE и sandbox-оплату.
 - ✅ Access/refresh токены в httpOnly cookie, не доступны JavaScript.
-- ⏳ Повторный refresh rotation инвалидирует старую цепочку (тест auth-service уже есть);
-  BFF-обновление токена — следующая итерация.
+- ✅ Повторный refresh rotation инвалидирует старую цепочку (тест auth-service);
+  BFF обновляет токен при 401.
 - ⏳ p95 checkout через gateway в бюджете A15 на staging.

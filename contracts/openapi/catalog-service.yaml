@@ -1064,7 +1064,19 @@ components:
     Variant:
       type: object
       additionalProperties: false
-      required: [id, productId, sku, name, priceMinor, currency, status, createdAt, updatedAt]
+      required:
+        [
+          id,
+          productId,
+          sku,
+          name,
+          priceMinor,
+          currency,
+          status,
+          availableQuantity,
+          createdAt,
+          updatedAt,
+        ]
       properties:
         id:
           type: string
@@ -1091,6 +1103,9 @@ components:
           enum: [BYN]
         status:
           $ref: '#/components/schemas/VariantStatus'
+        availableQuantity:
+          type: integer
+          minimum: 0
         createdAt:
           type: string
           format: date-time

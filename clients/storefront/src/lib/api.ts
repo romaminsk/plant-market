@@ -65,6 +65,20 @@ export interface IndividualPlantPage {
   totalPages: number;
 }
 
+export interface Variant {
+  id: string;
+  productId: string;
+  sku: string;
+  name: string;
+  size: string | null;
+  potSize: string | null;
+  form: string | null;
+  priceMinor: number;
+  currency: string;
+  status: 'DRAFT' | 'ACTIVE' | 'ARCHIVED';
+  availableQuantity: number;
+}
+
 export interface ShippingZone {
   id: string;
   name: string;
@@ -133,6 +147,16 @@ export async function fetchIndividualPlant(id: string): Promise<IndividualPlant>
     throw new Error(`Individual plant request failed with status ${response.status}`);
   }
   return (await response.json()) as IndividualPlant;
+}
+
+export async function fetchVariants(productId: string): Promise<Variant[]> {
+  const response = await fetch(`${API_URL}/api/v1/products/${productId}/variants`, {
+    cache: 'no-store',
+  });
+  if (!response.ok) {
+    throw new Error(`Variants request failed with status ${response.status}`);
+  }
+  return (await response.json()) as Variant[];
 }
 
 export async function fetchShippingZones(): Promise<ShippingZone[]> {
