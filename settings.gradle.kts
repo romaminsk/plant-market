@@ -20,5 +20,6 @@ include(
     "services:auth-service",
     "services:catalog-service",
     "services:order-service",
+    "services:payment-service",
     "tests:e2e",
 )

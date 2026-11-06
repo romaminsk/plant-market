@@ -15,6 +15,7 @@ fi
     :services:auth-service:bootJar \
     :services:catalog-service:bootJar \
     :services:order-service:bootJar \
+    :services:payment-service:bootJar \
     :services:api-gateway:bootJar \
     --console=plain
 

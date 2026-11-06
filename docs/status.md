@@ -1,8 +1,8 @@
 # Plant Market — статус проекта
 
 **Обновлено:** 2026-11-05
-**Фаза:** 2 — orders и резервы готовы; следующий платёжный sandbox
-**Текущая задача:** Phase 2 — payment-service + WireMock
+**Фаза:** 2 — orders, резервы и платёжный sandbox готовы
+**Текущая задача:** Phase 2 — delivery zones и notifications
 
 ## Состояние окружения
 
@@ -63,7 +63,9 @@
 - `catalog-service`: таблица reservations, TTL 15 минут, `reserved_quantity` у вариантов, scheduled expiry; резерв вариантов и индивидуальных растений.
 - Gateway route `/api/v1/orders/**`; order-service в compose с healthcheck.
 - J5 API E2E: create → checkout → cancel → reservation released; отдельный integration-тест на reserve/confirm/release.
-- Payment в Phase 2 пока stub (`/pay` подтверждает резерв); payment-service — следующий шаг.
+- `payment-service`: sandbox-провайдер через WireMock, webhook с `X-Provider-Secret`, статусы
+  CREATED/PENDING/CONFIRMED/FAILED/REFUNDED; `/pay` подтверждает резерв только после CONFIRMED.
+- ADR-0007: платёжный sandbox; реальный провайдер и refund flow — перед prod/Phase 3.
 
 ## Тесты и покрытие
 
@@ -72,17 +74,18 @@
 | `platform-common` |     9 |           74% |
 | `auth-service`    |     3 |           88% |
 | `catalog-service` |     5 |           83% |
-| `order-service`   |     1 |           73% |
+| `order-service`   |     1 |           70% |
+| `payment-service` |     1 |           77% |
 | `api-gateway`     |     8 |           96% |
-| `tests:e2e`       |     6 |             — |
+| `tests:e2e`       |     7 |             — |
 
-Итого **26 backend-тестов + 6 E2E = 32 теста, 0 падений**. JaCoCo-порог 70% проходит.
+Итого **27 backend-тестов + 7 E2E = 34 теста, 0 падений**. JaCoCo-порог 70% проходит.
 
 ## Следующие 3 шага
 
-1. Phase 2: payment-service sandbox + WireMock-стабы.
-2. Phase 2: delivery zones и расчёт доставки.
-3. Phase 2: notifications + outbox publisher на Spring events.
+1. Phase 2: delivery zones и расчёт доставки.
+2. Phase 2: notifications + outbox publisher на Spring events.
+3. Phase 2: J2/J3/J4 E2E и закрытие A11-чеклиста.
 
 ## Блокеры и риски
 

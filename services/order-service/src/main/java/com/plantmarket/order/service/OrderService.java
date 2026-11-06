@@ -4,6 +4,8 @@ import com.plantmarket.common.error.ApiException;
 import com.plantmarket.order.client.CatalogClient;
 import com.plantmarket.order.client.CatalogPlant;
 import com.plantmarket.order.client.CatalogVariant;
+import com.plantmarket.order.client.PaymentClient;
+import com.plantmarket.order.client.PaymentResult;
 import com.plantmarket.order.client.ReservationRequest;
 import com.plantmarket.order.client.ReservationResult;
 import com.plantmarket.order.client.ReservationTargetType;
@@ -34,6 +36,7 @@ public class OrderService {
   private final OrderStatusHistoryRepository historyRepository;
   private final OutboxEventRepository outboxRepository;
   private final CatalogClient catalogClient;
+  private final PaymentClient paymentClient;
   private final ObjectMapper objectMapper;
 
   public OrderService(
@@ -41,11 +44,13 @@ public class OrderService {
       OrderStatusHistoryRepository historyRepository,
       OutboxEventRepository outboxRepository,
       CatalogClient catalogClient,
+      PaymentClient paymentClient,
       ObjectMapper objectMapper) {
     this.orderRepository = orderRepository;
     this.historyRepository = historyRepository;
     this.outboxRepository = outboxRepository;
     this.catalogClient = catalogClient;
+    this.paymentClient = paymentClient;
     this.objectMapper = objectMapper;
   }
 
@@ -118,6 +123,11 @@ public class OrderService {
     OrderEntity order = findOwned(customerId, orderId);
     if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
       throw ApiException.conflict("Only PENDING_PAYMENT orders can be paid");
+    }
+    PaymentResult payment =
+        paymentClient.createPayment(orderId, order.getTotalMinor(), order.getCurrency());
+    if (!"CONFIRMED".equals(payment.status())) {
+      throw ApiException.conflict("Payment is not confirmed: " + payment.status());
     }
     catalogClient.confirm(orderId);
     order.markPaid();

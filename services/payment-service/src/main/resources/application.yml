@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: payment-service
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${POSTGRES_PORT:5432}/pm_payments
+    username: ${POSTGRES_USER:plantmarket}
+    password: ${POSTGRES_PASSWORD:plantmarket}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+
+server:
+  port: ${PAYMENT_SERVICE_PORT:8084}
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+app:
+  payment:
+    provider-uri: ${PAYMENT_PROVIDER_URI:http://localhost:8089}
+    webhook-secret: ${PAYMENT_WEBHOOK_SECRET:dev-payment-webhook-secret}

@@ -106,6 +106,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-plantmarket}
       ORDER_SERVICE_PORT: 8083
       CATALOG_SERVICE_URI: http://catalog-service:8081
+      PAYMENT_SERVICE_URI: http://payment-service:8084
       JWT_SECRET: ${JWT_SECRET:-dev-only-plant-market-jwt-secret-change-me-0123456789}
     ports:
       - '127.0.0.1:${ORDER_SERVICE_PORT:-8083}:8083'
@@ -114,8 +115,36 @@ services:
         condition: service_healthy
       catalog-service:
         condition: service_healthy
+      payment-service:
+        condition: service_healthy
     healthcheck:
       test: ['CMD-SHELL', "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8083'"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 30s
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: services/payment-service/Dockerfile
+    environment:
+      DB_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-plantmarket}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-plantmarket}
+      PAYMENT_SERVICE_PORT: 8084
+      PAYMENT_PROVIDER_URI: http://wiremock:8080
+      PAYMENT_WEBHOOK_SECRET: ${PAYMENT_WEBHOOK_SECRET:-dev-payment-webhook-secret}
+    ports:
+      - '127.0.0.1:${PAYMENT_SERVICE_PORT:-8084}:8084'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      wiremock:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8084'"]
       interval: 5s
       timeout: 3s
       retries: 30

@@ -35,5 +35,7 @@ app:
     secret: ${JWT_SECRET:dev-only-plant-market-jwt-secret-change-me-0123456789}
   catalog:
     base-uri: ${CATALOG_SERVICE_URI:http://localhost:8081}
+  payment:
+    base-uri: ${PAYMENT_SERVICE_URI:http://localhost:8084}
   orders:
     reservation-ttl: ${RESERVATION_TTL:PT15M}

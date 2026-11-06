@@ -58,6 +58,31 @@ class OrderApiE2ETest {
     assertThat(found).isTrue();
   }
 
+  @Test
+  void payOrderThroughSandboxProvider() throws Exception {
+    String token = login();
+    String variantId = seedVariantId();
+    JsonNode created =
+        post(
+            "/api/v1/orders",
+            token,
+            Map.of("items", java.util.List.of(Map.of("variantId", variantId, "quantity", 1))));
+    String orderId = created.path("id").asString();
+
+    JsonNode checkedOut = post("/api/v1/orders/" + orderId + "/checkout", token, Map.of());
+    assertThat(checkedOut.path("status").asString()).isEqualTo("PENDING_PAYMENT");
+
+    JsonNode paid = post("/api/v1/orders/" + orderId + "/pay", token, Map.of());
+    assertThat(paid.path("status").asString()).isEqualTo("PAID");
+  }
+
+  private String seedVariantId() throws Exception {
+    JsonNode products = get("/api/v1/products?size=100", null);
+    String productId = findProductId(products);
+    JsonNode variants = get("/api/v1/products/" + productId + "/variants", null);
+    return variants.get(0).path("id").asString();
+  }
+
   private String findProductId(JsonNode products) {
     for (JsonNode item : products.path("items")) {
       if ("MON-001".equals(item.path("sku").asString())) {

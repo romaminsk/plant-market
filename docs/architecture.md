@@ -1,6 +1,6 @@
 # Архитектура Plant Market
 
-**Статус:** Phase 2. Реализованы `api-gateway`, `auth-service`, `catalog-service`, `order-service`; `payment-service` — следующий шаг.
+**Статус:** Phase 2. Реализованы `api-gateway`, `auth-service`, `catalog-service`, `order-service`, `payment-service` (sandbox); delivery и notifications — следующие шаги.
 
 ## Контекст
 

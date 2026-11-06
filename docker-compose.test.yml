@@ -28,3 +28,6 @@ services:
 
   order-service:
     ports: !reset []
+
+  payment-service:
+    ports: !reset []

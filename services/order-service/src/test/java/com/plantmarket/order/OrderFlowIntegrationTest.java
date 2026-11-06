@@ -10,6 +10,8 @@ import com.nimbusds.jwt.SignedJWT;
 import com.plantmarket.order.client.CatalogClient;
 import com.plantmarket.order.client.CatalogPlant;
 import com.plantmarket.order.client.CatalogVariant;
+import com.plantmarket.order.client.PaymentClient;
+import com.plantmarket.order.client.PaymentResult;
 import com.plantmarket.order.client.ReservationRequest;
 import com.plantmarket.order.client.ReservationResult;
 import com.plantmarket.order.web.dto.CreateOrderItemRequest;
@@ -48,6 +50,7 @@ class OrderFlowIntegrationTest {
   private static final UUID VARIANT_ID = UUID.randomUUID();
   private static final UUID PLANT_ID = UUID.randomUUID();
   private static final FakeCatalogClient CATALOG = new FakeCatalogClient();
+  private static final FakePaymentClient PAYMENT = new FakePaymentClient();
 
   @BeforeAll
   static void startDatabase() {
@@ -115,6 +118,7 @@ class OrderFlowIntegrationTest {
     assertThat(paid.getBody()).isNotNull();
     assertThat(paid.getBody().status().name()).isEqualTo("PAID");
     assertThat(CATALOG.confirmCalls.get()).isEqualTo(1);
+    assertThat(PAYMENT.createCalls.get()).isEqualTo(1);
 
     ResponseEntity<OrderResponse> second =
         restTemplate.exchange(
@@ -176,6 +180,23 @@ class OrderFlowIntegrationTest {
     @Primary
     CatalogClient catalogClient() {
       return CATALOG;
+    }
+
+    @Bean
+    @Primary
+    PaymentClient paymentClient() {
+      return PAYMENT;
+    }
+  }
+
+  static final class FakePaymentClient implements PaymentClient {
+
+    final AtomicInteger createCalls = new AtomicInteger();
+
+    @Override
+    public PaymentResult createPayment(UUID orderId, long amountMinor, String currency) {
+      createCalls.incrementAndGet();
+      return new PaymentResult(UUID.randomUUID(), "CONFIRMED");
     }
   }
 

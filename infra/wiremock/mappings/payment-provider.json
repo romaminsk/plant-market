@@ -1,0 +1,18 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/provider/payments"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "id": "{{randomValue type='UUID'}}",
+      "status": "AUTHORIZED",
+      "redirectUrl": "http://localhost:8089/pay/mock"
+    },
+    "transformers": ["response-template"]
+  }
+}

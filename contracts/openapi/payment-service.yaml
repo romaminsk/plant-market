@@ -1,0 +1,192 @@
+openapi: 3.1.0
+info:
+  title: Plant Market — Payment Service
+  version: 0.1.0
+  description: |
+    Phase 2 sandbox payment API. The service calls the provider through WireMock and accepts
+    provider webhooks. All errors use RFC 7807 `application/problem+json`.
+servers:
+  - url: http://localhost:8084
+    description: Internal service (local)
+
+tags:
+  - name: payments
+
+paths:
+  /api/v1/payments:
+    post:
+      operationId: createPayment
+      tags: [payments]
+      summary: Create a payment through the sandbox provider
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePaymentRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Provider rejected the payment
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /api/v1/payments/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getPayment
+      tags: [payments]
+      responses:
+        '200':
+          description: Payment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/payments/webhook:
+    post:
+      operationId: paymentWebhook
+      tags: [payments]
+      summary: Provider callback; requires X-Provider-Secret
+      parameters:
+        - name: X-Provider-Secret
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentWebhookRequest'
+      responses:
+        '200':
+          description: Updated payment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '401':
+          description: Invalid webhook secret
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  responses:
+    BadRequest:
+      description: Validation failed
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: Payment not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+
+  schemas:
+    CreatePaymentRequest:
+      type: object
+      additionalProperties: false
+      required: [orderId, amountMinor, currency]
+      properties:
+        orderId:
+          type: string
+          format: uuid
+        amountMinor:
+          type: integer
+          format: int64
+          minimum: 1
+        currency:
+          type: string
+          enum: [BYN]
+
+    PaymentWebhookRequest:
+      type: object
+      additionalProperties: false
+      required: [providerRef, status]
+      properties:
+        providerRef:
+          type: string
+        status:
+          type: string
+          enum: [AUTHORIZED, CONFIRMED, PENDING, FAILED, REFUNDED]
+
+    PaymentStatus:
+      type: string
+      enum: [CREATED, PENDING, CONFIRMED, FAILED, REFUNDED]
+
+    Payment:
+      type: object
+      additionalProperties: false
+      required: [id, orderId, amountMinor, currency, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        orderId:
+          type: string
+          format: uuid
+        amountMinor:
+          type: integer
+          format: int64
+          minimum: 1
+        currency:
+          type: string
+          enum: [BYN]
+        status:
+          $ref: '#/components/schemas/PaymentStatus'
+        providerRef:
+          type: string
+        redirectUrl:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Problem:
+      type: object
+      additionalProperties: false
+      required: [type, title, status, detail, instance, traceId]
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+        traceId:
+          type: string
