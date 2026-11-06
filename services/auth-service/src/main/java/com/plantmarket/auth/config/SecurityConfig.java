@@ -48,6 +48,7 @@ import org.springframework.security.oauth2.server.authorization.token.OAuth2Toke
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 
 @Configuration
@@ -134,7 +135,7 @@ public class SecurityConfig {
     http.authorizeHttpRequests(auth ->
             auth.requestMatchers("/login", "/error").permitAll().anyRequest().authenticated())
         .formLogin(Customizer.withDefaults())
-        .csrf(Customizer.withDefaults());
+        .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()));
     return http.build();
   }
 
