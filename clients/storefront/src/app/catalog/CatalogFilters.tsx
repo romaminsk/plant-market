@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { pluralRu } from '@/lib/plural';
 
 const LIGHT_OPTIONS = [
   { value: '', label: 'Любой' },
@@ -60,7 +61,9 @@ export function CatalogFilters({
           <p className="eyebrow">Подбор</p>
           <h2>Фильтры</h2>
         </div>
-        <span className="filter-count">{activeCount > 0 ? `${activeCount} выбрано` : 'все'}</span>
+        <span className="filter-count">{activeCount > 0
+            ? `${activeCount} ${pluralRu(activeCount, 'фильтр', 'фильтра', 'фильтров')}`
+            : 'все'}</span>
       </div>
 
       <div className="filter-group">

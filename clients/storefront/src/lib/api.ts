@@ -99,22 +99,30 @@ export interface PlantFilters {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080';
 
-export async function fetchPublishedProducts(): Promise<ProductPage> {
-  const response = await fetch(`${API_URL}/api/v1/products?page=0&size=50&status=PUBLISHED`, {
-    cache: 'no-store',
-  });
-  if (!response.ok) {
-    throw new Error(`Catalog request failed with status ${response.status}`);
+async function fetchJson<T>(url: string, label: string): Promise<T> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const response = await fetch(url, { cache: 'no-store' });
+    if (response.ok) {
+      return (await response.json()) as T;
+    }
+    if (attempt === 0 && (response.status === 429 || response.status >= 500)) {
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      continue;
+    }
+    throw new Error(`${label} request failed with status ${response.status}`);
   }
-  return (await response.json()) as ProductPage;
+  throw new Error(`${label} request failed`);
+}
+
+export async function fetchPublishedProducts(): Promise<ProductPage> {
+  return fetchJson<ProductPage>(
+    `${API_URL}/api/v1/products?page=0&size=50&status=PUBLISHED`,
+    'Catalog',
+  );
 }
 
 export async function fetchProduct(id: string): Promise<Product> {
-  const response = await fetch(`${API_URL}/api/v1/products/${id}`, { cache: 'no-store' });
-  if (!response.ok) {
-    throw new Error(`Product request failed with status ${response.status}`);
-  }
-  return (await response.json()) as Product;
+  return fetchJson<Product>(`${API_URL}/api/v1/products/${id}`, 'Product');
 }
 
 export async function fetchIndividualPlants(
@@ -130,41 +138,22 @@ export async function fetchIndividualPlants(
   if (filters.maxPriceMinor !== undefined) {
     params.set('maxPriceMinor', String(filters.maxPriceMinor));
   }
-  const response = await fetch(`${API_URL}/api/v1/individual-plants?${params}`, {
-    cache: 'no-store',
-  });
-  if (!response.ok) {
-    throw new Error(`Individual plants request failed with status ${response.status}`);
-  }
-  return (await response.json()) as IndividualPlantPage;
+  return fetchJson<IndividualPlantPage>(
+    `${API_URL}/api/v1/individual-plants?${params}`,
+    'Individual plants',
+  );
 }
 
 export async function fetchIndividualPlant(id: string): Promise<IndividualPlant> {
-  const response = await fetch(`${API_URL}/api/v1/individual-plants/${id}`, {
-    cache: 'no-store',
-  });
-  if (!response.ok) {
-    throw new Error(`Individual plant request failed with status ${response.status}`);
-  }
-  return (await response.json()) as IndividualPlant;
+  return fetchJson<IndividualPlant>(`${API_URL}/api/v1/individual-plants/${id}`, 'Individual plant');
 }
 
 export async function fetchVariants(productId: string): Promise<Variant[]> {
-  const response = await fetch(`${API_URL}/api/v1/products/${productId}/variants`, {
-    cache: 'no-store',
-  });
-  if (!response.ok) {
-    throw new Error(`Variants request failed with status ${response.status}`);
-  }
-  return (await response.json()) as Variant[];
+  return fetchJson<Variant[]>(`${API_URL}/api/v1/products/${productId}/variants`, 'Variants');
 }
 
 export async function fetchShippingZones(): Promise<ShippingZone[]> {
-  const response = await fetch(`${API_URL}/api/v1/shipping/zones`, { cache: 'no-store' });
-  if (!response.ok) {
-    throw new Error(`Shipping zones request failed with status ${response.status}`);
-  }
-  return (await response.json()) as ShippingZone[];
+  return fetchJson<ShippingZone[]>(`${API_URL}/api/v1/shipping/zones`, 'Shipping zones');
 }
 
 const PRODUCT_IMAGES: Record<string, string> = {

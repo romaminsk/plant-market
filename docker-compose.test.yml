@@ -31,5 +31,5 @@ services:
 
   api-gateway:
     environment:
-      RATE_LIMIT_PUBLIC_RPM: 600
-      RATE_LIMIT_AUTH_RPM: 60
+      RATE_LIMIT_PUBLIC_RPM: 5000
+      RATE_LIMIT_AUTH_RPM: 200

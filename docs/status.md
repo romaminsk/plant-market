@@ -280,7 +280,7 @@
   теряется (статус подписки/претензии при этом сохраняется). Order-уведомления ретраятся (ADR-0012).
 - Outbox at-least-once: возможны дубли писем; dead-letter разбирается вручную через admin
   redrive, автоматического redrive нет.
-- CI E2E использует `docker-compose.test.yml`: rate limit 600/60 и опубликованный auth-service
+- CI E2E использует `docker-compose.test.yml`: rate limit 5000/200 и опубликованный auth-service
   `:8090` для PKCE-логина; prod-конфиг не меняется.
 - Storefront checkout: адрес есть; слоты доставки и отзывы — следующая итерация. Refresh в BFF
   реализован только в checkout, history-страницы при истёкшем токене просят войти снова.

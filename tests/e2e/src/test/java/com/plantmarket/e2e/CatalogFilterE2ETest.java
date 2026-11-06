@@ -23,6 +23,19 @@ class CatalogFilterE2ETest extends PlaywrightTestBase {
     acceptEssentialCookies();
     page.locator(".plant-card").first().waitFor();
     assertThat(page.locator(".plant-card").count()).isEqualTo(11);
+    assertThat(
+            page.getByRole(
+                    AriaRole.BUTTON,
+                    new com.microsoft.playwright.Page.GetByRoleOptions()
+                        .setName("Только вариегатные"))
+                .getAttribute("aria-pressed"))
+        .isEqualTo("false");
+    assertThat(
+            page.getByRole(
+                    AriaRole.BUTTON,
+                    new com.microsoft.playwright.Page.GetByRoleOptions().setName("Любой"))
+                .getAttribute("aria-pressed"))
+        .isEqualTo("true");
     page.screenshot(
         new com.microsoft.playwright.Page.ScreenshotOptions()
             .setPath(java.nio.file.Path.of("build", "e2e-artifacts", "catalog-all.png"))
