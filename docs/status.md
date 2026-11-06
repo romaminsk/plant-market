@@ -1,8 +1,8 @@
 # Plant Market — статус проекта
 
 **Обновлено:** 2026-11-05
-**Фаза:** 1 — каталог, auth, storefront
-**Текущая задача:** Phase 1 gate — admin update forms; J5 order/reserve — Phase 2
+**Фаза:** 1 — завершена (кроме J5 order/reserve — Phase 2)
+**Текущая задача:** Phase 2 — order-service и резервы
 
 ## Состояние окружения
 
@@ -51,7 +51,9 @@
 - Admin: вкладки продуктов, категорий, экземпляров, вариантов, партий; создание, архивирование/удаление, перевод в карантин/публикацию, списание, выпуск партии.
 - Lighthouse accessibility: **1.0** (порог 0.95).
 - Rate limit: 60 rpm публично, 10 rpm login/register, 300 rpm для запросов с Bearer-токеном (admin).
-- CI run `42101735362` — success, E2E 5/5 passed (включая Lighthouse 1.0); security run `42101735368` — success.
+- CI run `42170141399` — success, E2E 5/5 passed (включая Lighthouse 1.0); security run `42170140548` — success.
+- **Admin update forms:** редактирование продуктов, категорий, вариантов и экземпляров; E2E проверяет обновление продукта.
+- **CSRF double-submit:** `XSRF-TOKEN` + `_csrf`, session cookie `PM-SESSION`; prod — `__Host-`/Secure.
 - **Auth Phase 1:** OAuth2 Authorization Code + PKCE (SAS 7.1.2), публичные клиенты storefront/admin, refresh rotation, сессионная cookie и CSRF на форме логина; ADR-0006. `OAuth2PkceIntegrationTest` проходит.
 
 ## Тесты и покрытие
@@ -68,9 +70,9 @@
 
 ## Следующие 3 шага
 
-1. A11 T2 prod-конфиг: `__Host-PM-SESSION` + `Secure` и проверка cookie в staging.
-2. Phase 2: order-service, корзина, checkout, резервы с TTL.
-3. Phase 2: payment-service sandbox + WireMock, delivery zones, notifications.
+1. Phase 2: order-service — корзина, checkout, резервы с TTL.
+2. Phase 2: payment-service sandbox + WireMock.
+3. Phase 2: delivery zones, notifications, outbox на Spring events.
 
 ## Блокеры и риски
 
