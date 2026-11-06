@@ -145,7 +145,10 @@ export async function fetchIndividualPlants(
 }
 
 export async function fetchIndividualPlant(id: string): Promise<IndividualPlant> {
-  return fetchJson<IndividualPlant>(`${API_URL}/api/v1/individual-plants/${id}`, 'Individual plant');
+  return fetchJson<IndividualPlant>(
+    `${API_URL}/api/v1/individual-plants/${id}`,
+    'Individual plant',
+  );
 }
 
 export async function fetchVariants(productId: string): Promise<Variant[]> {

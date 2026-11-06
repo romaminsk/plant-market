@@ -61,9 +61,11 @@ export function CatalogFilters({
           <p className="eyebrow">Подбор</p>
           <h2>Фильтры</h2>
         </div>
-        <span className="filter-count">{activeCount > 0
+        <span className="filter-count">
+          {activeCount > 0
             ? `${activeCount} ${pluralRu(activeCount, 'фильтр', 'фильтра', 'фильтров')}`
-            : 'все'}</span>
+            : 'все'}
+        </span>
       </div>
 
       <div className="filter-group">
