@@ -80,6 +80,12 @@ paths:
       summary: Reserve stock and move the order to PENDING_PAYMENT
       security:
         - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckoutRequest'
       responses:
         '200':
           description: Order with reservation
@@ -139,6 +145,82 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+
+  /api/v1/shipping/zones:
+    get:
+      operationId: listShippingZones
+      tags: [shipping]
+      summary: List active delivery zones
+      responses:
+        '200':
+          description: Zones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ShippingZone'
+    post:
+      operationId: createShippingZone
+      tags: [shipping]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShippingZoneRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShippingZone'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/shipping/zones/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getShippingZone
+      tags: [shipping]
+      responses:
+        '200':
+          description: Zone
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShippingZone'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: updateShippingZone
+      tags: [shipping]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShippingZoneRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShippingZone'
+        '400':
+          $ref: '#/components/responses/BadRequest'
 
 components:
   securitySchemes:
@@ -255,6 +337,13 @@ components:
         customerId:
           type: string
           format: uuid
+        customerEmail:
+          type: string
+        shippingZoneId:
+          type: string
+          format: uuid
+        thermalPack:
+          type: boolean
         status:
           $ref: '#/components/schemas/OrderStatus'
         subtotalMinor:
@@ -287,6 +376,110 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/OrderItem'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CheckoutRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        shippingZoneId:
+          type: string
+          format: uuid
+        thermalPack:
+          type: boolean
+
+    ShippingZoneRequest:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          name,
+          city,
+          priceMinor,
+          freeFromMinor,
+          minDays,
+          maxDays,
+          winterRequiresThermal,
+          thermalPackMinor,
+        ]
+      properties:
+        name:
+          type: string
+          maxLength: 120
+        city:
+          type: string
+          maxLength: 120
+        priceMinor:
+          type: integer
+          format: int64
+          minimum: 0
+        freeFromMinor:
+          type: integer
+          format: int64
+          minimum: 0
+        minDays:
+          type: integer
+          minimum: 0
+        maxDays:
+          type: integer
+          minimum: 0
+        winterRequiresThermal:
+          type: boolean
+        thermalPackMinor:
+          type: integer
+          format: int64
+          minimum: 0
+        active:
+          type: boolean
+
+    ShippingZone:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          id,
+          name,
+          city,
+          priceMinor,
+          freeFromMinor,
+          minDays,
+          maxDays,
+          winterRequiresThermal,
+          thermalPackMinor,
+          active,
+          createdAt,
+          updatedAt,
+        ]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        city:
+          type: string
+        priceMinor:
+          type: integer
+          format: int64
+        freeFromMinor:
+          type: integer
+          format: int64
+        minDays:
+          type: integer
+        maxDays:
+          type: integer
+        winterRequiresThermal:
+          type: boolean
+        thermalPackMinor:
+          type: integer
+          format: int64
+        active:
+          type: boolean
         createdAt:
           type: string
           format: date-time

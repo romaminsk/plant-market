@@ -46,6 +46,10 @@ public class OutboxEventEntity {
     createdAt = Instant.now();
   }
 
+  public void markPublished() {
+    this.publishedAt = Instant.now();
+  }
+
   public UUID getId() {
     return id;
   }

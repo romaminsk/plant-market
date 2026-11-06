@@ -15,9 +15,12 @@ import com.plantmarket.order.domain.OrderItemType;
 import com.plantmarket.order.domain.OrderStatus;
 import com.plantmarket.order.domain.OrderStatusHistoryEntity;
 import com.plantmarket.order.domain.OutboxEventEntity;
+import com.plantmarket.order.domain.ShippingZoneEntity;
 import com.plantmarket.order.repository.OrderRepository;
 import com.plantmarket.order.repository.OrderStatusHistoryRepository;
 import com.plantmarket.order.repository.OutboxEventRepository;
+import com.plantmarket.order.repository.ShippingZoneRepository;
+import com.plantmarket.order.web.dto.CheckoutRequest;
 import com.plantmarket.order.web.dto.CreateOrderItemRequest;
 import com.plantmarket.order.web.dto.CreateOrderRequest;
 import com.plantmarket.order.web.dto.OrderItemResponse;
@@ -37,6 +40,7 @@ public class OrderService {
   private final OutboxEventRepository outboxRepository;
   private final CatalogClient catalogClient;
   private final PaymentClient paymentClient;
+  private final ShippingZoneRepository shippingZoneRepository;
   private final ObjectMapper objectMapper;
 
   public OrderService(
@@ -45,18 +49,20 @@ public class OrderService {
       OutboxEventRepository outboxRepository,
       CatalogClient catalogClient,
       PaymentClient paymentClient,
+      ShippingZoneRepository shippingZoneRepository,
       ObjectMapper objectMapper) {
     this.orderRepository = orderRepository;
     this.historyRepository = historyRepository;
     this.outboxRepository = outboxRepository;
     this.catalogClient = catalogClient;
     this.paymentClient = paymentClient;
+    this.shippingZoneRepository = shippingZoneRepository;
     this.objectMapper = objectMapper;
   }
 
   @Transactional
-  public OrderResponse create(UUID customerId, CreateOrderRequest request) {
-    OrderEntity order = new OrderEntity(customerId, "BYN");
+  public OrderResponse create(UUID customerId, String customerEmail, CreateOrderRequest request) {
+    OrderEntity order = new OrderEntity(customerId, customerEmail, "BYN");
     for (CreateOrderItemRequest item : request.items()) {
       boolean hasVariant = item.variantId() != null;
       boolean hasPlant = item.individualPlantId() != null;
@@ -97,10 +103,27 @@ public class OrderService {
   }
 
   @Transactional
-  public OrderResponse checkout(UUID customerId, UUID orderId) {
+  public OrderResponse checkout(UUID customerId, UUID orderId, CheckoutRequest request) {
     OrderEntity order = findOwned(customerId, orderId);
     if (order.getStatus() != OrderStatus.DRAFT) {
       throw ApiException.conflict("Only DRAFT orders can be checked out");
+    }
+    if (request != null && request.shippingZoneId() != null) {
+      ShippingZoneEntity zone =
+          shippingZoneRepository
+              .findById(request.shippingZoneId())
+              .filter(ShippingZoneEntity::isActive)
+              .orElseThrow(() -> ApiException.badRequest("Shipping zone is not available"));
+      boolean thermal = Boolean.TRUE.equals(request.thermalPack());
+      if (zone.isWinterRequiresThermal() && !thermal) {
+        throw ApiException.conflict("Thermal packaging is required for this zone");
+      }
+      long shipping =
+          order.getSubtotalMinor() >= zone.getFreeFromMinor() ? 0 : zone.getPriceMinor();
+      if (thermal) {
+        shipping += zone.getThermalPackMinor();
+      }
+      order.applyShipping(zone.getId(), shipping, thermal);
     }
     List<ReservationRequest.Item> items =
         order.getItems().stream()
@@ -197,6 +220,9 @@ public class OrderService {
     return new OrderResponse(
         order.getId(),
         order.getCustomerId(),
+        order.getCustomerEmail(),
+        order.getShippingZoneId(),
+        order.isThermalPack(),
         order.getStatus(),
         order.getSubtotalMinor(),
         order.getShippingMinor(),

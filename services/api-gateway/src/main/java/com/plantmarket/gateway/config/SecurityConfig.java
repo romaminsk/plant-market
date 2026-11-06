@@ -46,7 +46,8 @@ public class SecurityConfig {
                     "/api/v1/categories/**",
                     "/api/v1/products/**",
                     "/api/v1/variants/**",
-                    "/api/v1/individual-plants/**")
+                    "/api/v1/individual-plants/**",
+                    "/api/v1/shipping/**")
                 .permitAll()
                 .anyExchange()
                 .authenticated())

@@ -259,6 +259,36 @@ ensure_stock_batch() {
         "$API_URL/api/v1/stock-batches/$batch_id/release"
 }
 
+ensure_shipping_zone() {
+    local name="$1"
+    local city="$2"
+    local price_minor="$3"
+    local free_from_minor="$4"
+    local min_days="$5"
+    local max_days="$6"
+    local winter="$7"
+    local thermal_minor="$8"
+    local existing
+
+    existing="$(curl -sS "$API_URL/api/v1/shipping/zones" \
+        | jq -r --arg name "$name" '.[] | select(.name == $name) | .id')"
+    if [[ -n "$existing" ]]; then
+        return 0
+    fi
+
+    curl -sS -o /tmp/pm-seed-zone.json \
+        -H "Authorization: Bearer $ADMIN_TOKEN" \
+        -H 'Content-Type: application/json' \
+        -d "$(jq -n --arg name "$name" --arg city "$city" --argjson priceMinor "$price_minor" \
+            --argjson freeFromMinor "$free_from_minor" --argjson minDays "$min_days" \
+            --argjson maxDays "$max_days" --argjson winter "$winter" \
+            --argjson thermalMinor "$thermal_minor" \
+            '{name: $name, city: $city, priceMinor: $priceMinor, freeFromMinor: $freeFromMinor,
+              minDays: $minDays, maxDays: $maxDays, winterRequiresThermal: $winter,
+              thermalPackMinor: $thermalMinor, active: true}')" \
+        "$API_URL/api/v1/shipping/zones" >/dev/null
+}
+
 wait_for_gateway
 
 ADMIN_TOKEN="$(register_or_login "$ADMIN_EMAIL" "$ADMIN_PASSWORD" "Plant Market Admin")"
@@ -296,6 +326,9 @@ ensure_individual_plant "PLANT-004" "IP-004" 159900 "EASY" "MEDIUM" false
 ensure_individual_plant "PLANT-005" "IP-005" 74900 "EASY" "MEDIUM" false
 
 ensure_stock_batch "MON-001" "MON-001-12" "Seed Supplier" 10 5000
+
+ensure_shipping_zone "Минск" "Минск" 500 10000 1 2 false 0
+ensure_shipping_zone "Гомель (зима)" "Гомель" 700 15000 2 4 true 500
 
 CATEGORY_COUNT="$(curl -sS "$API_URL/api/v1/categories" | jq 'length')"
 PRODUCT_COUNT="$(curl -sS "$API_URL/api/v1/products?size=100" | jq '.totalElements')"

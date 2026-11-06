@@ -1,6 +1,7 @@
 package com.plantmarket.order.web;
 
 import com.plantmarket.order.service.OrderService;
+import com.plantmarket.order.web.dto.CheckoutRequest;
 import com.plantmarket.order.web.dto.CreateOrderRequest;
 import com.plantmarket.order.web.dto.OrderResponse;
 import jakarta.validation.Valid;
@@ -31,7 +32,7 @@ public class OrderController {
   @ResponseStatus(HttpStatus.CREATED)
   public OrderResponse create(
       @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody CreateOrderRequest request) {
-    return orderService.create(customerId(jwt), request);
+    return orderService.create(customerId(jwt), jwt.getClaimAsString("email"), request);
   }
 
   @GetMapping
@@ -45,8 +46,11 @@ public class OrderController {
   }
 
   @PostMapping("/{id}/checkout")
-  public OrderResponse checkout(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
-    return orderService.checkout(customerId(jwt), id);
+  public OrderResponse checkout(
+      @AuthenticationPrincipal Jwt jwt,
+      @PathVariable UUID id,
+      @RequestBody(required = false) CheckoutRequest request) {
+    return orderService.checkout(customerId(jwt), id, request);
   }
 
   @PostMapping("/{id}/pay")

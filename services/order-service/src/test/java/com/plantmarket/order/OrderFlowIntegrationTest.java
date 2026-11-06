@@ -14,9 +14,14 @@ import com.plantmarket.order.client.PaymentClient;
 import com.plantmarket.order.client.PaymentResult;
 import com.plantmarket.order.client.ReservationRequest;
 import com.plantmarket.order.client.ReservationResult;
+import com.plantmarket.order.notification.OutboxPublisher;
+import com.plantmarket.order.repository.OutboxEventRepository;
+import com.plantmarket.order.web.dto.CheckoutRequest;
 import com.plantmarket.order.web.dto.CreateOrderItemRequest;
 import com.plantmarket.order.web.dto.CreateOrderRequest;
 import com.plantmarket.order.web.dto.OrderResponse;
+import com.plantmarket.order.web.dto.ShippingZoneRequest;
+import com.plantmarket.order.web.dto.ShippingZoneResponse;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
@@ -70,6 +75,8 @@ class OrderFlowIntegrationTest {
   }
 
   @Autowired private TestRestTemplate restTemplate;
+  @Autowired private OutboxPublisher outboxPublisher;
+  @Autowired private OutboxEventRepository outboxEventRepository;
 
   @Value("${app.jwt.secret}")
   private String jwtSecret;
@@ -119,6 +126,8 @@ class OrderFlowIntegrationTest {
     assertThat(paid.getBody().status().name()).isEqualTo("PAID");
     assertThat(CATALOG.confirmCalls.get()).isEqualTo(1);
     assertThat(PAYMENT.createCalls.get()).isEqualTo(1);
+    outboxPublisher.publishPending();
+    assertThat(outboxEventRepository.findAll()).allMatch(event -> event.getPublishedAt() != null);
 
     ResponseEntity<OrderResponse> second =
         restTemplate.exchange(
@@ -149,6 +158,80 @@ class OrderFlowIntegrationTest {
         restTemplate.exchange(
             "/api/v1/orders", HttpMethod.GET, new HttpEntity<>(headers), OrderResponse[].class);
     assertThat(list.getBody()).hasSize(2);
+  }
+
+  @Test
+  void checkoutAppliesShippingZoneAndThermalRule() {
+    UUID customerId = UUID.randomUUID();
+    HttpHeaders headers = headers(customerId);
+
+    ShippingZoneResponse normalZone =
+        restTemplate
+            .exchange(
+                "/api/v1/shipping/zones",
+                HttpMethod.POST,
+                new HttpEntity<>(
+                    new ShippingZoneRequest("Minsk", "Minsk", 500L, 50000L, 1, 2, false, 0L, true),
+                    headers),
+                ShippingZoneResponse.class)
+            .getBody();
+    assertThat(normalZone).isNotNull();
+
+    UUID firstOrder = createVariantOrder(headers);
+    ResponseEntity<OrderResponse> firstCheckout =
+        restTemplate.exchange(
+            "/api/v1/orders/" + firstOrder + "/checkout",
+            HttpMethod.POST,
+            new HttpEntity<>(new CheckoutRequest(normalZone.id(), false), headers),
+            OrderResponse.class);
+    assertThat(firstCheckout.getBody()).isNotNull();
+    assertThat(firstCheckout.getBody().shippingMinor()).isEqualTo(500L);
+    assertThat(firstCheckout.getBody().totalMinor()).isEqualTo(10500L);
+
+    ShippingZoneResponse winterZone =
+        restTemplate
+            .exchange(
+                "/api/v1/shipping/zones",
+                HttpMethod.POST,
+                new HttpEntity<>(
+                    new ShippingZoneRequest(
+                        "Gomel winter", "Gomel", 500L, 50000L, 2, 4, true, 300L, true),
+                    headers),
+                ShippingZoneResponse.class)
+            .getBody();
+    assertThat(winterZone).isNotNull();
+
+    UUID secondOrder = createVariantOrder(headers);
+    ResponseEntity<String> rejected =
+        restTemplate.exchange(
+            "/api/v1/orders/" + secondOrder + "/checkout",
+            HttpMethod.POST,
+            new HttpEntity<>(new CheckoutRequest(winterZone.id(), false), headers),
+            String.class);
+    assertThat(rejected.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+
+    ResponseEntity<OrderResponse> accepted =
+        restTemplate.exchange(
+            "/api/v1/orders/" + secondOrder + "/checkout",
+            HttpMethod.POST,
+            new HttpEntity<>(new CheckoutRequest(winterZone.id(), true), headers),
+            OrderResponse.class);
+    assertThat(accepted.getBody()).isNotNull();
+    assertThat(accepted.getBody().shippingMinor()).isEqualTo(800L);
+    assertThat(accepted.getBody().thermalPack()).isTrue();
+  }
+
+  private UUID createVariantOrder(HttpHeaders headers) {
+    ResponseEntity<OrderResponse> created =
+        restTemplate.exchange(
+            "/api/v1/orders",
+            HttpMethod.POST,
+            new HttpEntity<>(
+                new CreateOrderRequest(List.of(new CreateOrderItemRequest(VARIANT_ID, null, 1))),
+                headers),
+            OrderResponse.class);
+    assertThat(created.getBody()).isNotNull();
+    return created.getBody().id();
   }
 
   private HttpHeaders headers(UUID customerId) {

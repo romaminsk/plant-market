@@ -27,6 +27,15 @@ public class OrderEntity {
   @Column(name = "customer_id", nullable = false)
   private UUID customerId;
 
+  @Column(name = "customer_email", length = 254)
+  private String customerEmail;
+
+  @Column(name = "shipping_zone_id")
+  private UUID shippingZoneId;
+
+  @Column(name = "thermal_pack", nullable = false)
+  private boolean thermalPack;
+
   @Enumerated(EnumType.STRING)
   @Column(name = "status", length = 30, nullable = false)
   private OrderStatus status;
@@ -71,8 +80,9 @@ public class OrderEntity {
 
   protected OrderEntity() {}
 
-  public OrderEntity(UUID customerId, String currency) {
+  public OrderEntity(UUID customerId, String customerEmail, String currency) {
     this.customerId = customerId;
+    this.customerEmail = customerEmail;
     this.currency = currency;
     this.status = OrderStatus.DRAFT;
   }
@@ -81,6 +91,13 @@ public class OrderEntity {
     items.add(item);
     subtotalMinor += item.getLineTotalMinor();
     totalMinor = subtotalMinor + shippingMinor + taxMinor - discountMinor;
+  }
+
+  public void applyShipping(UUID zoneId, long shippingMinor, boolean thermalPack) {
+    this.shippingZoneId = zoneId;
+    this.shippingMinor = shippingMinor;
+    this.thermalPack = thermalPack;
+    this.totalMinor = subtotalMinor + shippingMinor + taxMinor - discountMinor;
   }
 
   public void markPendingPayment(Instant reservationExpiresAt) {
@@ -142,6 +159,18 @@ public class OrderEntity {
 
   public UUID getCustomerId() {
     return customerId;
+  }
+
+  public String getCustomerEmail() {
+    return customerEmail;
+  }
+
+  public UUID getShippingZoneId() {
+    return shippingZoneId;
+  }
+
+  public boolean isThermalPack() {
+    return thermalPack;
   }
 
   public OrderStatus getStatus() {

@@ -29,7 +29,9 @@ public class RouteConfig {
                         "/api/v1/individual-plants/**",
                         "/api/v1/stock-batches/**")
                     .uri(catalogUri))
-        .route("order-service", route -> route.path("/api/v1/orders/**").uri(orderUri))
+        .route(
+            "order-service",
+            route -> route.path("/api/v1/orders/**", "/api/v1/shipping/**").uri(orderUri))
         .build();
   }
 }

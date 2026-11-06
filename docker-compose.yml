@@ -107,6 +107,8 @@ services:
       ORDER_SERVICE_PORT: 8083
       CATALOG_SERVICE_URI: http://catalog-service:8081
       PAYMENT_SERVICE_URI: http://payment-service:8084
+      MAIL_HOST: mailhog
+      MAIL_PORT: 1025
       JWT_SECRET: ${JWT_SECRET:-dev-only-plant-market-jwt-secret-change-me-0123456789}
     ports:
       - '127.0.0.1:${ORDER_SERVICE_PORT:-8083}:8083'

@@ -8,6 +8,9 @@ import java.util.UUID;
 public record OrderResponse(
     UUID id,
     UUID customerId,
+    String customerEmail,
+    UUID shippingZoneId,
+    boolean thermalPack,
     OrderStatus status,
     long subtotalMinor,
     long shippingMinor,

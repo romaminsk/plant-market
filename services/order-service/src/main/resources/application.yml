@@ -15,6 +15,12 @@ spring:
           time_zone: UTC
   flyway:
     enabled: true
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    properties:
+      mail.smtp.auth: false
+      mail.smtp.starttls.enable: false
 
 server:
   port: ${ORDER_SERVICE_PORT:8083}
@@ -39,3 +45,5 @@ app:
     base-uri: ${PAYMENT_SERVICE_URI:http://localhost:8084}
   orders:
     reservation-ttl: ${RESERVATION_TTL:PT15M}
+  outbox:
+    publish-ms: ${OUTBOX_PUBLISH_MS:5000}

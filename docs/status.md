@@ -1,8 +1,8 @@
 # Plant Market — статус проекта
 
 **Обновлено:** 2026-11-05
-**Фаза:** 2 — orders, резервы и платёжный sandbox готовы
-**Текущая задача:** Phase 2 — delivery zones и notifications
+**Фаза:** 2 — orders, резервы, оплата, доставка и уведомления готовы
+**Текущая задача:** Phase 2 gate — J2/J3/J4 E2E и A11
 
 ## Состояние окружения
 
@@ -66,6 +66,8 @@
 - `payment-service`: sandbox-провайдер через WireMock, webhook с `X-Provider-Secret`, статусы
   CREATED/PENDING/CONFIRMED/FAILED/REFUNDED; `/pay` подтверждает резерв только после CONFIRMED.
 - ADR-0007: платёжный sandbox; реальный провайдер и refund flow — перед prod/Phase 3.
+- Delivery zones + winter thermal rule; `CheckoutRequest` с `shippingZoneId`/`thermalPack`.
+- Outbox publisher на Spring events + MailHog-уведомления на PAID/CANCELLED (ADR-0008).
 
 ## Тесты и покрытие
 
@@ -74,18 +76,18 @@
 | `platform-common` |     9 |           74% |
 | `auth-service`    |     3 |           88% |
 | `catalog-service` |     5 |           83% |
-| `order-service`   |     1 |           70% |
+| `order-service`   |     2 |           73% |
 | `payment-service` |     1 |           77% |
 | `api-gateway`     |     8 |           96% |
-| `tests:e2e`       |     7 |             — |
+| `tests:e2e`       |     8 |             — |
 
-Итого **27 backend-тестов + 7 E2E = 34 теста, 0 падений**. JaCoCo-порог 70% проходит.
+Итого **28 backend-тестов + 8 E2E = 36 тестов, 0 падений**. JaCoCo-порог 70% проходит.
 
 ## Следующие 3 шага
 
-1. Phase 2: delivery zones и расчёт доставки.
-2. Phase 2: notifications + outbox publisher на Spring events.
-3. Phase 2: J2/J3/J4 E2E и закрытие A11-чеклиста.
+1. Phase 2 gate: J2 (restock), J3 (зимняя доставка UI), J4 (претензия) E2E.
+2. Phase 2: закрыть A11-чеклист и добавить retry/outbox dead-letter.
+3. Phase 3: WYSIWYG-галерея, waitlist, care-напоминания.
 
 ## Блокеры и риски
 
