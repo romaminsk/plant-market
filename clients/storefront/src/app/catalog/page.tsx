@@ -7,6 +7,8 @@ import {
   productImage,
   type PlantFilters,
 } from '@/lib/api';
+import { CatalogFilters } from './CatalogFilters';
+import { pluralRu } from '@/lib/plural';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,8 +17,6 @@ export const metadata: Metadata = {
   description: 'Вариегатные, редкие и индивидуальные комнатные растения в наличии.',
   alternates: { canonical: '/catalog' },
 };
-
-const LIGHT_OPTIONS = ['LOW', 'MEDIUM', 'BRIGHT', 'DIRECT'] as const;
 
 export default async function CatalogPage({
   searchParams,
@@ -33,6 +33,7 @@ export default async function CatalogPage({
       : undefined;
 
   const filters: PlantFilters = { variegated, light, maxPriceMinor };
+  const filtersActive = Boolean(variegated || light || maxPriceMinor !== undefined);
   const [plants, products] = await Promise.all([
     fetchIndividualPlants(filters),
     fetchPublishedProducts(),
@@ -40,148 +41,145 @@ export default async function CatalogPage({
 
   return (
     <section>
-      <div className="page-heading">
+      <div className="catalog-hero">
         <div>
           <p className="eyebrow">WYSIWYG · каталог</p>
-          <h1>Растения в наличии</h1>
+          <h1>Растения для вашего дома</h1>
           <p className="muted">
-            Каждое индивидуальное растение — конкретный экземпляр с уникальным кодом.
+            Конкретные экземпляры с фото листьев, корней и дефектов. Что видите — то и получите.
           </p>
         </div>
-        <span className="count" aria-live="polite">
-          {plants.totalElements} растений
-        </span>
+        <div className="hero-stat" aria-live="polite">
+          <strong>{plants.totalElements}</strong>
+          <span>
+            {pluralRu(plants.totalElements, 'растение', 'растения', 'растений')} в наличии
+          </span>
+        </div>
       </div>
 
-      <form className="filters" method="get" action="/catalog" aria-label="Фильтры каталога">
-        <label className="filter-check">
-          <input type="checkbox" name="variegated" value="true" defaultChecked={variegated} />
-          Вариегатные
-        </label>
-        <label>
-          Свет
-          <select name="light" defaultValue={light ?? ''}>
-            <option value="">любой</option>
-            {LIGHT_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Цена до, BYN
-          <input
-            type="number"
-            name="maxPrice"
-            min="0"
-            step="1"
-            defaultValue={maxPrice !== undefined && Number.isFinite(maxPrice) ? maxPrice : ''}
-          />
-        </label>
-        <button type="submit">Показать</button>
-        <Link className="reset-link" href="/catalog">
-          Сбросить
-        </Link>
-      </form>
+      <div className="catalog-layout">
+        <CatalogFilters variegated={variegated} light={light} maxPrice={maxPrice} />
 
-      {plants.items.length === 0 ? (
-        <p className="empty">Под выбранные фильтры растений нет.</p>
-      ) : (
-        <ul className="plant-grid">
-          {plants.items.map((plant) => (
-            <li key={plant.id} className="plant-card">
-              <Link className="plant-photo" href={`/plants/${plant.id}`} aria-label={plant.code}>
-                {(plant.photos?.[0]?.url ?? plant.photoUrl) ? (
-                  <img
-                    src={plant.photos?.[0]?.url ?? plant.photoUrl ?? ''}
-                    alt={`${plant.productName}, ${plant.code}`}
-                    width={400}
-                    height={300}
-                    loading="eager"
-                  />
-                ) : (
-                  <img
-                    src="/images/plants/monstera.jpg"
-                    alt={`${plant.productName}, ${plant.code}`}
-                    width={400}
-                    height={300}
-                    loading="eager"
-                  />
-                )}
+        <div className="catalog-results">
+          <div className="results-bar">
+            <p>
+              Найдено <strong>{plants.totalElements}</strong>
+            </p>
+            <span className="muted">Фото и код закреплены за экземпляром</span>
+          </div>
+
+          {plants.items.length === 0 ? (
+            <div className="empty">
+              <h2>Под эти фильтры растений нет</h2>
+              <p>Попробуйте убрать свет или увеличить бюджет.</p>
+              <Link className="button-link" href="/catalog">
+                Сбросить фильтры
               </Link>
-              <div className="product-body">
-                <p className="sku">{plant.code} · WYSIWYG</p>
-                <h2>
-                  <Link href={`/plants/${plant.id}`}>{plant.productName}</Link>
-                </h2>
-                {plant.description ? <p className="muted">{plant.description}</p> : null}
-                <dl className="facts">
-                  <div>
-                    <dt>Свет</dt>
-                    <dd>{plant.light}</dd>
+            </div>
+          ) : (
+            <ul className="plant-grid">
+              {plants.items.map((plant) => (
+                <li key={plant.id} className="plant-card">
+                  <Link
+                    className="plant-photo"
+                    href={`/plants/${plant.id}`}
+                    aria-label={plant.code}
+                  >
+                    <img
+                      src={
+                        plant.photos?.[0]?.url ?? plant.photoUrl ?? '/images/plants/monstera.jpg'
+                      }
+                      alt={`${plant.productName}, ${plant.code}`}
+                      width={400}
+                      height={300}
+                      loading="eager"
+                    />
+                    <span className="photo-badge">WYSIWYG</span>
+                  </Link>
+                  <div className="product-body">
+                    <p className="sku">{plant.code}</p>
+                    <h2>
+                      <Link href={`/plants/${plant.id}`}>{plant.productName}</Link>
+                    </h2>
+                    <p className="muted plant-description">{plant.description}</p>
+                    <dl className="facts">
+                      <div>
+                        <dt>Свет</dt>
+                        <dd>{plant.light}</dd>
+                      </div>
+                      <div>
+                        <dt>Уход</dt>
+                        <dd>{plant.careLevel}</dd>
+                      </div>
+                      <div>
+                        <dt>Питомцы</dt>
+                        <dd>{plant.petSafe ? 'безопасно' : 'осторожно'}</dd>
+                      </div>
+                    </dl>
+                    <p className="price">{formatPrice(plant.priceMinor, plant.currency)}</p>
                   </div>
-                  <div>
-                    <dt>Уход</dt>
-                    <dd>{plant.careLevel}</dd>
-                  </div>
-                  <div>
-                    <dt>Питомцы</dt>
-                    <dd>{plant.petSafe ? 'безопасно' : 'осторожно'}</dd>
-                  </div>
-                </dl>
-                <p className="price">{formatPrice(plant.priceMinor, plant.currency)}</p>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+                </li>
+              ))}
+            </ul>
+          )}
 
-      <div className="section-heading">
-        <h2>Позиции каталога</h2>
-        <span className="count">{products.totalElements} позиций</span>
+          {!filtersActive ? (
+            <>
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">Не только экземпляры</p>
+                  <h2>Позиции каталога</h2>
+                </div>
+                <span className="count">
+                  {products.totalElements}{' '}
+                  {pluralRu(products.totalElements, 'позиция', 'позиции', 'позиций')}
+                </span>
+              </div>
+              {products.items.length === 0 ? (
+                <p className="empty">Каталог пока пуст.</p>
+              ) : (
+                <ul className="product-grid">
+                  {products.items.map((product) => (
+                    <li key={product.id} className="product-card">
+                      <div className="product-photo">
+                        <img
+                          src={productImage(product.sku)}
+                          alt={product.name}
+                          width={400}
+                          height={300}
+                          loading="eager"
+                        />
+                      </div>
+                      <div className="product-body">
+                        <p className="sku">{product.sku}</p>
+                        <h2>
+                          <Link href={`/catalog/${product.id}`}>{product.name}</Link>
+                        </h2>
+                        <p className="muted plant-description">{product.description}</p>
+                        <dl className="facts">
+                          <div>
+                            <dt>Свет</dt>
+                            <dd>{product.light}</dd>
+                          </div>
+                          <div>
+                            <dt>Уход</dt>
+                            <dd>{product.careLevel}</dd>
+                          </div>
+                          <div>
+                            <dt>Питомцы</dt>
+                            <dd>{product.petSafe ? 'безопасно' : 'осторожно'}</dd>
+                          </div>
+                        </dl>
+                        <p className="price">{formatPrice(product.priceMinor, product.currency)}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
+          ) : null}
+        </div>
       </div>
-      {products.items.length === 0 ? (
-        <p className="empty">Каталог пока пуст.</p>
-      ) : (
-        <ul className="product-grid">
-          {products.items.map((product) => (
-            <li key={product.id} className="product-card">
-              <div className="product-photo">
-                <img
-                  src={productImage(product.sku)}
-                  alt={product.name}
-                  width={400}
-                  height={300}
-                  loading="eager"
-                />
-              </div>
-              <div className="product-body">
-                <p className="sku">{product.sku}</p>
-                <h2>
-                  <Link href={`/catalog/${product.id}`}>{product.name}</Link>
-                </h2>
-                {product.description ? <p className="muted">{product.description}</p> : null}
-                <dl className="facts">
-                  <div>
-                    <dt>Свет</dt>
-                    <dd>{product.light}</dd>
-                  </div>
-                  <div>
-                    <dt>Уход</dt>
-                    <dd>{product.careLevel}</dd>
-                  </div>
-                  <div>
-                    <dt>Питомцы</dt>
-                    <dd>{product.petSafe ? 'безопасно' : 'осторожно'}</dd>
-                  </div>
-                </dl>
-                <p className="price">{formatPrice(product.priceMinor, product.currency)}</p>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
     </section>
   );
 }

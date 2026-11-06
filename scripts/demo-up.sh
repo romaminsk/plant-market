@@ -12,6 +12,10 @@ if [[ ! -f .env ]]; then
     cp .env.example .env
 fi
 
+# Demo drives many catalog navigations; keep the public limit above the prod default.
+export RATE_LIMIT_PUBLIC_RPM="${RATE_LIMIT_PUBLIC_RPM:-600}"
+export RATE_LIMIT_AUTH_RPM="${RATE_LIMIT_AUTH_RPM:-60}"
+
 ./scripts/dev-up.sh
 if [[ "${DEMO_SKIP_SEED:-}" != "1" ]]; then
     ./scripts/seed.sh

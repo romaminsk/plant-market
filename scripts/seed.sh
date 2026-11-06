@@ -254,6 +254,12 @@ ensure_plant_photos() {
         IP-004) general="/images/plants/syngonium.jpg" ;;
         IP-005) general="/images/plants/scindapsus.jpg" ;;
         IP-006) general="/images/plants/anthurium.jpg" ;;
+        IP-007) general="/images/plants/anthurium.jpg" ;;
+        IP-008) general="/images/plants/alocasia.jpg" ;;
+        IP-009) general="/images/plants/syngonium.jpg" ;;
+        IP-010) general="/images/plants/scindapsus.jpg" ;;
+        IP-011) general="/images/plants/anthurium.jpg" ;;
+        IP-012) general="/images/plants/philodendron.jpg" ;;
         *) general="/images/plants/monstera.jpg" ;;
     esac
 
@@ -404,8 +410,14 @@ ensure_individual_plant "PLANT-003" "IP-003" 89900 "MEDIUM" "BRIGHT" false
 ensure_individual_plant "PLANT-004" "IP-004" 159900 "EASY" "MEDIUM" false
 ensure_individual_plant "PLANT-005" "IP-005" 74900 "EASY" "MEDIUM" false
 ensure_individual_plant "PLANT-006" "IP-006" 249900 "HARD" "MEDIUM" false "QUARANTINE"
+ensure_individual_plant "PLANT-002" "IP-007" 9500 "MEDIUM" "BRIGHT" false
+ensure_individual_plant "PLANT-003" "IP-008" 4500 "MEDIUM" "LOW" false
+ensure_individual_plant "PLANT-004" "IP-009" 15000 "EASY" "DIRECT" false
+ensure_individual_plant "PLANT-005" "IP-010" 6500 "EASY" "MEDIUM" false
+ensure_individual_plant "PLANT-006" "IP-011" 3500 "HARD" "LOW" false
+ensure_individual_plant "PLANT-001" "IP-012" 22000 "MEDIUM" "BRIGHT" false
 
-for code in IP-001 IP-002 IP-003 IP-004 IP-005 IP-006; do
+for code in IP-001 IP-002 IP-003 IP-004 IP-005 IP-006 IP-007 IP-008 IP-009 IP-010 IP-011 IP-012; do
     ensure_plant_photos "$code"
 done
 

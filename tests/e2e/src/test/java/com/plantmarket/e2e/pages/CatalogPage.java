@@ -18,7 +18,8 @@ public final class CatalogPage {
   public CatalogPage open() {
     page.navigate(baseUrl + "/catalog");
     Locator heading =
-        page.getByRole(AriaRole.HEADING, new Page.GetByRoleOptions().setName("Растения в наличии"));
+        page.getByRole(
+            AriaRole.HEADING, new Page.GetByRoleOptions().setName("Растения для вашего дома"));
     try {
       heading.waitFor(new Locator.WaitForOptions().setTimeout(60_000));
     } catch (PlaywrightException firstAttempt) {
