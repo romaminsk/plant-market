@@ -18,6 +18,10 @@ import {
   login,
   releaseStockBatch,
   transitionPlant,
+  updateCategory,
+  updateIndividualPlant,
+  updateProduct,
+  updateVariant,
 } from './api';
 import type { Category, IndividualPlant, Product, StockBatch, Variant } from './api';
 
@@ -49,6 +53,10 @@ export default function App() {
   const [variantProductId, setVariantProductId] = useState('');
   const [stockProductId, setStockProductId] = useState('');
   const [stockVariants, setStockVariants] = useState<Variant[]>([]);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [editingVariant, setEditingVariant] = useState<Variant | null>(null);
+  const [editingPlant, setEditingPlant] = useState<IndividualPlant | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -290,31 +298,39 @@ export default function App() {
       {tab === 'products' ? (
         <section className="panel-grid">
           <div className="card panel">
-            <h2>Новый продукт</h2>
+            <h2>{editingProduct ? 'Редактировать продукт' : 'Новый продукт'}</h2>
             <form
+              key={editingProduct?.id ?? 'new-product'}
               onSubmit={(event) => {
                 event.preventDefault();
                 const form = event.currentTarget;
                 const data = new FormData(form);
+                const body = {
+                  sku: formValue(data, 'sku'),
+                  name: formValue(data, 'name'),
+                  slug: formValue(data, 'slug'),
+                  description: formValue(data, 'description') || null,
+                  categoryId: formValue(data, 'categoryId'),
+                  priceMinor: Math.round(formNumber(data, 'price') * 100),
+                  currency: CURRENCY,
+                  status: formValue(data, 'status'),
+                  careLevel: formValue(data, 'careLevel'),
+                  light: formValue(data, 'light'),
+                  petSafe: data.get('petSafe') === 'on',
+                  variegated: data.get('variegated') === 'on',
+                  size: formValue(data, 'size') || null,
+                  careGuide: formValue(data, 'careGuide') || null,
+                };
                 void run(
-                  () =>
-                    createProduct(accessToken, {
-                      sku: formValue(data, 'sku'),
-                      name: formValue(data, 'name'),
-                      slug: formValue(data, 'slug'),
-                      description: formValue(data, 'description') || null,
-                      categoryId: formValue(data, 'categoryId'),
-                      priceMinor: Math.round(formNumber(data, 'price') * 100),
-                      currency: CURRENCY,
-                      status: formValue(data, 'status'),
-                      careLevel: formValue(data, 'careLevel'),
-                      light: formValue(data, 'light'),
-                      petSafe: data.get('petSafe') === 'on',
-                      variegated: data.get('variegated') === 'on',
-                      size: formValue(data, 'size') || null,
-                      careGuide: formValue(data, 'careGuide') || null,
-                    }),
-                  'Продукт создан',
+                  async () => {
+                    if (editingProduct) {
+                      await updateProduct(accessToken, editingProduct.id, body);
+                      setEditingProduct(null);
+                    } else {
+                      await createProduct(accessToken, body);
+                    }
+                  },
+                  editingProduct ? 'Продукт обновлён' : 'Продукт создан',
                   form,
                 );
               }}
@@ -322,21 +338,31 @@ export default function App() {
               <div className="form-row">
                 <label>
                   SKU
-                  <input name="sku" required />
+                  <input name="sku" defaultValue={editingProduct?.sku ?? ''} required />
                 </label>
                 <label>
                   Название
-                  <input name="name" required />
+                  <input name="name" defaultValue={editingProduct?.name ?? ''} required />
                 </label>
               </div>
               <div className="form-row">
                 <label>
                   Slug
-                  <input name="slug" required pattern="[a-z0-9-]+" />
+                  <input
+                    name="slug"
+                    defaultValue={editingProduct?.slug ?? ''}
+                    required
+                    pattern="[a-z0-9-]+"
+                  />
                 </label>
                 <label>
                   Категория
-                  <select name="categoryId" required>
+                  <select
+                    name="categoryId"
+                    defaultValue={editingProduct?.categoryId ?? ''}
+                    required
+                  >
+                    <option value="">Выберите категорию</option>
                     {categories.map((category) => (
                       <option key={category.id} value={category.id}>
                         {category.name}
@@ -348,17 +374,26 @@ export default function App() {
               <div className="form-row">
                 <label>
                   Цена, BYN
-                  <input name="price" type="number" min="0" step="0.01" required />
+                  <input
+                    name="price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    defaultValue={
+                      editingProduct ? (editingProduct.priceMinor / 100).toString() : ''
+                    }
+                    required
+                  />
                 </label>
                 <label>
                   Размер
-                  <input name="size" />
+                  <input name="size" defaultValue={editingProduct?.size ?? ''} />
                 </label>
               </div>
               <div className="form-row">
                 <label>
                   Статус
-                  <select name="status" defaultValue="PUBLISHED">
+                  <select name="status" defaultValue={editingProduct?.status ?? 'PUBLISHED'}>
                     <option>DRAFT</option>
                     <option>PUBLISHED</option>
                     <option>ARCHIVED</option>
@@ -366,7 +401,7 @@ export default function App() {
                 </label>
                 <label>
                   Свет
-                  <select name="light" defaultValue="MEDIUM">
+                  <select name="light" defaultValue={editingProduct?.light ?? 'MEDIUM'}>
                     <option>LOW</option>
                     <option>MEDIUM</option>
                     <option>BRIGHT</option>
@@ -375,7 +410,7 @@ export default function App() {
                 </label>
                 <label>
                   Уход
-                  <select name="careLevel" defaultValue="EASY">
+                  <select name="careLevel" defaultValue={editingProduct?.careLevel ?? 'EASY'}>
                     <option>EASY</option>
                     <option>MEDIUM</option>
                     <option>HARD</option>
@@ -384,21 +419,42 @@ export default function App() {
               </div>
               <label>
                 Описание
-                <textarea name="description" rows={2} />
+                <textarea
+                  name="description"
+                  rows={2}
+                  defaultValue={editingProduct?.description ?? ''}
+                />
               </label>
               <label>
                 Care guide
-                <textarea name="careGuide" rows={2} />
+                <textarea
+                  name="careGuide"
+                  rows={2}
+                  defaultValue={editingProduct?.careGuide ?? ''}
+                />
               </label>
               <div className="checks">
                 <label>
-                  <input type="checkbox" name="variegated" /> Вариегатный
+                  <input
+                    type="checkbox"
+                    name="variegated"
+                    defaultChecked={editingProduct?.variegated}
+                  />{' '}
+                  Вариегатный
                 </label>
                 <label>
-                  <input type="checkbox" name="petSafe" /> Безопасен для питомцев
+                  <input type="checkbox" name="petSafe" defaultChecked={editingProduct?.petSafe} />{' '}
+                  Безопасен для питомцев
                 </label>
               </div>
-              <button type="submit">Создать продукт</button>
+              <button type="submit">
+                {editingProduct ? 'Сохранить продукт' : 'Создать продукт'}
+              </button>
+              {editingProduct ? (
+                <button type="button" className="secondary" onClick={() => setEditingProduct(null)}>
+                  Отмена
+                </button>
+              ) : null}
             </form>
           </div>
           <div className="card panel">
@@ -425,6 +481,9 @@ export default function App() {
                       </span>
                     </td>
                     <td>
+                      <button type="button" onClick={() => setEditingProduct(product)}>
+                        Редактировать
+                      </button>
                       {product.status !== 'ARCHIVED' ? (
                         <button
                           type="button"
@@ -450,37 +509,63 @@ export default function App() {
       {tab === 'categories' ? (
         <section className="panel-grid">
           <div className="card panel">
-            <h2>Новая категория</h2>
+            <h2>{editingCategory ? 'Редактировать категорию' : 'Новая категория'}</h2>
             <form
+              key={editingCategory?.id ?? 'new-category'}
               onSubmit={(event) => {
                 event.preventDefault();
                 const form = event.currentTarget;
                 const data = new FormData(form);
+                const body = {
+                  name: formValue(data, 'name'),
+                  slug: formValue(data, 'slug'),
+                  description: formValue(data, 'description') || null,
+                };
                 void run(
-                  () =>
-                    createCategory(accessToken, {
-                      name: formValue(data, 'name'),
-                      slug: formValue(data, 'slug'),
-                      description: formValue(data, 'description') || null,
-                    }),
-                  'Категория создана',
+                  async () => {
+                    if (editingCategory) {
+                      await updateCategory(accessToken, editingCategory.id, body);
+                      setEditingCategory(null);
+                    } else {
+                      await createCategory(accessToken, body);
+                    }
+                  },
+                  editingCategory ? 'Категория обновлена' : 'Категория создана',
                   form,
                 );
               }}
             >
               <label>
                 Название
-                <input name="name" required />
+                <input name="name" defaultValue={editingCategory?.name ?? ''} required />
               </label>
               <label>
                 Slug
-                <input name="slug" required pattern="[a-z0-9-]+" />
+                <input
+                  name="slug"
+                  defaultValue={editingCategory?.slug ?? ''}
+                  required
+                  pattern="[a-z0-9-]+"
+                />
               </label>
               <label>
                 Описание
-                <textarea name="description" rows={2} />
+                <textarea
+                  name="description"
+                  rows={2}
+                  defaultValue={editingCategory?.description ?? ''}
+                />
               </label>
-              <button type="submit">Создать</button>
+              <button type="submit">{editingCategory ? 'Сохранить категорию' : 'Создать'}</button>
+              {editingCategory ? (
+                <button
+                  type="button"
+                  className="secondary"
+                  onClick={() => setEditingCategory(null)}
+                >
+                  Отмена
+                </button>
+              ) : null}
             </form>
           </div>
           <div className="card panel">
@@ -499,6 +584,9 @@ export default function App() {
                     <td className="mono">{category.slug}</td>
                     <td>{category.name}</td>
                     <td>
+                      <button type="button" onClick={() => setEditingCategory(category)}>
+                        Редактировать
+                      </button>
                       <button
                         type="button"
                         onClick={() =>
@@ -522,33 +610,47 @@ export default function App() {
       {tab === 'plants' ? (
         <section className="panel-grid">
           <div className="card panel">
-            <h2>Новый экземпляр</h2>
+            <h2>{editingPlant ? 'Редактировать экземпляр' : 'Новый экземпляр'}</h2>
             <form
+              key={editingPlant?.id ?? 'new-plant'}
               onSubmit={(event) => {
                 event.preventDefault();
                 const form = event.currentTarget;
                 const data = new FormData(form);
                 const productId = formValue(data, 'productId');
+                const body = {
+                  code: formValue(data, 'code'),
+                  description: formValue(data, 'description') || null,
+                  photoUrl: formValue(data, 'photoUrl') || null,
+                  priceMinor: Math.round(formNumber(data, 'price') * 100),
+                  currency: CURRENCY,
+                  careLevel: formValue(data, 'careLevel'),
+                  light: formValue(data, 'light'),
+                  petSafe: data.get('petSafe') === 'on',
+                };
                 void run(
-                  () =>
-                    createIndividualPlant(accessToken, productId, {
-                      code: formValue(data, 'code'),
-                      description: formValue(data, 'description') || null,
-                      photoUrl: formValue(data, 'photoUrl') || null,
-                      priceMinor: Math.round(formNumber(data, 'price') * 100),
-                      currency: CURRENCY,
-                      careLevel: formValue(data, 'careLevel'),
-                      light: formValue(data, 'light'),
-                      petSafe: data.get('petSafe') === 'on',
-                    }),
-                  'Экземпляр создан (ACQUIRED)',
+                  async () => {
+                    if (editingPlant) {
+                      await updateIndividualPlant(accessToken, editingPlant.id, body);
+                      setEditingPlant(null);
+                    } else {
+                      await createIndividualPlant(accessToken, productId, body);
+                    }
+                  },
+                  editingPlant ? 'Экземпляр обновлён' : 'Экземпляр создан (ACQUIRED)',
                   form,
                 );
               }}
             >
               <label>
                 Продукт
-                <select name="productId" required>
+                <select
+                  name="productId"
+                  required
+                  defaultValue={editingPlant?.productId ?? ''}
+                  disabled={Boolean(editingPlant)}
+                >
+                  <option value="">Выберите продукт</option>
                   {products.map((product) => (
                     <option key={product.id} value={product.id}>
                       {product.name}
@@ -559,17 +661,24 @@ export default function App() {
               <div className="form-row">
                 <label>
                   Код
-                  <input name="code" required />
+                  <input name="code" defaultValue={editingPlant?.code ?? ''} required />
                 </label>
                 <label>
                   Цена, BYN
-                  <input name="price" type="number" min="0" step="0.01" required />
+                  <input
+                    name="price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    defaultValue={editingPlant ? (editingPlant.priceMinor / 100).toString() : ''}
+                    required
+                  />
                 </label>
               </div>
               <div className="form-row">
                 <label>
                   Свет
-                  <select name="light" defaultValue="MEDIUM">
+                  <select name="light" defaultValue={editingPlant?.light ?? 'MEDIUM'}>
                     <option>LOW</option>
                     <option>MEDIUM</option>
                     <option>BRIGHT</option>
@@ -578,7 +687,7 @@ export default function App() {
                 </label>
                 <label>
                   Уход
-                  <select name="careLevel" defaultValue="EASY">
+                  <select name="careLevel" defaultValue={editingPlant?.careLevel ?? 'EASY'}>
                     <option>EASY</option>
                     <option>MEDIUM</option>
                     <option>HARD</option>
@@ -587,16 +696,28 @@ export default function App() {
               </div>
               <label>
                 Описание
-                <textarea name="description" rows={2} />
+                <textarea
+                  name="description"
+                  rows={2}
+                  defaultValue={editingPlant?.description ?? ''}
+                />
               </label>
               <label>
                 Фото URL
-                <input name="photoUrl" />
+                <input name="photoUrl" defaultValue={editingPlant?.photoUrl ?? ''} />
               </label>
               <label>
-                <input type="checkbox" name="petSafe" /> Безопасен для питомцев
+                <input type="checkbox" name="petSafe" defaultChecked={editingPlant?.petSafe} />{' '}
+                Безопасен для питомцев
               </label>
-              <button type="submit">Создать экземпляр</button>
+              <button type="submit">
+                {editingPlant ? 'Сохранить экземпляр' : 'Создать экземпляр'}
+              </button>
+              {editingPlant ? (
+                <button type="button" className="secondary" onClick={() => setEditingPlant(null)}>
+                  Отмена
+                </button>
+              ) : null}
             </form>
           </div>
           <div className="card panel">
@@ -619,6 +740,9 @@ export default function App() {
                     <td>{formatPrice(plant.priceMinor, plant.currency)}</td>
                     <td>{plant.status}</td>
                     <td>
+                      <button type="button" onClick={() => setEditingPlant(plant)}>
+                        Редактировать
+                      </button>
                       {plant.status === 'ACQUIRED' ? (
                         <button
                           type="button"
@@ -670,26 +794,34 @@ export default function App() {
       {tab === 'variants' ? (
         <section className="panel-grid">
           <div className="card panel">
-            <h2>Новый вариант</h2>
+            <h2>{editingVariant ? 'Редактировать вариант' : 'Новый вариант'}</h2>
             <form
+              key={editingVariant?.id ?? 'new-variant'}
               onSubmit={(event) => {
                 event.preventDefault();
                 const form = event.currentTarget;
                 const data = new FormData(form);
                 const productId = formValue(data, 'productId');
+                const body = {
+                  sku: formValue(data, 'sku'),
+                  name: formValue(data, 'name'),
+                  size: formValue(data, 'size') || null,
+                  potSize: formValue(data, 'potSize') || null,
+                  form: formValue(data, 'form') || null,
+                  priceMinor: Math.round(formNumber(data, 'price') * 100),
+                  currency: CURRENCY,
+                  status: formValue(data, 'status'),
+                };
                 void run(
-                  () =>
-                    createVariant(accessToken, productId, {
-                      sku: formValue(data, 'sku'),
-                      name: formValue(data, 'name'),
-                      size: formValue(data, 'size') || null,
-                      potSize: formValue(data, 'potSize') || null,
-                      form: formValue(data, 'form') || null,
-                      priceMinor: Math.round(formNumber(data, 'price') * 100),
-                      currency: CURRENCY,
-                      status: formValue(data, 'status'),
-                    }),
-                  'Вариант создан',
+                  async () => {
+                    if (editingVariant) {
+                      await updateVariant(accessToken, editingVariant.id, body);
+                      setEditingVariant(null);
+                    } else {
+                      await createVariant(accessToken, productId, body);
+                    }
+                  },
+                  editingVariant ? 'Вариант обновлён' : 'Вариант создан',
                   form,
                 );
               }}
@@ -700,6 +832,7 @@ export default function App() {
                   name="productId"
                   required
                   value={variantProductId}
+                  disabled={Boolean(editingVariant)}
                   onChange={(event) => setVariantProductId(event.target.value)}
                 >
                   <option value="">Выберите продукт</option>
@@ -713,42 +846,58 @@ export default function App() {
               <div className="form-row">
                 <label>
                   SKU
-                  <input name="sku" required />
+                  <input name="sku" defaultValue={editingVariant?.sku ?? ''} required />
                 </label>
                 <label>
                   Название
-                  <input name="name" required />
+                  <input name="name" defaultValue={editingVariant?.name ?? ''} required />
                 </label>
               </div>
               <div className="form-row">
                 <label>
                   Размер
-                  <input name="size" />
+                  <input name="size" defaultValue={editingVariant?.size ?? ''} />
                 </label>
                 <label>
                   Горшок
-                  <input name="potSize" />
+                  <input name="potSize" defaultValue={editingVariant?.potSize ?? ''} />
                 </label>
                 <label>
                   Форма
-                  <input name="form" />
+                  <input name="form" defaultValue={editingVariant?.form ?? ''} />
                 </label>
               </div>
               <div className="form-row">
                 <label>
                   Цена, BYN
-                  <input name="price" type="number" min="0" step="0.01" required />
+                  <input
+                    name="price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    defaultValue={
+                      editingVariant ? (editingVariant.priceMinor / 100).toString() : ''
+                    }
+                    required
+                  />
                 </label>
                 <label>
                   Статус
-                  <select name="status" defaultValue="ACTIVE">
+                  <select name="status" defaultValue={editingVariant?.status ?? 'ACTIVE'}>
                     <option>DRAFT</option>
                     <option>ACTIVE</option>
                     <option>ARCHIVED</option>
                   </select>
                 </label>
               </div>
-              <button type="submit">Создать вариант</button>
+              <button type="submit">
+                {editingVariant ? 'Сохранить вариант' : 'Создать вариант'}
+              </button>
+              {editingVariant ? (
+                <button type="button" className="secondary" onClick={() => setEditingVariant(null)}>
+                  Отмена
+                </button>
+              ) : null}
             </form>
           </div>
           <div className="card panel">
@@ -771,6 +920,15 @@ export default function App() {
                     <td>{formatPrice(variant.priceMinor, variant.currency)}</td>
                     <td>{variant.status}</td>
                     <td>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingVariant(variant);
+                          setVariantProductId(variant.productId);
+                        }}
+                      >
+                        Редактировать
+                      </button>
                       {variant.status !== 'ARCHIVED' ? (
                         <button
                           type="button"

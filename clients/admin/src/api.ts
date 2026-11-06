@@ -10,6 +10,7 @@ export interface Product {
   sku: string;
   name: string;
   slug: string;
+  description: string | null;
   categoryId: string;
   priceMinor: number;
   currency: string;
@@ -143,6 +144,17 @@ export async function createCategory(accessToken: string, body: JsonBody): Promi
   });
 }
 
+export async function updateCategory(
+  accessToken: string,
+  categoryId: string,
+  body: JsonBody,
+): Promise<Category> {
+  return request<Category>(`/api/v1/categories/${categoryId}`, accessToken, {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  });
+}
+
 export async function deleteCategory(accessToken: string, categoryId: string): Promise<void> {
   await request<void>(`/api/v1/categories/${categoryId}`, accessToken, { method: 'DELETE' });
 }
@@ -158,6 +170,17 @@ export async function createProduct(accessToken: string, body: JsonBody): Promis
   });
 }
 
+export async function updateProduct(
+  accessToken: string,
+  productId: string,
+  body: JsonBody,
+): Promise<Product> {
+  return request<Product>(`/api/v1/products/${productId}`, accessToken, {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  });
+}
+
 export async function fetchVariants(accessToken: string, productId: string): Promise<Variant[]> {
   return request<Variant[]>(`/api/v1/products/${productId}/variants`, accessToken);
 }
@@ -169,6 +192,17 @@ export async function createVariant(
 ): Promise<Variant> {
   return request<Variant>(`/api/v1/products/${productId}/variants`, accessToken, {
     method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
+export async function updateVariant(
+  accessToken: string,
+  variantId: string,
+  body: JsonBody,
+): Promise<Variant> {
+  return request<Variant>(`/api/v1/variants/${variantId}`, accessToken, {
+    method: 'PUT',
     body: JSON.stringify(body),
   });
 }
@@ -192,6 +226,17 @@ export async function createIndividualPlant(
 ): Promise<IndividualPlant> {
   return request<IndividualPlant>(`/api/v1/products/${productId}/individual-plants`, accessToken, {
     method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
+export async function updateIndividualPlant(
+  accessToken: string,
+  plantId: string,
+  body: JsonBody,
+): Promise<IndividualPlant> {
+  return request<IndividualPlant>(`/api/v1/individual-plants/${plantId}`, accessToken, {
+    method: 'PUT',
     body: JSON.stringify(body),
   });
 }

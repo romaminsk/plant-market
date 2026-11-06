@@ -144,9 +144,25 @@ class AdminCrudTest extends PlaywrightTestBase {
             com.microsoft.playwright.options.AriaRole.BUTTON,
             new com.microsoft.playwright.Page.GetByRoleOptions().setName("Продукты"))
         .click();
+    String updatedProductName = productName + " Updated";
     page.getByRole(
             com.microsoft.playwright.options.AriaRole.ROW,
             new com.microsoft.playwright.Page.GetByRoleOptions().setName(productName))
+        .getByRole(
+            com.microsoft.playwright.options.AriaRole.BUTTON,
+            new com.microsoft.playwright.Locator.GetByRoleOptions().setName("Редактировать"))
+        .click();
+    page.getByLabel("Название").fill(updatedProductName);
+    page.getByLabel("Цена, BYN").fill("110");
+    page.getByRole(
+            com.microsoft.playwright.options.AriaRole.BUTTON,
+            new com.microsoft.playwright.Page.GetByRoleOptions().setName("Сохранить продукт"))
+        .click();
+    page.getByText("Продукт обновлён").waitFor();
+
+    page.getByRole(
+            com.microsoft.playwright.options.AriaRole.ROW,
+            new com.microsoft.playwright.Page.GetByRoleOptions().setName(updatedProductName))
         .getByRole(
             com.microsoft.playwright.options.AriaRole.BUTTON,
             new com.microsoft.playwright.Locator.GetByRoleOptions().setName("Архивировать"))
