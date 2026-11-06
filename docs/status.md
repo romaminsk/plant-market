@@ -280,8 +280,9 @@
   теряется (статус подписки/претензии при этом сохраняется). Order-уведомления ретраятся (ADR-0012).
 - Outbox at-least-once: возможны дубли писем; dead-letter разбирается вручную через admin
   redrive, автоматического redrive нет.
-- CI E2E использует `docker-compose.test.yml`: rate limit 5000/200 и опубликованный auth-service
-  `:8090` для PKCE-логина; prod-конфиг не меняется.
+- CI E2E копирует `.env.example` (dev-лимиты 2000/100) и использует опубликованный auth-service
+  `:8090` для PKCE-логина; prod-лимиты 60/10/300 задаются окружением и не меняются.
+- `docker-compose.test.yml` остаётся опциональным override для ручного прогона тестового стека.
 - Storefront checkout: адрес есть; слоты доставки и отзывы — следующая итерация. Refresh в BFF
   реализован только в checkout, history-страницы при истёкшем токене просят войти снова.
 - **Pre-prod блокеры из ревью:** admin JWT в localStorage (нужен admin BFF), Idempotency-Key для
