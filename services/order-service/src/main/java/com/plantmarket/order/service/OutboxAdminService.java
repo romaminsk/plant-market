@@ -31,6 +31,9 @@ public class OutboxAdminService {
         outboxRepository
             .findById(id)
             .orElseThrow(() -> ApiException.notFound("Outbox event not found: " + id));
+    if (!event.isDead()) {
+      throw ApiException.conflict("Only dead-letter events can be redriven: " + id);
+    }
     event.resetForRedrive();
     return toResponse(event);
   }

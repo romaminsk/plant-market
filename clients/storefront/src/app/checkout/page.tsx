@@ -18,6 +18,7 @@ export default function CheckoutPage() {
   const [status, setStatus] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const [orderId, setOrderId] = useState('');
+  const [paidTotal, setPaidTotal] = useState<number | null>(null);
 
   useEffect(() => {
     const loaded = readCart();
@@ -46,6 +47,8 @@ export default function CheckoutPage() {
   const shipping = zone
     ? (subtotal >= zone.freeFromMinor ? 0 : zone.priceMinor) + (thermal ? zone.thermalPackMinor : 0)
     : 0;
+  const thermalRequired = Boolean(zone?.winterRequiresThermal);
+  const thermalMissing = thermalRequired && !thermal;
 
   async function submit() {
     setStatus('sending');
@@ -74,6 +77,7 @@ export default function CheckoutPage() {
         detail?: string;
         orderId?: string;
         status?: string;
+        totalMinor?: number;
       } | null;
       if (response.status === 401) {
         setAuthenticated(false);
@@ -89,6 +93,7 @@ export default function CheckoutPage() {
       });
       clearCart();
       setOrderId(payload?.orderId ?? '');
+      setPaidTotal(payload?.totalMinor ?? null);
       setStatus('done');
     } catch (cause) {
       setStatus('error');
@@ -114,6 +119,11 @@ export default function CheckoutPage() {
         <p>
           Номер заказа: <span className="mono">{orderId}</span>
         </p>
+        {paidTotal !== null ? (
+          <p>
+            Оплачено: <strong>{formatPrice(paidTotal, items[0]?.currency ?? 'BYN')}</strong>
+          </p>
+        ) : null}
         <p className="muted">Подтверждение отправлено на e-mail. Спасибо!</p>
         <p>
           <Link href="/account/orders">Мои заказы</Link>
@@ -195,13 +205,19 @@ export default function CheckoutPage() {
               <dd>{formatPrice(subtotal + shipping, items[0]?.currency ?? 'BYN')}</dd>
             </div>
           </dl>
+          {thermalMissing ? (
+            <p className="form-message error" role="status">
+              Для этой зоны обязательна термоупаковка.
+            </p>
+          ) : null}
           <button
             type="button"
             disabled={
               status === 'sending' ||
               !zoneId ||
               authenticated !== true ||
-              address.trim().length === 0
+              address.trim().length === 0 ||
+              thermalMissing
             }
             onClick={() => void submit()}
           >

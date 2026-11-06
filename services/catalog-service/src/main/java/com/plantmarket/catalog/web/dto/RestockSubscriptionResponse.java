@@ -9,7 +9,6 @@ public record RestockSubscriptionResponse(
     UUID id,
     RestockTargetType targetType,
     UUID targetId,
-    String email,
     RestockSubscriptionStatus status,
     Instant createdAt,
     Instant notifiedAt) {}

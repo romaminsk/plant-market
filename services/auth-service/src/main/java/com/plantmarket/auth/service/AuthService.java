@@ -84,6 +84,11 @@ public class AuthService {
   }
 
   @Transactional
+  public void logout(UUID userId) {
+    refreshTokenRepository.revokeAllActive(userId, Instant.now());
+  }
+
+  @Transactional
   public TokenResponse login(LoginRequest request) {
     UserEntity user =
         userRepository

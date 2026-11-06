@@ -1008,7 +1008,7 @@ components:
     RestockSubscription:
       type: object
       additionalProperties: false
-      required: [id, targetType, targetId, email, status, createdAt]
+      required: [id, targetType, targetId, status, createdAt]
       properties:
         id:
           type: string
@@ -1018,8 +1018,6 @@ components:
         targetId:
           type: string
           format: uuid
-        email:
-          type: string
         status:
           $ref: '#/components/schemas/RestockSubscriptionStatus'
         createdAt:

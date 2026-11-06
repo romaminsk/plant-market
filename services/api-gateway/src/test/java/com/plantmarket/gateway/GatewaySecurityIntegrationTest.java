@@ -77,11 +77,37 @@ class GatewaySecurityIntegrationTest {
   }
 
   @Test
-  void validJwtPassesSecurityAndReachesRouting() {
+  void customerJwtIsForbiddenForCatalogMutation() {
     client
         .post()
         .uri("/api/v1/products")
-        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken())
+        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken(java.util.List.of("CUSTOMER")))
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue("{}")
+        .exchange()
+        .expectStatus()
+        .isForbidden();
+  }
+
+  @Test
+  void customerJwtIsForbiddenForShippingMutation() {
+    client
+        .post()
+        .uri("/api/v1/shipping/zones")
+        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken(java.util.List.of("CUSTOMER")))
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue("{}")
+        .exchange()
+        .expectStatus()
+        .isForbidden();
+  }
+
+  @Test
+  void staffJwtPassesSecurity() {
+    client
+        .post()
+        .uri("/api/v1/unknown")
+        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken(java.util.List.of("ADMIN")))
         .contentType(MediaType.APPLICATION_JSON)
         .bodyValue("{}")
         .exchange()
@@ -104,11 +130,16 @@ class GatewaySecurityIntegrationTest {
   }
 
   private String accessToken() {
+    return accessToken(java.util.List.of());
+  }
+
+  private String accessToken(java.util.List<String> roles) {
     try {
       JWTClaimsSet claims =
           new JWTClaimsSet.Builder()
               .subject(UUID.randomUUID().toString())
               .issuer("gateway-test")
+              .claim("roles", roles)
               .issueTime(new Date())
               .expirationTime(Date.from(Instant.now().plusSeconds(300)))
               .build();

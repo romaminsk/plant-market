@@ -146,6 +146,23 @@
 - E2E: создание, список, отключение; integration-тест проверяет отправку due-напоминания через
   мок `JavaMailSender` и 409 для неоплаченного заказа.
 
+### Ревью 2026-11-06 и security-фиксы (✅)
+
+- Полное ревью backend/frontend/E2E: `docs/review-2026-11-06.md`.
+- Gateway: роли `ADMIN/OPERATOR/MANAGER` на мутации каталога, stock, shipping, media; reservation
+  route убран из внешнего API; тесты на 401/403.
+- Order: pessimistic lock на checkout/pay/cancel, тест конкурентной оплаты; `@Valid` checkout.
+- Catalog: confirm резерва строже (409 после expiry, проверка plant), locks на reservations,
+  restock без e-mail в ответе, media 10 MB + magic bytes, stock adjust без ложных уведомлений.
+- Auth: refresh rotation под lock; redirect URI storefront/admin вынесены в env; logout
+  отзывает refresh-токены пользователя.
+- Payment: матрица переходов статусов; host-порты order/payment больше не публикуются.
+- Storefront: open redirect закрыт, `__Host-` cookie при `COOKIE_SECURE=true`, CSP/headers,
+  JSON-LD escaping, cart validation, BFF требует зону/адрес и отменяет заказ при сбое.
+- Admin: CSP/X-Frame/Referrer/Permissions; JWT в localStorage остаётся pre-prod блокером.
+- Restock: NOTIFIED только при успешной отправке; SMTP-сбой оставляет PENDING.
+- Ошибки missing header / multipart >10 MB → 400 RFC 7807.
+
 ### Phase 3 — timeline заказа (✅)
 
 - `GET /api/v1/orders/{id}/history` — статусы заказа с временем (DRAFT → PENDING_PAYMENT → PAID
@@ -220,19 +237,19 @@
 | ----------------- | ----: | ------------: |
 | `platform-common` |     9 |           74% |
 | `auth-service`    |     3 |           89% |
-| `catalog-service` |     8 |           85% |
-| `order-service`   |     6 |           78% |
-| `payment-service` |     1 |           77% |
-| `api-gateway`     |     8 |           97% |
-| `tests:e2e`       |    16 |             — |
+| `catalog-service` |     8 |           84% |
+| `order-service`   |     7 |           82% |
+| `payment-service` |     1 |           78% |
+| `api-gateway`     |    10 |           97% |
+| `tests:e2e`       |    17 |             — |
 
-Итого **35 backend-тестов + 16 E2E = 51 тест, 0 падений**. JaCoCo-порог 70% проходит.
+Итого **38 backend-тестов + 17 E2E = 55 тестов, 0 падений**. JaCoCo-порог 70% проходит.
 
 ## Следующие 3 шага
 
-1. Storefront: адреса/слоты доставки, отзывы, consent-версионирование (ADR-0013/0014).
-2. Phase 3: staging A1/A15, замена volume на MinIO/S3, content sniffing загрузок.
-3. Юридический A11 (L1–L8): передать владельцу/юристу; до подписи prod запрещён.
+1. Admin BFF (httpOnly cookies) + Idempotency-Key для checkout/pay — закрыть pre-prod блокеры.
+2. Storefront: слоты доставки, отзывы, consent-версионирование; slug-URL и sitemap.
+3. Staging A1/A15, MinIO/S3, юридический A11 L1–L8; до подписи prod запрещён.
 
 ## Блокеры и риски
 
@@ -240,7 +257,8 @@
 - A11 T2: double-submit CSRF реализован; `__Host-`/Secure cookie включаются prod-конфигом, проверить в staging.
 - In-memory SAS authorizations теряются при рестарте auth-service; для одного экземпляра Phase 1 допустимо (ADR-0006).
 - In-memory rate limit не разделяется между экземплярами gateway (ADR-0005).
-- Прямые порты auth/catalog открыты на localhost; перед prod закрыть.
+- Прямые порты auth/catalog открыты на localhost (OAuth и media); order/payment больше не
+  публикуются. Перед prod закрыть auth/catalog за reverse proxy.
 - MailHog `v1.0.1` — только `linux/amd64`.
 - A11 L1–L8 (торговый реестр, СКНО/ЕРИП, ПДн, CITES, оферта, налоги) не закрыты: нужен
   владелец/юрист. Phase 2/3 закрыты по коду, но это не разрешение на prod.
@@ -250,8 +268,10 @@
   redrive, автоматического redrive нет.
 - CI E2E использует `docker-compose.test.yml`: rate limit 600/60 и опубликованный auth-service
   `:8090` для PKCE-логина; prod-конфиг не меняется.
-- Storefront checkout: нет адресов/слотов доставки и отзывов; refresh в BFF реализован только
-  в checkout, history-страницы при истёкшем токене просят войти снова (ADR-0013).
+- Storefront checkout: адрес есть; слоты доставки и отзывы — следующая итерация. Refresh в BFF
+  реализован только в checkout, history-страницы при истёкшем токене просят войти снова.
+- **Pre-prod блокеры из ревью:** admin JWT в localStorage (нужен admin BFF), Idempotency-Key для
+  create/pay, J6/B2B (Phase 4), slug-URL, tenant_id, revocation refresh при logout.
 - Фото принимаются как URL; API загрузки есть, UI загрузки в админке — следующий шаг.
 - Media volume не реплицируется и не бэкапится; публичные файлы без content sniffing (ADR-0011).
 - Галерея в seed использует placehold.co; фотостандарт (нейтральный фон, линейка, 4 ракурса)
@@ -285,3 +305,7 @@
   работают без согласия (ADR-0014).
 - **Ruling:** заказ с зоной доставки требует `deliveryAddress`; адрес хранится в `orders` и
   показывается покупателю в деталях заказа.
+- **Ruling:** все мутации каталога/stock/shipping/media требуют staff-роль на gateway; reservation
+  API не публикуется наружу.
+- **Ruling:** admin JWT в localStorage — известный pre-prod блокер; до admin BFF A11 T1/T2 не
+  считать полностью закрытыми.

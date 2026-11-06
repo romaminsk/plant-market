@@ -14,8 +14,11 @@ import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverter;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.header.ReferrerPolicyServerHttpHeadersWriter;
+import reactor.core.publisher.Flux;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -30,8 +33,20 @@ public class SecurityConfig {
   }
 
   @Bean
+  public ReactiveJwtAuthenticationConverter jwtAuthenticationConverter() {
+    JwtGrantedAuthoritiesConverter authorities = new JwtGrantedAuthoritiesConverter();
+    authorities.setAuthoritiesClaimName("roles");
+    authorities.setAuthorityPrefix("ROLE_");
+    ReactiveJwtAuthenticationConverter converter = new ReactiveJwtAuthenticationConverter();
+    converter.setJwtGrantedAuthoritiesConverter(jwt -> Flux.fromIterable(authorities.convert(jwt)));
+    return converter;
+  }
+
+  @Bean
   public SecurityWebFilterChain securityWebFilterChain(
-      ServerHttpSecurity http, ProblemAuthenticationEntryPoint authenticationEntryPoint) {
+      ServerHttpSecurity http,
+      ProblemAuthenticationEntryPoint authenticationEntryPoint,
+      ReactiveJwtAuthenticationConverter jwtAuthenticationConverter) {
     return http.csrf(ServerHttpSecurity.CsrfSpec::disable)
         .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
         .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
@@ -62,11 +77,43 @@ public class SecurityConfig {
                     "/api/v1/individual-plants/**",
                     "/api/v1/shipping/**")
                 .permitAll()
+                .pathMatchers(HttpMethod.GET, "/api/v1/stock-batches/**")
+                .hasAnyRole("ADMIN", "OPERATOR", "MANAGER")
+                .pathMatchers(
+                    HttpMethod.POST,
+                    "/api/v1/categories/**",
+                    "/api/v1/products/**",
+                    "/api/v1/variants/**",
+                    "/api/v1/individual-plants/**",
+                    "/api/v1/stock-batches/**",
+                    "/api/v1/shipping/**",
+                    "/api/v1/media/**")
+                .hasAnyRole("ADMIN", "OPERATOR", "MANAGER")
+                .pathMatchers(
+                    HttpMethod.PUT,
+                    "/api/v1/categories/**",
+                    "/api/v1/products/**",
+                    "/api/v1/variants/**",
+                    "/api/v1/individual-plants/**",
+                    "/api/v1/stock-batches/**",
+                    "/api/v1/shipping/**")
+                .hasAnyRole("ADMIN", "OPERATOR", "MANAGER")
+                .pathMatchers(
+                    HttpMethod.DELETE,
+                    "/api/v1/categories/**",
+                    "/api/v1/products/**",
+                    "/api/v1/variants/**",
+                    "/api/v1/individual-plants/**",
+                    "/api/v1/stock-batches/**",
+                    "/api/v1/shipping/**")
+                .hasAnyRole("ADMIN", "OPERATOR", "MANAGER")
+                .pathMatchers("/api/v1/admin/**", "/api/v1/claims/**")
+                .hasAnyRole("ADMIN", "OPERATOR", "MANAGER")
                 .anyExchange()
                 .authenticated())
         .oauth2ResourceServer(oauth2 ->
             oauth2
-                .jwt(Customizer.withDefaults())
+                .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter))
                 .authenticationEntryPoint(authenticationEntryPoint))
         .exceptionHandling(
             exceptions -> exceptions.authenticationEntryPoint(authenticationEntryPoint))

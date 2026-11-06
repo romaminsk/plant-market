@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { ACCESS_COOKIE, REFRESH_COOKIE, apiUrl, authServiceUrl } from '@/lib/auth';
+import { ACCESS_COOKIE, COOKIE_SECURE, REFRESH_COOKIE, apiUrl, authServiceUrl } from '@/lib/auth';
 
 interface RefreshedTokens {
   access: string;
@@ -13,7 +13,7 @@ interface CheckoutItem {
   quantity?: number;
 }
 
-const secure = process.env.COOKIE_SECURE === 'true';
+const secure = COOKIE_SECURE;
 
 export async function POST(request: NextRequest) {
   let token = request.cookies.get(ACCESS_COOKIE)?.value;
@@ -35,6 +35,14 @@ export async function POST(request: NextRequest) {
   const items = Array.isArray(payload.items) ? payload.items : [];
   if (items.length === 0 || items.length > 20) {
     return NextResponse.json({ detail: 'Cart must contain 1 to 20 items' }, { status: 400 });
+  }
+  const shippingZoneId = payload.shippingZoneId?.trim();
+  const deliveryAddress = payload.deliveryAddress?.trim();
+  if (!shippingZoneId) {
+    return NextResponse.json({ detail: 'shippingZoneId is required' }, { status: 400 });
+  }
+  if (!deliveryAddress || deliveryAddress.length > 500) {
+    return NextResponse.json({ detail: 'deliveryAddress is required (max 500)' }, { status: 400 });
   }
   const orderItems = [];
   for (const item of items) {
@@ -109,12 +117,13 @@ export async function POST(request: NextRequest) {
   const checkoutResponse = await apiFetch(`/api/v1/orders/${order.id}/checkout`, {
     method: 'POST',
     body: JSON.stringify({
-      shippingZoneId: payload.shippingZoneId ?? null,
+      shippingZoneId,
       thermalPack: Boolean(payload.thermalPack),
-      deliveryAddress: payload.deliveryAddress ?? null,
+      deliveryAddress,
     }),
   });
   if (!checkoutResponse.ok) {
+    await cancelOrder(order.id, token);
     return withTokens(await forward(checkoutResponse));
   }
 
@@ -123,10 +132,33 @@ export async function POST(request: NextRequest) {
     body: '{}',
   });
   if (!payResponse.ok) {
+    await cancelOrder(order.id, token);
     return withTokens(await forward(payResponse));
   }
-  const paid = (await payResponse.json()) as { id: string; status: string };
-  return withTokens(NextResponse.json({ orderId: paid.id, status: paid.status }));
+  const paid = (await payResponse.json()) as {
+    id: string;
+    status: string;
+    totalMinor: number;
+  };
+  return withTokens(
+    NextResponse.json({ orderId: paid.id, status: paid.status, totalMinor: paid.totalMinor }),
+  );
+}
+
+async function cancelOrder(orderId: string, token: string): Promise<void> {
+  try {
+    await fetch(`${apiUrl()}/api/v1/orders/${orderId}/cancel`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: '{}',
+      cache: 'no-store',
+    });
+  } catch {
+    // Best-effort compensation; the reservation TTL still releases stock.
+  }
 }
 
 async function refresh(refreshToken: string): Promise<RefreshedTokens | null> {

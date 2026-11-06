@@ -51,7 +51,11 @@ public class RestockSubscriptionService {
         subscriptionRepository.findByTargetTypeAndTargetIdAndEmail(
             request.targetType(), request.targetId(), email);
     if (existing.isPresent()) {
-      return new SubscriptionResult(toResponse(existing.get()), false);
+      RestockSubscriptionEntity subscription = existing.get();
+      if (subscription.getStatus() == RestockSubscriptionStatus.NOTIFIED) {
+        subscription.resetToPending();
+      }
+      return new SubscriptionResult(toResponse(subscription), false);
     }
     RestockSubscriptionEntity saved =
         subscriptionRepository.save(
@@ -95,8 +99,9 @@ public class RestockSubscriptionService {
         subscriptionRepository.findByTargetTypeAndTargetIdAndStatus(
             targetType, targetId, RestockSubscriptionStatus.PENDING);
     for (RestockSubscriptionEntity subscription : pending) {
-      notifier.notifyAvailable(subscription.getEmail(), label);
-      subscription.markNotified();
+      if (notifier.notifyAvailable(subscription.getEmail(), label)) {
+        subscription.markNotified();
+      }
     }
   }
 
@@ -128,7 +133,6 @@ public class RestockSubscriptionService {
         subscription.getId(),
         subscription.getTargetType(),
         subscription.getTargetId(),
-        subscription.getEmail(),
         subscription.getStatus(),
         subscription.getCreatedAt(),
         subscription.getNotifiedAt());

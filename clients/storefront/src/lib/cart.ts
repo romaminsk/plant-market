@@ -21,8 +21,32 @@ export function readCart(): CartItem[] {
     return [];
   }
   try {
-    const parsed = JSON.parse(window.localStorage.getItem(KEY) ?? '[]') as CartItem[];
-    return Array.isArray(parsed) ? parsed : [];
+    const parsed = JSON.parse(window.localStorage.getItem(KEY) ?? '[]') as unknown;
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+    return parsed.filter((item): item is CartItem => {
+      if (typeof item !== 'object' || item === null) {
+        return false;
+      }
+      const candidate = item as Partial<CartItem>;
+      return (
+        (candidate.type === 'VARIANT' || candidate.type === 'INDIVIDUAL_PLANT') &&
+        typeof candidate.id === 'string' &&
+        candidate.id.length > 0 &&
+        typeof candidate.name === 'string' &&
+        candidate.name.length > 0 &&
+        typeof candidate.priceMinor === 'number' &&
+        Number.isFinite(candidate.priceMinor) &&
+        candidate.priceMinor >= 0 &&
+        typeof candidate.currency === 'string' &&
+        candidate.currency.length === 3 &&
+        typeof candidate.quantity === 'number' &&
+        Number.isInteger(candidate.quantity) &&
+        candidate.quantity >= 1 &&
+        candidate.quantity <= 10
+      );
+    });
   } catch {
     return [];
   }

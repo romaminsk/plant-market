@@ -80,7 +80,7 @@ public class ClaimService {
 
   @Transactional
   public ClaimResponse decide(UUID claimId, ClaimDecisionRequest request) {
-    OrderClaimEntity claim = find(claimId);
+    OrderClaimEntity claim = findForUpdate(claimId);
     ClaimStatus target =
         request.decision() == ClaimDecision.REJECT
             ? ClaimStatus.REJECTED
@@ -111,6 +111,12 @@ public class ClaimService {
   private OrderClaimEntity find(UUID claimId) {
     return claimRepository
         .findById(claimId)
+        .orElseThrow(() -> ApiException.notFound("Claim not found: " + claimId));
+  }
+
+  private OrderClaimEntity findForUpdate(UUID claimId) {
+    return claimRepository
+        .findByIdForUpdate(claimId)
         .orElseThrow(() -> ApiException.notFound("Claim not found: " + claimId));
   }
 

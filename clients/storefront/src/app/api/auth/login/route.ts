@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { authServiceUrl } from '@/lib/auth';
+import { COOKIE_SECURE, authServiceUrl } from '@/lib/auth';
 import { createChallenge, createVerifier } from '@/lib/pkce';
 
 const COOKIE_OPTIONS = {
@@ -8,7 +8,7 @@ const COOKIE_OPTIONS = {
   sameSite: 'lax' as const,
   path: '/',
   maxAge: 600,
-  secure: process.env.COOKIE_SECURE === 'true',
+  secure: COOKIE_SECURE,
 };
 
 export function GET(request: NextRequest) {
@@ -16,7 +16,8 @@ export function GET(request: NextRequest) {
   const verifier = createVerifier();
   const state = createVerifier();
   const requested = request.nextUrl.searchParams.get('returnTo') ?? '/checkout';
-  const returnTo = requested.startsWith('/') ? requested : '/checkout';
+  const returnTo =
+    requested.startsWith('/') && !requested.startsWith('//') ? requested : '/checkout';
 
   const authorize = new URL('/oauth2/authorize', authServiceUrl());
   authorize.searchParams.set('response_type', 'code');

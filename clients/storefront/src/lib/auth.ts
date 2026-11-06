@@ -1,7 +1,11 @@
 import { cookies } from 'next/headers';
 
-export const ACCESS_COOKIE = 'pm.access';
-export const REFRESH_COOKIE = 'pm.refresh';
+const secure = process.env.COOKIE_SECURE === 'true';
+const prefix = secure ? '__Host-' : '';
+
+export const COOKIE_SECURE = secure;
+export const ACCESS_COOKIE = `${prefix}pm.access`;
+export const REFRESH_COOKIE = `${prefix}pm.refresh`;
 
 export function authServiceUrl(): string {
   return process.env.AUTH_SERVICE_URL ?? 'http://localhost:8090';

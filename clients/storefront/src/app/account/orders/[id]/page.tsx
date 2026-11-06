@@ -29,24 +29,30 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   if (!token) {
     return <LoginPrompt returnTo={`/account/orders/${id}`} />;
   }
-  const response = await fetch(`${apiUrl()}/api/v1/orders/${id}`, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: 'no-store',
-  });
-  if (response.status === 401) {
-    return <LoginPrompt returnTo={`/account/orders/${id}`} />;
+  let order: OrderDetail;
+  let history: { status: string; at: string }[] = [];
+  try {
+    const response = await fetch(`${apiUrl()}/api/v1/orders/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store',
+    });
+    if (response.status === 401) {
+      return <LoginPrompt returnTo={`/account/orders/${id}`} />;
+    }
+    if (!response.ok) {
+      return <p className="error">Заказ не найден (HTTP {response.status}).</p>;
+    }
+    order = (await response.json()) as OrderDetail;
+    const historyResponse = await fetch(`${apiUrl()}/api/v1/orders/${id}/history`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store',
+    });
+    if (historyResponse.ok) {
+      history = (await historyResponse.json()) as { status: string; at: string }[];
+    }
+  } catch {
+    return <p className="error">Сервис заказов временно недоступен. Попробуйте позже.</p>;
   }
-  if (!response.ok) {
-    return <p className="error">Заказ не найден (HTTP {response.status}).</p>;
-  }
-  const order = (await response.json()) as OrderDetail;
-  const historyResponse = await fetch(`${apiUrl()}/api/v1/orders/${id}/history`, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: 'no-store',
-  });
-  const history = historyResponse.ok
-    ? ((await historyResponse.json()) as { status: string; at: string }[])
-    : [];
   return (
     <section>
       <Link className="back-link" href="/account/orders">

@@ -84,6 +84,15 @@ class PaymentFlowIntegrationTest {
                 new PaymentWebhookRequest("provider-test-1", "CONFIRMED"), wrongHeaders),
             String.class);
     assertThat(badSecret.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+
+    HttpHeaders validHeaders = new HttpHeaders();
+    validHeaders.set("X-Provider-Secret", "dev-payment-webhook-secret");
+    ResponseEntity<String> regression =
+        restTemplate.postForEntity(
+            "/api/v1/payments/webhook",
+            new HttpEntity<>(new PaymentWebhookRequest("provider-test-1", "FAILED"), validHeaders),
+            String.class);
+    assertThat(regression.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
   }
 
   @TestConfiguration

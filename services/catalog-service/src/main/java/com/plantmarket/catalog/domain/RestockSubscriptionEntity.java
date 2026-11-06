@@ -59,6 +59,11 @@ public class RestockSubscriptionEntity {
     this.notifiedAt = Instant.now();
   }
 
+  public void resetToPending() {
+    this.status = RestockSubscriptionStatus.PENDING;
+    this.notifiedAt = null;
+  }
+
   public UUID getId() {
     return id;
   }

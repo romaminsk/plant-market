@@ -28,6 +28,8 @@ class OrderApiE2ETest {
   void createCheckoutAndCancelOrderReleasesReservation() throws Exception {
     String token = login();
     String variantId = SeedData.variantId(apiUrl);
+    int availableBefore =
+        get("/api/v1/variants/" + variantId, null).path("availableQuantity").asInt();
 
     JsonNode created =
         post(
@@ -43,6 +45,9 @@ class OrderApiE2ETest {
 
     JsonNode cancelled = post("/api/v1/orders/" + orderId + "/cancel", token, Map.of());
     assertThat(cancelled.path("status").asString()).isEqualTo("CANCELLED");
+    int availableAfter =
+        get("/api/v1/variants/" + variantId, null).path("availableQuantity").asInt();
+    assertThat(availableAfter).isEqualTo(availableBefore);
 
     JsonNode orders = get("/api/v1/orders", token);
     boolean found = false;

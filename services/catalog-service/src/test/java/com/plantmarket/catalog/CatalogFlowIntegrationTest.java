@@ -1,6 +1,8 @@
 package com.plantmarket.catalog;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 import com.plantmarket.catalog.domain.CareLevel;
 import com.plantmarket.catalog.domain.Currency;
@@ -11,6 +13,7 @@ import com.plantmarket.catalog.domain.ReservationTargetType;
 import com.plantmarket.catalog.domain.RestockSubscriptionStatus;
 import com.plantmarket.catalog.domain.RestockTargetType;
 import com.plantmarket.catalog.domain.VariantStatus;
+import com.plantmarket.catalog.notification.RestockNotifier;
 import com.plantmarket.catalog.web.dto.CategoryRequest;
 import com.plantmarket.catalog.web.dto.CategoryResponse;
 import com.plantmarket.catalog.web.dto.IndividualPlantRequest;
@@ -52,11 +55,14 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties = "management.health.mail.enabled=false")
 @AutoConfigureTestRestTemplate
 class CatalogFlowIntegrationTest {
 
@@ -83,6 +89,7 @@ class CatalogFlowIntegrationTest {
   }
 
   @Autowired private TestRestTemplate restTemplate;
+  @MockitoBean private RestockNotifier restockNotifier;
 
   @Test
   void createListUpdateAndArchiveProduct() {
@@ -216,6 +223,20 @@ class CatalogFlowIntegrationTest {
         restTemplate.postForEntity(
             "/api/v1/media", new HttpEntity<>(invalid, headers), String.class);
     assertThat(rejected.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+
+    ByteArrayResource fakePng =
+        new ByteArrayResource("not-an-image".getBytes(java.nio.charset.StandardCharsets.UTF_8)) {
+          @Override
+          public String getFilename() {
+            return "fake.png";
+          }
+        };
+    MultiValueMap<String, Object> spoofed = new LinkedMultiValueMap<>();
+    spoofed.add("file", new HttpEntity<>(fakePng, partHeaders));
+    ResponseEntity<String> spoofedResponse =
+        restTemplate.postForEntity(
+            "/api/v1/media", new HttpEntity<>(spoofed, headers), String.class);
+    assertThat(spoofedResponse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
   }
 
   @Test
@@ -306,6 +327,7 @@ class CatalogFlowIntegrationTest {
 
   @Test
   void restockSubscriptionNotifiesWhenBatchIsReleased() {
+    when(restockNotifier.notifyAvailable(anyString(), anyString())).thenReturn(true);
     String suffix = UUID.randomUUID().toString().substring(0, 8);
     CategoryResponse category =
         restTemplate

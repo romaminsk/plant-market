@@ -6,9 +6,11 @@ import com.plantmarket.auth.domain.UserEntity;
 import com.plantmarket.auth.domain.UserStatus;
 import com.plantmarket.auth.repository.UserRepository;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -149,16 +151,23 @@ public class SecurityConfig {
   }
 
   @Bean
-  public RegisteredClientRepository registeredClientRepository(JwtProperties properties) {
+  public RegisteredClientRepository registeredClientRepository(
+      JwtProperties properties,
+      @Value("${app.auth.storefront-redirect-uris:http://localhost:3000/auth/callback}")
+          String storefrontRedirects,
+      @Value("${app.auth.admin-redirect-uris:http://localhost:5173/auth/callback}")
+          String adminRedirects) {
     return new InMemoryRegisteredClientRepository(
         registeredClient(
-            "storefront",
-            "Plant Market Storefront",
-            properties,
-            "http://localhost:3000/auth/callback",
-            "http://localhost:3100/auth/callback"),
-        registeredClient(
-            "admin", "Plant Market Admin", properties, "http://localhost:5173/auth/callback"));
+            "storefront", "Plant Market Storefront", properties, split(storefrontRedirects)),
+        registeredClient("admin", "Plant Market Admin", properties, split(adminRedirects)));
+  }
+
+  private static String[] split(String value) {
+    return Arrays.stream(value.split(","))
+        .map(String::trim)
+        .filter(entry -> !entry.isBlank())
+        .toArray(String[]::new);
   }
 
   @Bean

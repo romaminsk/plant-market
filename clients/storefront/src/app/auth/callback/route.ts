@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { ACCESS_COOKIE, REFRESH_COOKIE, authServiceUrl } from '@/lib/auth';
+import { ACCESS_COOKIE, COOKIE_SECURE, REFRESH_COOKIE, authServiceUrl } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get('code');
@@ -8,7 +8,8 @@ export async function GET(request: NextRequest) {
   const verifier = request.cookies.get('pm.pkce')?.value;
   const expectedState = request.cookies.get('pm.state')?.value;
   const requested = request.cookies.get('pm.return')?.value ?? '/checkout';
-  const returnTo = requested.startsWith('/') ? requested : '/checkout';
+  const returnTo =
+    requested.startsWith('/') && !requested.startsWith('//') ? requested : '/checkout';
   const origin = request.nextUrl.origin;
 
   if (!code || !verifier || !state || state !== expectedState) {
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
     expires_in?: number;
   };
 
-  const secure = process.env.COOKIE_SECURE === 'true';
+  const secure = COOKIE_SECURE;
   const response = NextResponse.redirect(new URL(returnTo, request.url));
   response.cookies.set(ACCESS_COOKIE, tokens.access_token, {
     httpOnly: true,

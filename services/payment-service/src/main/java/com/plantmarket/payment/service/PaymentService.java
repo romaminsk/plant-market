@@ -62,8 +62,30 @@ public class PaymentService {
         paymentRepository
             .findByProviderRef(request.providerRef())
             .orElseThrow(() -> ApiException.notFound("Payment not found"));
-    payment.updateStatus(mapStatus(request.status()));
+    PaymentStatus target = mapStatus(request.status());
+    if (!canTransition(payment.getStatus(), target)) {
+      throw ApiException.conflict(
+          "Illegal payment transition from " + payment.getStatus() + " to " + target);
+    }
+    if (payment.getStatus() != target) {
+      payment.updateStatus(target);
+    }
     return toResponse(payment);
+  }
+
+  private static boolean canTransition(PaymentStatus from, PaymentStatus to) {
+    if (from == to) {
+      return true;
+    }
+    return switch (from) {
+      case CREATED ->
+          to == PaymentStatus.PENDING
+              || to == PaymentStatus.CONFIRMED
+              || to == PaymentStatus.FAILED;
+      case PENDING -> to == PaymentStatus.CONFIRMED || to == PaymentStatus.FAILED;
+      case CONFIRMED -> to == PaymentStatus.REFUNDED;
+      case FAILED, REFUNDED -> false;
+    };
   }
 
   private PaymentStatus mapStatus(String providerStatus) {

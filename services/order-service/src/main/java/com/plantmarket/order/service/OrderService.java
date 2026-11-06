@@ -105,7 +105,7 @@ public class OrderService {
 
   @Transactional
   public OrderResponse checkout(UUID customerId, UUID orderId, CheckoutRequest request) {
-    OrderEntity order = findOwned(customerId, orderId);
+    OrderEntity order = findOwnedForUpdate(customerId, orderId);
     if (order.getStatus() != OrderStatus.DRAFT) {
       throw ApiException.conflict("Only DRAFT orders can be checked out");
     }
@@ -148,7 +148,7 @@ public class OrderService {
 
   @Transactional
   public OrderResponse pay(UUID customerId, UUID orderId) {
-    OrderEntity order = findOwned(customerId, orderId);
+    OrderEntity order = findOwnedForUpdate(customerId, orderId);
     if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
       throw ApiException.conflict("Only PENDING_PAYMENT orders can be paid");
     }
@@ -165,7 +165,7 @@ public class OrderService {
 
   @Transactional
   public OrderResponse cancel(UUID customerId, UUID orderId) {
-    OrderEntity order = findOwned(customerId, orderId);
+    OrderEntity order = findOwnedForUpdate(customerId, orderId);
     if (order.getStatus() == OrderStatus.PENDING_PAYMENT) {
       catalogClient.release(orderId);
     }
@@ -201,6 +201,13 @@ public class OrderService {
   private OrderEntity findOwned(UUID customerId, UUID orderId) {
     return orderRepository
         .findById(orderId)
+        .filter(order -> order.getCustomerId().equals(customerId))
+        .orElseThrow(() -> ApiException.notFound("Order not found: " + orderId));
+  }
+
+  private OrderEntity findOwnedForUpdate(UUID customerId, UUID orderId) {
+    return orderRepository
+        .findByIdForUpdate(orderId)
         .filter(order -> order.getCustomerId().equals(customerId))
         .orElseThrow(() -> ApiException.notFound("Order not found: " + orderId));
   }

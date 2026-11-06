@@ -198,6 +198,7 @@ ensure_individual_plant() {
     local care_level="$4"
     local light="$5"
     local pet_safe="$6"
+    local final_status="${7:-AVAILABLE}"
     local product_id existing_id current_status
 
     product_id="$(product_id_by_sku "$product_sku")"
@@ -223,7 +224,7 @@ ensure_individual_plant() {
         transition_plant "$existing_id" "QUARANTINE"
         current_status="QUARANTINE"
     fi
-    if [[ "$current_status" == "QUARANTINE" ]]; then
+    if [[ "$final_status" == "AVAILABLE" && "$current_status" == "QUARANTINE" ]]; then
         transition_plant "$existing_id" "AVAILABLE"
     fi
 }
@@ -368,6 +369,7 @@ ensure_product "PLANT-002" "Anthurium Clarinervium" "anthurium-clarinervium" "И
 ensure_product "PLANT-003" "Alocasia Frydek" "alocasia-frydek" "Индивидуальное растение. Фото: placeholder." "$MONSTERA_ID" 89900 "MEDIUM" "BRIGHT" false
 ensure_product "PLANT-004" "Syngonium Albo" "syngonium-albo" "Индивидуальное растение. Фото: placeholder." "$MONSTERA_ID" 159900 "EASY" "MEDIUM" false true
 ensure_product "PLANT-005" "Scindapsus Treubii Moonlight" "scindapsus-treubii-moonlight" "Индивидуальное растение. Фото: placeholder." "$MONSTERA_ID" 74900 "EASY" "MEDIUM" false
+ensure_product "PLANT-006" "Anthurium Warocqueanum" "anthurium-warocqueanum" "Индивидуальное растение. Фото: placeholder." "$MONSTERA_ID" 249900 "HARD" "MEDIUM" false
 
 ensure_variant "MON-001" "MON-001-12" "12 cm pot" "MEDIUM" "12cm" "POTTED" 139900 "ACTIVE"
 ensure_variant "MON-002" "MON-002-12" "12 cm pot" "MEDIUM" "12cm" "POTTED" 359900 "ACTIVE"
@@ -377,8 +379,9 @@ ensure_individual_plant "PLANT-002" "IP-002" 189900 "HARD" "MEDIUM" false
 ensure_individual_plant "PLANT-003" "IP-003" 89900 "MEDIUM" "BRIGHT" false
 ensure_individual_plant "PLANT-004" "IP-004" 159900 "EASY" "MEDIUM" false
 ensure_individual_plant "PLANT-005" "IP-005" 74900 "EASY" "MEDIUM" false
+ensure_individual_plant "PLANT-006" "IP-006" 249900 "HARD" "MEDIUM" false "QUARANTINE"
 
-for code in IP-001 IP-002 IP-003 IP-004 IP-005; do
+for code in IP-001 IP-002 IP-003 IP-004 IP-005 IP-006; do
     ensure_plant_photos "$code"
 done
 

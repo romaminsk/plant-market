@@ -24,17 +24,22 @@ export default async function OrdersPage() {
   if (!token) {
     return <LoginPrompt />;
   }
-  const response = await fetch(`${apiUrl()}/api/v1/orders`, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: 'no-store',
-  });
-  if (response.status === 401) {
-    return <LoginPrompt />;
+  let orders: OrderSummary[];
+  try {
+    const response = await fetch(`${apiUrl()}/api/v1/orders`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store',
+    });
+    if (response.status === 401) {
+      return <LoginPrompt />;
+    }
+    if (!response.ok) {
+      return <p className="error">Не удалось загрузить заказы (HTTP {response.status}).</p>;
+    }
+    orders = (await response.json()) as OrderSummary[];
+  } catch {
+    return <p className="error">Сервис заказов временно недоступен. Попробуйте позже.</p>;
   }
-  if (!response.ok) {
-    return <p className="error">Не удалось загрузить заказы (HTTP {response.status}).</p>;
-  }
-  const orders = (await response.json()) as OrderSummary[];
   if (orders.length === 0) {
     return (
       <section>

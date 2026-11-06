@@ -47,6 +47,39 @@ public class MediaController {
           case MediaType.IMAGE_PNG_VALUE -> "png";
           default -> "webp";
         };
-    return new MediaResponse(mediaStorage.store(file.getBytes(), contentType, extension));
+    byte[] content = file.getBytes();
+    if (!matchesSignature(content, contentType)) {
+      throw ApiException.badRequest("File content does not match its content type");
+    }
+    return new MediaResponse(mediaStorage.store(content, contentType, extension));
+  }
+
+  private static boolean matchesSignature(byte[] content, String contentType) {
+    if (MediaType.IMAGE_PNG_VALUE.equals(contentType)) {
+      return content.length >= 8
+          && (content[0] & 0xFF) == 0x89
+          && content[1] == 'P'
+          && content[2] == 'N'
+          && content[3] == 'G'
+          && content[4] == 0x0D
+          && content[5] == 0x0A
+          && content[6] == 0x1A
+          && content[7] == 0x0A;
+    }
+    if (MediaType.IMAGE_JPEG_VALUE.equals(contentType)) {
+      return content.length >= 3
+          && (content[0] & 0xFF) == 0xFF
+          && (content[1] & 0xFF) == 0xD8
+          && (content[2] & 0xFF) == 0xFF;
+    }
+    return content.length >= 12
+        && content[0] == 'R'
+        && content[1] == 'I'
+        && content[2] == 'F'
+        && content[3] == 'F'
+        && content[8] == 'W'
+        && content[9] == 'E'
+        && content[10] == 'B'
+        && content[11] == 'P';
   }
 }

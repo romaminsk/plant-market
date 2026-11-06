@@ -58,7 +58,7 @@ public class ShippingZoneService {
         request.maxDays(),
         request.winterRequiresThermal(),
         request.thermalPackMinor(),
-        request.active() == null || request.active());
+        request.active() == null ? zone.isActive() : request.active());
     return toResponse(zone);
   }
 

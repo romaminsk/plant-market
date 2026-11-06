@@ -44,6 +44,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -197,6 +202,50 @@ class OrderFlowIntegrationTest {
     assertThat(history.getBody())
         .extracting(OrderHistoryEntry::status)
         .containsExactly(OrderStatus.DRAFT, OrderStatus.PENDING_PAYMENT, OrderStatus.CANCELLED);
+  }
+
+  @Test
+  void concurrentPayOnlyCreatesOnePayment() throws Exception {
+    UUID customerId = UUID.randomUUID();
+    HttpHeaders headers = headers(customerId);
+    UUID orderId = createVariantOrder(headers);
+    restTemplate.exchange(
+        "/api/v1/orders/" + orderId + "/checkout",
+        HttpMethod.POST,
+        new HttpEntity<>(Map.of(), headers),
+        OrderResponse.class);
+    int paymentsBefore = PAYMENT.createCalls.get();
+
+    ExecutorService executor = Executors.newFixedThreadPool(2);
+    CountDownLatch start = new CountDownLatch(1);
+    try {
+      Future<ResponseEntity<String>> first =
+          executor.submit(() -> {
+            start.await();
+            return restTemplate.exchange(
+                "/api/v1/orders/" + orderId + "/pay",
+                HttpMethod.POST,
+                new HttpEntity<>(headers),
+                String.class);
+          });
+      Future<ResponseEntity<String>> second =
+          executor.submit(() -> {
+            start.await();
+            return restTemplate.exchange(
+                "/api/v1/orders/" + orderId + "/pay",
+                HttpMethod.POST,
+                new HttpEntity<>(headers),
+                String.class);
+          });
+      start.countDown();
+      ResponseEntity<String> firstResult = first.get(10, TimeUnit.SECONDS);
+      ResponseEntity<String> secondResult = second.get(10, TimeUnit.SECONDS);
+      assertThat(List.of(firstResult.getStatusCode(), secondResult.getStatusCode()))
+          .containsExactlyInAnyOrder(HttpStatus.OK, HttpStatus.CONFLICT);
+      assertThat(PAYMENT.createCalls.get() - paymentsBefore).isEqualTo(1);
+    } finally {
+      executor.shutdownNow();
+    }
   }
 
   @Test

@@ -47,7 +47,7 @@ pnpm dev:admin
 # 6. Проверить доступность каталога
 ./scripts/lighthouse-a11y.sh http://localhost:3000/catalog
 
-# 7. E2E (нужны запущенные сервисы, storefront :3100 и админка :5173)
+# 7. E2E (нужны запущенные сервисы, storefront :3000 и админка :5173)
 ./scripts/test-e2e.sh
 
 # 8. Остановить

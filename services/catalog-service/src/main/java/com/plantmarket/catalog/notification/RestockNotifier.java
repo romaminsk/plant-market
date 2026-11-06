@@ -19,7 +19,7 @@ public class RestockNotifier {
     this.mailSender = mailSender;
   }
 
-  public void notifyAvailable(String email, String label) {
+  public boolean notifyAvailable(String email, String label) {
     try {
       SimpleMailMessage message = new SimpleMailMessage();
       message.setTo(email);
@@ -28,8 +28,10 @@ public class RestockNotifier {
           "Товар «" + label + "» снова в наличии. Успейте оформить заказ на plant-market.by.");
       mailSender.send(message);
       log.info("Restock notification sent for {}", label);
+      return true;
     } catch (MailException exception) {
       log.warn("Could not send restock notification for {}: {}", label, exception.getMessage());
+      return false;
     }
   }
 }

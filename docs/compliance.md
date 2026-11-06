@@ -5,18 +5,18 @@
 
 ## Технические требования A11
 
-| #   | Требование                                                                              | Статус      | Комментарий                                                                                                                             |
-| --- | --------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| T1  | OAuth2 Authorization Code + PKCE; access 10 мин, refresh с ротацией                     | ✅ Phase 1  | SAS 7.1.2, публичные клиенты storefront/admin; refresh rotation (ADR-0006)                                                              |
-| T2  | Cookie `__Host-`, `Secure`, `HttpOnly`, `SameSite=Lax`; CSRF double-submit              | ✅ Phase 1  | double-submit `XSRF-TOKEN`; `__Host-`/Secure — prod-конфиг                                                                              |
-| T3  | Пароли Argon2id                                                                         | ✅ Phase 0  | `Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8`                                                                                  |
-| T4  | Роли `CUSTOMER/OPERATOR/MANAGER/ADMIN/SYSTEM`; фильтр по `tenant_id` + тест на изоляцию | ⚠️ частично | роли и ADMIN seed есть; tenant_id — Phase 4                                                                                             |
-| T5  | Rate limit на gateway: 60/мин публично, 10/мин login/register                           | ✅ Phase 0  | in-memory fixed-window, один экземпляр gateway (ADR-0005)                                                                               |
-| T6  | HSTS, CSP, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`            | ✅ Phase 2  | gateway: CSP `default-src 'none'`, Referrer-Policy, Permissions-Policy, X-Frame-Options DENY, X-Content-Type-Options; HSTS только HTTPS |
-| T7  | Секреты — `.env` в `.gitignore`, `.env.example` без секретов; prod — Vault/SOPS         | ⚠️ частично | dev-дефолты в `.env.example`; prod-хранилище — Phase 3+                                                                                 |
-| T8  | Логи без PII, токенов, номеров карт, полных адресов                                     | ✅ Phase 2  | тела запросов не логируются; e-mail убран из логов restock/claims; в логах только id/статусы                                            |
-| T9  | Платежи — hosted page / redirect, SAQ-A; PAN не хранить и не логировать                 | ⚠️ sandbox  | sandbox не принимает и не хранит PAN; реальный провайдер должен быть hosted page — решение владельца перед prod                         |
-| T10 | 0 секретов в репозитории (gitleaks/trufflehog)                                          | ✅ Phase 2  | security run `42182462495`: trivy, TruffleHog secrets, pnpm audit — success                                                             |
+| #   | Требование                                                                              | Статус        | Комментарий                                                                                                                             |
+| --- | --------------------------------------------------------------------------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| T1  | OAuth2 Authorization Code + PKCE; access 10 мин, refresh с ротацией                     | ⚠️ storefront | Storefront — PKCE BFF; admin всё ещё password-login + JWT в localStorage — pre-prod блокер (нужен admin BFF)                            |
+| T2  | Cookie `__Host-`, `Secure`, `HttpOnly`, `SameSite=Lax`; CSRF double-submit              | ⚠️ storefront | Storefront: httpOnly + CSRF, `__Host-`/Secure при `COOKIE_SECURE=true`; admin JWT в localStorage — открыто                              |
+| T3  | Пароли Argon2id                                                                         | ✅ Phase 0    | `Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8`                                                                                  |
+| T4  | Роли `CUSTOMER/OPERATOR/MANAGER/ADMIN/SYSTEM`; фильтр по `tenant_id` + тест на изоляцию | ⚠️ частично   | роли и ADMIN seed есть; tenant_id — Phase 4                                                                                             |
+| T5  | Rate limit на gateway: 60/мин публично, 10/мин login/register                           | ✅ Phase 0    | in-memory fixed-window, один экземпляр gateway (ADR-0005)                                                                               |
+| T6  | HSTS, CSP, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`            | ✅ Phase 2    | gateway: CSP `default-src 'none'`, Referrer-Policy, Permissions-Policy, X-Frame-Options DENY, X-Content-Type-Options; HSTS только HTTPS |
+| T7  | Секреты — `.env` в `.gitignore`, `.env.example` без секретов; prod — Vault/SOPS         | ⚠️ частично   | dev-дефолты в `.env.example`; prod-хранилище — Phase 3+                                                                                 |
+| T8  | Логи без PII, токенов, номеров карт, полных адресов                                     | ✅ Phase 2    | тела запросов не логируются; e-mail убран из логов restock/claims; в логах только id/статусы                                            |
+| T9  | Платежи — hosted page / redirect, SAQ-A; PAN не хранить и не логировать                 | ⚠️ sandbox    | sandbox не принимает и не хранит PAN; реальный провайдер должен быть hosted page — решение владельца перед prod                         |
+| T10 | 0 секретов в репозитории (gitleaks/trufflehog)                                          | ✅ Phase 2    | security run `42182462495`: trivy, TruffleHog secrets, pnpm audit — success                                                             |
 
 ## Юридический чек-лист РБ
 

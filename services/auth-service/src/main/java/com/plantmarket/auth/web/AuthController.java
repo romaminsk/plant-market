@@ -44,6 +44,12 @@ public class AuthController {
     return authService.refresh(request);
   }
 
+  @PostMapping("/logout")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void logout(@AuthenticationPrincipal Jwt jwt) {
+    authService.logout(UUID.fromString(jwt.getSubject()));
+  }
+
   @GetMapping("/me")
   public UserResponse me(@AuthenticationPrincipal Jwt jwt) {
     return authService.me(UUID.fromString(jwt.getSubject()));

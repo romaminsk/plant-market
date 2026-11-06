@@ -108,11 +108,15 @@ function ClaimRow({
       </td>
       <td>{claim.reason}</td>
       <td>
-        {claim.photoUrls.map((url, index) => (
-          <a key={url} href={url} target="_blank" rel="noreferrer">
-            фото {index + 1}
-          </a>
-        ))}
+        {claim.photoUrls.map((url, index) =>
+          /^https?:\/\//i.test(url) ? (
+            <a key={url} href={url} target="_blank" rel="noreferrer">
+              фото {index + 1}
+            </a>
+          ) : (
+            <span key={`${url}-${index}`}>фото {index + 1} (недоступно)</span>
+          ),
+        )}
       </td>
       <td>{claim.status}</td>
       <td>

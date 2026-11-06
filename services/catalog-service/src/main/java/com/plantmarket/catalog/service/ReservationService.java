@@ -21,6 +21,8 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ReservationService {
 
+  private static final Logger log = LoggerFactory.getLogger(ReservationService.class);
   private static final Duration RESERVATION_TTL = Duration.ofMinutes(15);
 
   private final ReservationRepository reservationRepository;
@@ -75,7 +78,13 @@ public class ReservationService {
   public ReservationResponse confirm(UUID orderId) {
     List<ReservationEntity> active =
         reservationRepository.findByOrderIdAndStatus(orderId, ReservationStatus.ACTIVE);
+    if (active.isEmpty()) {
+      throw ApiException.conflict("No active reservations for order " + orderId);
+    }
     for (ReservationEntity reservation : active) {
+      if (reservation.getExpiresAt().isBefore(Instant.now())) {
+        throw ApiException.conflict("Reservation has expired for order " + orderId);
+      }
       confirmOne(reservation);
       reservation.confirm();
     }
@@ -138,20 +147,30 @@ public class ReservationService {
 
   private void releaseOne(ReservationEntity reservation) {
     if (reservation.getTargetType() == ReservationTargetType.VARIANT) {
-      ProductVariantEntity variant =
-          variantRepository
-              .findByIdForUpdate(reservation.getTargetId())
-              .orElseThrow(() -> ApiException.notFound("Variant not found"));
-      variant.release(reservation.getQuantity());
+      variantRepository
+          .findByIdForUpdate(reservation.getTargetId())
+          .ifPresentOrElse(
+              variant -> variant.release(reservation.getQuantity()),
+              () ->
+                  log.warn(
+                      "Reservation {} references missing variant {}",
+                      reservation.getId(),
+                      reservation.getTargetId()));
       return;
     }
-    IndividualPlantEntity plant =
-        plantRepository
-            .findByIdForUpdate(reservation.getTargetId())
-            .orElseThrow(() -> ApiException.notFound("Individual plant not found"));
-    if (plant.getStatus() == IndividualPlantStatus.RESERVED) {
-      plant.transitionTo(IndividualPlantStatus.AVAILABLE);
-    }
+    plantRepository
+        .findByIdForUpdate(reservation.getTargetId())
+        .ifPresentOrElse(
+            plant -> {
+              if (plant.getStatus() == IndividualPlantStatus.RESERVED) {
+                plant.transitionTo(IndividualPlantStatus.AVAILABLE);
+              }
+            },
+            () ->
+                log.warn(
+                    "Reservation {} references missing plant {}",
+                    reservation.getId(),
+                    reservation.getTargetId()));
   }
 
   private void confirmOne(ReservationEntity reservation) {
@@ -160,9 +179,15 @@ public class ReservationService {
           plantRepository
               .findByIdForUpdate(reservation.getTargetId())
               .orElseThrow(() -> ApiException.notFound("Individual plant not found"));
-      if (plant.getStatus() == IndividualPlantStatus.RESERVED) {
-        plant.transitionTo(IndividualPlantStatus.SOLD);
+      if (plant.getStatus() != IndividualPlantStatus.RESERVED) {
+        throw ApiException.conflict(
+            "Individual plant is not reserved: "
+                + plant.getCode()
+                + " ("
+                + plant.getStatus()
+                + ")");
       }
+      plant.transitionTo(IndividualPlantStatus.SOLD);
       return;
     }
 

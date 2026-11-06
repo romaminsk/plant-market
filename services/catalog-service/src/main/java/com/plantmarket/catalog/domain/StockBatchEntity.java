@@ -107,6 +107,8 @@ public class StockBatchEntity {
     this.remainingQuantity = remaining;
     if (remaining == 0) {
       this.status = StockBatchStatus.DEPLETED;
+    } else if (this.status == StockBatchStatus.DEPLETED) {
+      this.status = StockBatchStatus.AVAILABLE;
     }
   }
 

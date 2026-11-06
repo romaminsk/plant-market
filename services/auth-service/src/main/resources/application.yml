@@ -38,6 +38,9 @@ management:
         enabled: true
 
 app:
+  auth:
+    storefront-redirect-uris: ${AUTH_STOREFRONT_REDIRECT_URIS:http://localhost:3000/auth/callback,http://localhost:3100/auth/callback}
+    admin-redirect-uris: ${AUTH_ADMIN_REDIRECT_URIS:http://localhost:5173/auth/callback}
   jwt:
     issuer: ${JWT_ISSUER:http://localhost:8090}
     secret: ${JWT_SECRET:dev-only-plant-market-jwt-secret-change-me-0123456789}

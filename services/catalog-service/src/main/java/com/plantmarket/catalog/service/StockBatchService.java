@@ -88,7 +88,7 @@ public class StockBatchService {
     }
     boolean increased = remainingQuantity > batch.getRemainingQuantity();
     batch.adjustRemaining(remainingQuantity);
-    if (increased) {
+    if (increased && batch.getStatus() == StockBatchStatus.AVAILABLE) {
       restockService.notifyVariantAvailable(batch.getProductVariant().getId());
     }
     return toResponse(batch);

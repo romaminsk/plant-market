@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { fetchIndividualPlant, formatPrice } from '@/lib/api';
 import { PlantGallery } from './PlantGallery';
+import { safeJsonLd } from '@/lib/seo';
 import { RestockForm } from './RestockForm';
 import { AddToCart } from './AddToCart';
 import { TrackView } from '../../TrackView';
@@ -52,10 +53,7 @@ export default async function IndividualPlantPage({ params }: { params: Promise<
         priceMinor={plant.priceMinor}
         currency={plant.currency}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
       <Link className="back-link" href="/catalog">
         ← Назад в каталог
       </Link>

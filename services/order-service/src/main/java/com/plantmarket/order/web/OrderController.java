@@ -55,7 +55,7 @@ public class OrderController {
   public OrderResponse checkout(
       @AuthenticationPrincipal Jwt jwt,
       @PathVariable UUID id,
-      @RequestBody(required = false) CheckoutRequest request) {
+      @Valid @RequestBody(required = false) CheckoutRequest request) {
     return orderService.checkout(customerId(jwt), id, request);
   }
 

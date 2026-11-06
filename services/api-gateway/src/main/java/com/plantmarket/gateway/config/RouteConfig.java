@@ -28,7 +28,6 @@ public class RouteConfig {
                         "/api/v1/variants/**",
                         "/api/v1/individual-plants/**",
                         "/api/v1/stock-batches/**",
-                        "/api/v1/reservations/**",
                         "/api/v1/restock-subscriptions/**",
                         "/api/v1/media/**")
                     .uri(catalogUri))
