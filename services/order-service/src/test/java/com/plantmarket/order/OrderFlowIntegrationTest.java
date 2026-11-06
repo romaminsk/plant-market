@@ -14,11 +14,16 @@ import com.plantmarket.order.client.PaymentClient;
 import com.plantmarket.order.client.PaymentResult;
 import com.plantmarket.order.client.ReservationRequest;
 import com.plantmarket.order.client.ReservationResult;
+import com.plantmarket.order.domain.CareReminderEntity;
 import com.plantmarket.order.domain.ClaimDecision;
 import com.plantmarket.order.domain.ClaimStatus;
 import com.plantmarket.order.domain.OrderStatus;
 import com.plantmarket.order.notification.OutboxPublisher;
+import com.plantmarket.order.repository.CareReminderRepository;
 import com.plantmarket.order.repository.OutboxEventRepository;
+import com.plantmarket.order.service.CareReminderService;
+import com.plantmarket.order.web.dto.CareReminderRequest;
+import com.plantmarket.order.web.dto.CareReminderResponse;
 import com.plantmarket.order.web.dto.CheckoutRequest;
 import com.plantmarket.order.web.dto.ClaimDecisionRequest;
 import com.plantmarket.order.web.dto.ClaimRequest;
@@ -31,6 +36,7 @@ import com.plantmarket.order.web.dto.ShippingZoneResponse;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterAll;
@@ -44,16 +50,21 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties = "management.health.mail.enabled=false")
 @AutoConfigureTestRestTemplate
 class OrderFlowIntegrationTest {
 
@@ -83,6 +94,10 @@ class OrderFlowIntegrationTest {
   @Autowired private TestRestTemplate restTemplate;
   @Autowired private OutboxPublisher outboxPublisher;
   @Autowired private OutboxEventRepository outboxEventRepository;
+  @Autowired private CareReminderRepository careReminderRepository;
+  @Autowired private CareReminderService careReminderService;
+
+  @MockitoBean private JavaMailSender mailSender;
 
   @Value("${app.jwt.secret}")
   private String jwtSecret;
@@ -164,6 +179,77 @@ class OrderFlowIntegrationTest {
         restTemplate.exchange(
             "/api/v1/orders", HttpMethod.GET, new HttpEntity<>(headers), OrderResponse[].class);
     assertThat(list.getBody()).hasSize(2);
+  }
+
+  @Test
+  void careRemindersCanBeOptedInListedAndDisabled() {
+    UUID customerId = UUID.randomUUID();
+    HttpHeaders headers = headers(customerId);
+    UUID orderId = createVariantOrder(headers);
+    restTemplate.exchange(
+        "/api/v1/orders/" + orderId + "/checkout",
+        HttpMethod.POST,
+        new HttpEntity<>(Map.of(), headers),
+        OrderResponse.class);
+    ResponseEntity<OrderResponse> paid =
+        restTemplate.exchange(
+            "/api/v1/orders/" + orderId + "/pay",
+            HttpMethod.POST,
+            new HttpEntity<>(Map.of(), headers),
+            OrderResponse.class);
+    assertThat(paid.getBody()).isNotNull();
+    UUID orderItemId = paid.getBody().items().getFirst().id();
+
+    ResponseEntity<List<CareReminderResponse>> created =
+        restTemplate.exchange(
+            "/api/v1/orders/" + orderId + "/care-reminders",
+            HttpMethod.POST,
+            new HttpEntity<>(new CareReminderRequest(7), headers),
+            new ParameterizedTypeReference<>() {});
+    assertThat(created.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    assertThat(created.getBody()).hasSize(1);
+    CareReminderResponse reminder = created.getBody().getFirst();
+    assertThat(reminder.active()).isTrue();
+    assertThat(reminder.intervalDays()).isEqualTo(7);
+
+    ResponseEntity<List<CareReminderResponse>> listed =
+        restTemplate.exchange(
+            "/api/v1/orders/" + orderId + "/care-reminders",
+            HttpMethod.GET,
+            new HttpEntity<>(headers),
+            new ParameterizedTypeReference<>() {});
+    assertThat(listed.getBody()).hasSize(1);
+
+    CareReminderEntity due = careReminderRepository.findById(reminder.id()).orElseThrow();
+    due.scheduleAt(Instant.now().minusSeconds(60));
+    careReminderRepository.save(due);
+    careReminderService.sendDue();
+    assertThat(careReminderRepository.findById(reminder.id()).orElseThrow().getNextSendAt())
+        .isAfter(Instant.now());
+
+    ResponseEntity<String> deleted =
+        restTemplate.exchange(
+            "/api/v1/care-reminders/" + reminder.id(),
+            HttpMethod.DELETE,
+            new HttpEntity<>(headers),
+            String.class);
+    assertThat(deleted.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+    ResponseEntity<List<CareReminderResponse>> afterDelete =
+        restTemplate.exchange(
+            "/api/v1/orders/" + orderId + "/care-reminders",
+            HttpMethod.GET,
+            new HttpEntity<>(headers),
+            new ParameterizedTypeReference<>() {});
+    assertThat(afterDelete.getBody()).isEmpty();
+
+    UUID draftOrderId = createVariantOrder(headers);
+    ResponseEntity<String> rejected =
+        restTemplate.exchange(
+            "/api/v1/orders/" + draftOrderId + "/care-reminders",
+            HttpMethod.POST,
+            new HttpEntity<>(new CareReminderRequest(7), headers),
+            String.class);
+    assertThat(rejected.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
   }
 
   @Test
@@ -336,6 +422,7 @@ class OrderFlowIntegrationTest {
       JWTClaimsSet claims =
           new JWTClaimsSet.Builder()
               .subject(customerId.toString())
+              .claim("email", "customer-" + customerId + "@example.test")
               .claim("roles", roles)
               .issueTime(new Date())
               .expirationTime(Date.from(Instant.now().plusSeconds(300)))

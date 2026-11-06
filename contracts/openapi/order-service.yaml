@@ -354,6 +354,93 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
+  /api/v1/orders/{orderId}/care-reminders:
+    parameters:
+      - name: orderId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: createCareReminders
+      tags: [care]
+      summary: Opt in to care reminders for every item of a paid order
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CareReminderRequest'
+      responses:
+        '201':
+          description: Active reminders (idempotent for an order)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CareReminder'
+        '409':
+          description: Order is not paid
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+    get:
+      operationId: listOrderCareReminders
+      tags: [care]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Active reminders of the order
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CareReminder'
+
+  /api/v1/care-reminders:
+    get:
+      operationId: listCareReminders
+      tags: [care]
+      summary: List all reminders of the current customer
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Reminders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CareReminder'
+
+  /api/v1/care-reminders/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      operationId: deactivateCareReminder
+      tags: [care]
+      summary: Opt out of a care reminder
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Reminder deactivated
+        '404':
+          $ref: '#/components/responses/NotFound'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -689,6 +776,43 @@ components:
           type: string
           format: date-time
         decidedAt:
+          type: string
+          format: date-time
+
+    CareReminderRequest:
+      type: object
+      additionalProperties: false
+      required: [intervalDays]
+      properties:
+        intervalDays:
+          type: integer
+          minimum: 1
+          maximum: 365
+
+    CareReminder:
+      type: object
+      additionalProperties: false
+      required: [id, orderId, orderItemId, plantName, intervalDays, nextSendAt, active, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        orderId:
+          type: string
+          format: uuid
+        orderItemId:
+          type: string
+          format: uuid
+        plantName:
+          type: string
+        intervalDays:
+          type: integer
+        nextSendAt:
+          type: string
+          format: date-time
+        active:
+          type: boolean
+        createdAt:
           type: string
           format: date-time
 

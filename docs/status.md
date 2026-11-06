@@ -2,7 +2,7 @@
 
 **Обновлено:** 2026-11-06
 **Фаза:** 2 — gate закрыт по коду: J2/J3/J4 зелёные, A11-техника закрыта
-**Текущая задача:** Phase 3 — WYSIWYG-галерея готова, далее care-напоминания
+**Текущая задача:** Phase 3 — галерея и care-напоминания готовы, далее MinIO и outbox retry
 
 ## Состояние окружения
 
@@ -77,6 +77,7 @@
   X-Content-Type-Options; HSTS — только на HTTPS. Логи новых модулей без e-mail.
 - CI run `42182462585` — success, E2E 8/8 на тот момент; security run `42182462495` — success
   (trivy, secrets/TruffleHog, dependency audit).
+- CI run `42186081173` — success, E2E 10/10 с WYSIWYG-галереей и общими API-токенами.
 
 ### Phase 3 — WYSIWYG-галерея (✅ первый шаг)
 
@@ -88,6 +89,15 @@
 - Seed добавляет по 4 placeholder-ракурса для IP-001…IP-005, не перезаписывая реальные фото.
 - E2E J1 проверяет переход в карточку и цену; integration-тест — замену галереи и 400 без GENERAL.
 
+### Phase 3 — care-напоминания (✅)
+
+- `care_reminders` в `order-service`: одна запись на позицию оплаченного заказа, интервал 1–365 дней.
+- Opt-in `POST /api/v1/orders/{orderId}/care-reminders`, список, opt-out `DELETE /api/v1/care-reminders/{id}`.
+- Планировщик раз в 60 секунд отправляет до 50 писем; при ошибке SMTP напоминание повторяется
+  на следующем цикле (ADR-0010).
+- E2E: создание, список, отключение; integration-тест проверяет отправку due-напоминания через
+  мок `JavaMailSender` и 409 для неоплаченного заказа.
+
 ## Тесты и покрытие
 
 | Модуль            | Тесты | Line coverage |
@@ -95,17 +105,17 @@
 | `platform-common` |     9 |           74% |
 | `auth-service`    |     3 |           89% |
 | `catalog-service` |     7 |           85% |
-| `order-service`   |     3 |           75% |
+| `order-service`   |     4 |           76% |
 | `payment-service` |     1 |           77% |
 | `api-gateway`     |     8 |           97% |
-| `tests:e2e`       |    10 |             — |
+| `tests:e2e`       |    11 |             — |
 
-Итого **31 backend-тест + 10 E2E = 41 тест, 0 падений**. JaCoCo-порог 70% проходит.
+Итого **32 backend-теста + 11 E2E = 43 теста, 0 падений**. JaCoCo-порог 70% проходит.
 
 ## Следующие 3 шага
 
-1. Phase 3: care-напоминания (расписание, opt-in, письма).
-2. Phase 3: загрузка фото (галерея и претензии) в MinIO, outbox retry/dead-letter.
+1. Phase 3: загрузка фото (галерея и претензии) в MinIO, outbox retry/dead-letter.
+2. Phase 3: staging-метрики A1 и p95 в бюджете A15.
 3. Юридический A11 (L1–L8): передать владельцу/юристу; до подписи prod запрещён.
 
 ## Блокеры и риски
@@ -140,3 +150,5 @@
   только `ADMIN/OPERATOR/MANAGER`.
 - **Ruling:** security-заголовки выставляет gateway; CSP `default-src 'none'` для API, HSTS
   включается только на HTTPS.
+- **Ruling:** care-напоминания — в `order-service`, opt-in на оплаченный заказ, интервал в днях;
+  при ошибке SMTP письмо повторяется, `next_send_at` не сдвигается.

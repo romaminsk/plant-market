@@ -35,7 +35,11 @@ public class RouteConfig {
             "order-service",
             route ->
                 route
-                    .path("/api/v1/orders/**", "/api/v1/shipping/**", "/api/v1/claims/**")
+                    .path(
+                        "/api/v1/orders/**",
+                        "/api/v1/shipping/**",
+                        "/api/v1/claims/**",
+                        "/api/v1/care-reminders/**")
                     .uri(orderUri))
         .build();
   }

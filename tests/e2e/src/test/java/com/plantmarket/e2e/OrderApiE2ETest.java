@@ -115,6 +115,36 @@ class OrderApiE2ETest {
   }
 
   @Test
+  void careReminderOptInAndOptOut() throws Exception {
+    String token = login();
+    String variantId = seedVariantId();
+    JsonNode created =
+        post(
+            "/api/v1/orders",
+            token,
+            Map.of("items", java.util.List.of(Map.of("variantId", variantId, "quantity", 1))));
+    String orderId = created.path("id").asString();
+    post("/api/v1/orders/" + orderId + "/checkout", token, Map.of());
+    post("/api/v1/orders/" + orderId + "/pay", token, Map.of());
+
+    JsonNode reminders =
+        post("/api/v1/orders/" + orderId + "/care-reminders", token, Map.of("intervalDays", 14));
+    assertThat(reminders.size()).isEqualTo(1);
+    String reminderId = reminders.get(0).path("id").asString();
+    assertThat(reminders.get(0).path("active").asBoolean()).isTrue();
+    assertThat(reminders.get(0).path("intervalDays").asInt()).isEqualTo(14);
+
+    JsonNode listed = get("/api/v1/orders/" + orderId + "/care-reminders", token);
+    assertThat(listed.size()).isEqualTo(1);
+
+    HttpResponse<String> deleted = delete("/api/v1/care-reminders/" + reminderId, token);
+    assertThat(deleted.statusCode()).isEqualTo(204);
+
+    JsonNode afterDelete = get("/api/v1/orders/" + orderId + "/care-reminders", token);
+    assertThat(afterDelete.size()).isZero();
+  }
+
+  @Test
   void winterZoneRequiresThermalPackaging() throws Exception {
     String token = login();
     String variantId = seedVariantId();
@@ -176,6 +206,14 @@ class OrderApiE2ETest {
 
   private String adminLogin() throws Exception {
     return ApiTokens.admin(apiUrl);
+  }
+
+  private HttpResponse<String> delete(String path, String token) throws Exception {
+    HttpRequest.Builder builder = HttpRequest.newBuilder(URI.create(apiUrl + path)).DELETE();
+    if (token != null) {
+      builder.header("Authorization", "Bearer " + token);
+    }
+    return client.send(builder.build(), HttpResponse.BodyHandlers.ofString());
   }
 
   private JsonNode get(String path, String token) throws Exception {
