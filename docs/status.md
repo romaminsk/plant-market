@@ -82,6 +82,7 @@
 - CI run `42188535932` — success, E2E 12/12 с media uploads и waitlist UI.
 - CI run `42189452781` — success, E2E 12/12 с outbox retry.
 - CI run `42191984783` — success, E2E 14/14 с админ-редактором галереи и панелью претензий.
+- CI run `42193571529` — success, E2E 15/15 с OAuth2 PKCE checkout через storefront BFF.
 
 ### Phase 3 — WYSIWYG-галерея (✅ первый шаг)
 
