@@ -224,6 +224,11 @@ tbody tr:last-child td {
 
 .panel {
   padding: 1.25rem;
+  overflow-x: auto;
+}
+
+.panel-grid > .panel:last-child {
+  grid-column: 1 / -1;
 }
 
 .panel h2 {
@@ -318,4 +323,45 @@ table button {
   .panel-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Visual polish */
+h1,
+.panel h2 {
+  font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif;
+  letter-spacing: -0.015em;
+}
+
+.app-shell {
+  max-width: 1280px;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: 0.9rem 0;
+  background: rgb(244 246 242 / 94%);
+  backdrop-filter: blur(12px);
+}
+
+button {
+  border-radius: 999px;
+}
+
+table tbody tr:hover {
+  background: #f8faf5;
+}
+
+.panel {
+  border-radius: 18px;
+}
+
+.tabs {
+  position: sticky;
+  top: 76px;
+  z-index: 10;
+  padding: 0.35rem 0;
+  background: rgb(244 246 242 / 94%);
+  backdrop-filter: blur(12px);
 }

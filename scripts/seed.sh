@@ -191,6 +191,18 @@ transition_plant() {
         "$API_URL/api/v1/individual-plants/$plant_id/transitions"
 }
 
+plant_image_for_sku() {
+    case "$1" in
+        PLANT-001) echo "/images/plants/philodendron.jpg" ;;
+        PLANT-002) echo "/images/plants/anthurium.jpg" ;;
+        PLANT-003) echo "/images/plants/alocasia.jpg" ;;
+        PLANT-004) echo "/images/plants/syngonium.jpg" ;;
+        PLANT-005) echo "/images/plants/scindapsus.jpg" ;;
+        PLANT-006) echo "/images/plants/anthurium.jpg" ;;
+        *) echo "/images/plants/monstera.jpg" ;;
+    esac
+}
+
 ensure_individual_plant() {
     local product_sku="$1"
     local code="$2"
@@ -212,9 +224,12 @@ ensure_individual_plant() {
             -H 'Content-Type: application/json' \
             -d "$(jq -n --arg code "$code" --argjson priceMinor "$price_minor" \
                 --arg careLevel "$care_level" --arg light "$light" --argjson petSafe "$pet_safe" \
-                '{code: $code, description: "Индивидуальное растение. Фото: placeholder.",
-                  photoUrl: "https://placehold.co/600x800?text=plant", priceMinor: $priceMinor,
-                  currency: "BYN", careLevel: $careLevel, light: $light, petSafe: $petSafe}')" \
+                --arg photoUrl "$(plant_image_for_sku "$product_sku")" \
+                '{code: $code,
+                  photoUrl: $photoUrl,
+                  description: "Конкретный экземпляр: фото общего плана, листа, корней и дефектов.",
+                  priceMinor: $priceMinor, currency: "BYN",
+                  careLevel: $careLevel, light: $light, petSafe: $petSafe}')" \
             "$API_URL/api/v1/products/$product_id/individual-plants" \
             | jq -r '.id')"
     fi
@@ -231,7 +246,16 @@ ensure_individual_plant() {
 
 ensure_plant_photos() {
     local code="$1"
-    local plant_id count
+    local plant_id count general
+    case "$code" in
+        IP-001) general="/images/plants/philodendron.jpg" ;;
+        IP-002) general="/images/plants/anthurium.jpg" ;;
+        IP-003) general="/images/plants/alocasia.jpg" ;;
+        IP-004) general="/images/plants/syngonium.jpg" ;;
+        IP-005) general="/images/plants/scindapsus.jpg" ;;
+        IP-006) general="/images/plants/anthurium.jpg" ;;
+        *) general="/images/plants/monstera.jpg" ;;
+    esac
 
     plant_id="$(curl -sS "$API_URL/api/v1/individual-plants?search=$code&size=100" \
         | jq -r --arg code "$code" '.items[] | select(.code == $code) | .id' | head -n 1)"
@@ -243,12 +267,12 @@ ensure_plant_photos() {
     curl -sS -o /dev/null -X PUT \
         -H "Authorization: Bearer $ADMIN_TOKEN" \
         -H 'Content-Type: application/json' \
-        -d "$(jq -n --arg code "$code" \
+        -d "$(jq -n --arg general "$general" \
             '{photos: [
-                {url: ("https://placehold.co/800x1000?text=" + $code + "+general"), kind: "GENERAL"},
-                {url: ("https://placehold.co/800x1000?text=" + $code + "+leaf"), kind: "LEAF"},
-                {url: ("https://placehold.co/800x1000?text=" + $code + "+roots"), kind: "ROOTS"},
-                {url: ("https://placehold.co/800x1000?text=" + $code + "+defects"), kind: "DEFECTS"}
+                {url: $general, kind: "GENERAL"},
+                {url: "/images/plants/leaf.jpg", kind: "LEAF"},
+                {url: "/images/plants/roots.jpg", kind: "ROOTS"},
+                {url: "/images/plants/defects.jpg", kind: "DEFECTS"}
             ]}')" \
         "$API_URL/api/v1/individual-plants/$plant_id/photos"
 }
@@ -364,12 +388,12 @@ ensure_product "FERN-001" "Nephrolepis Boston" "nephrolepis-boston" "Пышны�
 ensure_product "SUCC-001" "Echeveria Elegans" "echeveria-elegans" "Розетка с голубоватым налётом" "$SUCCULENTS_ID" 3800 "EASY" "DIRECT" true
 ensure_product "SUCC-002" "Haworthia Fasciata" "haworthia-fasciata" "Полосатая хавортия, компактная" "$SUCCULENTS_ID" 2900 "EASY" "BRIGHT" true
 
-ensure_product "PLANT-001" "Philodendron Pink Princess" "philodendron-pink-princess" "Индивидуальное растение. Фото: placeholder." "$MONSTERA_ID" 259900 "MEDIUM" "BRIGHT" false true
-ensure_product "PLANT-002" "Anthurium Clarinervium" "anthurium-clarinervium" "Индивидуальное растение. Фото: placeholder." "$MONSTERA_ID" 189900 "HARD" "MEDIUM" false true
-ensure_product "PLANT-003" "Alocasia Frydek" "alocasia-frydek" "Индивидуальное растение. Фото: placeholder." "$MONSTERA_ID" 89900 "MEDIUM" "BRIGHT" false
-ensure_product "PLANT-004" "Syngonium Albo" "syngonium-albo" "Индивидуальное растение. Фото: placeholder." "$MONSTERA_ID" 159900 "EASY" "MEDIUM" false true
-ensure_product "PLANT-005" "Scindapsus Treubii Moonlight" "scindapsus-treubii-moonlight" "Индивидуальное растение. Фото: placeholder." "$MONSTERA_ID" 74900 "EASY" "MEDIUM" false
-ensure_product "PLANT-006" "Anthurium Warocqueanum" "anthurium-warocqueanum" "Индивидуальное растение. Фото: placeholder." "$MONSTERA_ID" 249900 "HARD" "MEDIUM" false
+ensure_product "PLANT-001" "Philodendron Pink Princess" "philodendron-pink-princess" "Пестролистная лиана с розовыми пятнами на тёмных листьях." "$MONSTERA_ID" 259900 "MEDIUM" "BRIGHT" false true
+ensure_product "PLANT-002" "Anthurium Clarinervium" "anthurium-clarinervium" "Бархатистые листья с серебристыми жилками." "$MONSTERA_ID" 189900 "HARD" "MEDIUM" false true
+ensure_product "PLANT-003" "Alocasia Frydek" "alocasia-frydek" "Крупные стреловидные листья с контрастным рисунком." "$MONSTERA_ID" 89900 "MEDIUM" "BRIGHT" false
+ensure_product "PLANT-004" "Syngonium Albo" "syngonium-albo" "Быстрорастущая лиана с кремовыми секторами." "$MONSTERA_ID" 159900 "EASY" "MEDIUM" false true
+ensure_product "PLANT-005" "Scindapsus Treubii Moonlight" "scindapsus-treubii-moonlight" "Серебристо-зелёные листья, любит опору." "$MONSTERA_ID" 74900 "EASY" "MEDIUM" false
+ensure_product "PLANT-006" "Anthurium Warocqueanum" "anthurium-warocqueanum" "Королевский антуриум с бархатными листьями." "$MONSTERA_ID" 249900 "HARD" "MEDIUM" false
 
 ensure_variant "MON-001" "MON-001-12" "12 cm pot" "MEDIUM" "12cm" "POTTED" 139900 "ACTIVE"
 ensure_variant "MON-002" "MON-002-12" "12 cm pot" "MEDIUM" "12cm" "POTTED" 359900 "ACTIVE"

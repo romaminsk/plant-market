@@ -27,8 +27,13 @@ export function PlantGallery({
 
   if (items.length === 0) {
     return (
-      <div className="detail-photo" aria-hidden="true">
-        🌿
+      <div className="detail-photo">
+        <img
+          src="/images/plants/monstera.jpg"
+          alt={`${name}, код ${code}`}
+          width={800}
+          height={1000}
+        />
       </div>
     );
   }

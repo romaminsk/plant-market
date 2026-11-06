@@ -4,6 +4,7 @@ import {
   fetchIndividualPlants,
   fetchPublishedProducts,
   formatPrice,
+  productImage,
   type PlantFilters,
 } from '@/lib/api';
 
@@ -41,7 +42,7 @@ export default async function CatalogPage({
     <section>
       <div className="page-heading">
         <div>
-          <p className="eyebrow">Phase 1 · каталог</p>
+          <p className="eyebrow">WYSIWYG · каталог</p>
           <h1>Растения в наличии</h1>
           <p className="muted">
             Каждое индивидуальное растение — конкретный экземпляр с уникальным кодом.
@@ -97,10 +98,16 @@ export default async function CatalogPage({
                     alt={`${plant.productName}, ${plant.code}`}
                     width={400}
                     height={300}
-                    loading="lazy"
+                    loading="eager"
                   />
                 ) : (
-                  '🌿'
+                  <img
+                    src="/images/plants/monstera.jpg"
+                    alt={`${plant.productName}, ${plant.code}`}
+                    width={400}
+                    height={300}
+                    loading="eager"
+                  />
                 )}
               </Link>
               <div className="product-body">
@@ -140,8 +147,14 @@ export default async function CatalogPage({
         <ul className="product-grid">
           {products.items.map((product) => (
             <li key={product.id} className="product-card">
-              <div className="product-photo" aria-hidden="true">
-                🌿
+              <div className="product-photo">
+                <img
+                  src={productImage(product.sku)}
+                  alt={product.name}
+                  width={400}
+                  height={300}
+                  loading="eager"
+                />
               </div>
               <div className="product-body">
                 <p className="sku">{product.sku}</p>

@@ -37,7 +37,7 @@ curl -sS -o /dev/null -X POST -H "Authorization: Bearer $TOKEN" \
     "$API_URL/api/v1/orders/$ORDER_ID/pay"
 
 CLAIM_ID="$(curl -sS -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
-    -d '{"reason":"Повреждён лист при доставке","photoUrls":["https://placehold.co/800x600?text=damage"]}' \
+    -d '{"reason":"Повреждён лист при доставке","photoUrls":["http://localhost:3100/images/plants/defects.jpg"]}' \
     "$API_URL/api/v1/orders/$ORDER_ID/claims" | jq -r '.id')"
 
 echo "Order:  $ORDER_ID"

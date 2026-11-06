@@ -44,6 +44,15 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           </nav>
         </header>
         <main className="container">{children}</main>
+        <footer className="site-footer">
+          <div className="footer-inner">
+            <p className="muted">© 2026 Plant Market · редкие комнатные растения</p>
+            <nav aria-label="Сервис">
+              <a href="/catalog">Каталог</a> · <a href="/account/orders">Мои заказы</a> ·{' '}
+              <a href="/legal/cookies">Cookie</a>
+            </nav>
+          </div>
+        </footer>
         <CookieBanner />
       </body>
     </html>

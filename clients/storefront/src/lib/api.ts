@@ -167,6 +167,24 @@ export async function fetchShippingZones(): Promise<ShippingZone[]> {
   return (await response.json()) as ShippingZone[];
 }
 
+const PRODUCT_IMAGES: Record<string, string> = {
+  'MON-001': '/images/plants/monstera.jpg',
+  'MON-002': '/images/plants/monstera.jpg',
+  'FERN-001': '/images/plants/fern.jpg',
+  'SUCC-001': '/images/plants/echeveria.jpg',
+  'SUCC-002': '/images/plants/haworthia.jpg',
+  'PLANT-001': '/images/plants/philodendron.jpg',
+  'PLANT-002': '/images/plants/anthurium.jpg',
+  'PLANT-003': '/images/plants/alocasia.jpg',
+  'PLANT-004': '/images/plants/syngonium.jpg',
+  'PLANT-005': '/images/plants/scindapsus.jpg',
+  'PLANT-006': '/images/plants/anthurium.jpg',
+};
+
+export function productImage(sku: string): string {
+  return PRODUCT_IMAGES[sku] ?? '/images/plants/monstera.jpg';
+}
+
 export function formatPrice(priceMinor: number, currency: string): string {
   return new Intl.NumberFormat('be-BY', {
     style: 'currency',

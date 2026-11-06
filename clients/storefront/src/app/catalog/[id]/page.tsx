@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { fetchProduct, fetchVariants, formatPrice } from '@/lib/api';
+import { fetchProduct, fetchVariants, formatPrice, productImage } from '@/lib/api';
 import { AddVariantToCart } from './AddVariantToCart';
 import { safeJsonLd } from '@/lib/seo';
 import { TrackView } from '../../TrackView';
@@ -58,8 +58,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         ← Назад в каталог
       </Link>
       <div className="detail-layout">
-        <div className="detail-photo" aria-hidden="true">
-          🌿
+        <div className="detail-photo product-hero">
+          <img src={productImage(product.sku)} alt={product.name} width={800} height={600} />
         </div>
         <div>
           <p className="sku">{product.sku}</p>

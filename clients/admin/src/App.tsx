@@ -221,7 +221,7 @@ export default function App() {
     return (
       <main className="login-shell">
         <section className="card login-card">
-          <p className="eyebrow">Plant Market · Phase 1</p>
+          <p className="eyebrow">Plant Market · Operations</p>
           <h1>Админка</h1>
           <p className="muted">Вход через auth-service. JWT хранится в localStorage для E2E.</p>
           <form onSubmit={handleLogin}>
@@ -260,7 +260,7 @@ export default function App() {
     <main className="app-shell">
       <header className="topbar">
         <div>
-          <p className="eyebrow">Plant Market · Phase 1</p>
+          <p className="eyebrow">Plant Market · Operations</p>
           <h1>Админка</h1>
         </div>
         <div className="actions">

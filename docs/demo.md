@@ -3,6 +3,10 @@
 Демо показывает WYSIWYG-каталог, корзину, OAuth2 PKCE checkout, зимнюю доставку, restock,
 претензии, care-напоминания и админку.
 
+Фотографии в демо — реальные фото растений из Unsplash и Wikimedia Commons, скачанные локально
+(`clients/storefront/public/images/plants/CREDITS.md`). Это демо-контент; для продакшена нужны
+собственные WYSIWYG-фото с соблюдением фотостандарта.
+
 ## Подготовка
 
 ```bash
