@@ -30,8 +30,8 @@
 | Admin CRUD (create/read/archive/delete/transition/release) | ✅          |
 | Lighthouse A11y                                            | ✅ 1.0 (CI) |
 | OAuth2 Authorization Code + PKCE                           | ✅          |
-| Cookie security / CSRF                                     | ⚠️          |
-| Admin update forms                                         | ⬜          |
+| Cookie security / CSRF                                     | ✅          |
+| Admin update forms                                         | ✅          |
 | J5 order/reserve/cancel                                    | Phase 2     |
 
 ## Сделано
@@ -68,14 +68,14 @@
 
 ## Следующие 3 шага
 
-1. Admin: update-формы для продуктов, вариантов и категорий.
-2. A11 T2: CSRF double-submit и `__Host-`/Secure cookie в prod-конфиге.
-3. Phase 2: J5 order/reserve/cancel, корзина и checkout.
+1. A11 T2 prod-конфиг: `__Host-PM-SESSION` + `Secure` и проверка cookie в staging.
+2. Phase 2: order-service, корзина, checkout, резервы с TTL.
+3. Phase 2: payment-service sandbox + WireMock, delivery zones, notifications.
 
 ## Блокеры и риски
 
 - Remote workflow использует `actions/*@v4`; обновление до `@v7`/`setup-java@v6` требует `gh auth refresh -s workflow`. CI на `@v4` зелёный.
-- A11 T2: CSRF double-submit и `__Host-`/Secure cookie включаются в prod-конфиге; в Phase 1 используется synchronizer token и `PM-SESSION`.
+- A11 T2: double-submit CSRF реализован; `__Host-`/Secure cookie включаются prod-конфигом, проверить в staging.
 - In-memory SAS authorizations теряются при рестарте auth-service; для одного экземпляра Phase 1 допустимо (ADR-0006).
 - In-memory rate limit не разделяется между экземплярами gateway (ADR-0005).
 - Прямые порты auth/catalog открыты на localhost; перед prod закрыть.
@@ -90,3 +90,4 @@
 - **Ruling:** Lighthouse запускается `scripts/lighthouse-a11y.sh` и как `LighthouseA11yTest` в E2E-сьюте; порог 0.95.
 - **Ruling:** rate limit: 60 rpm публично, 10 rpm login/register, 300 rpm для запросов с Bearer-токеном.
 - **Ruling:** OAuth2 PKCE — SAS 7.1.2 с публичными клиентами и кастомным refresh-token генератором; ADR-0006.
+- **Ruling:** CSRF — double-submit cookie `XSRF-TOKEN`; session cookie `PM-SESSION`/`__Host-` prod.
