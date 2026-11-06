@@ -29,6 +29,9 @@ DEMO_RESET_CONFIRM=yes ./scripts/demo-reset.sh
 
 - Customer: `customer@plantmarket.local` / `CustomerPassword123!`
 - Admin: `admin@plantmarket.local` / `AdminPassword123!`
+- QA customer: `qa.customer@plantmarket.local` / `QaCustomer123!`
+- QA operator: `qa.operator@plantmarket.local` / `QaOperator123!`
+- QA manager: `qa.manager@plantmarket.local` / `QaManager123!`
 
 ## Сцена 1. J1: каталог → корзина → PKCE-логин → оплата
 

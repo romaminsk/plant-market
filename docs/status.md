@@ -90,6 +90,10 @@
   media magic bytes, J3 UI, 17/17 E2E; backend 38 тестов.
 - CI run `42233064039` — success после подъёма dev/CI rate limit: E2E 18/18.
 - CI run `42237526777` — success после Dark Premium редизайна: E2E 18/18, Lighthouse a11y ≥ 0.95.
+- QA-прогон: созданы `qa.customer/qa.operator/qa.manager`, добавлен `QaUiJourneyE2ETest`
+  (storefront journey, branded login error/logout, operator claim). Найдены и исправлены:
+  белая строка при hover в админ-таблицах, синие ссылки в админке, подчёркивание в заказах,
+  hero показывал отфильтрованный ноль вместо общего остатка.
 
 ### Phase 3 — WYSIWYG-галерея (✅ первый шаг)
 
@@ -263,9 +267,21 @@
 | `order-service`   |     7 |           82% |
 | `payment-service` |     1 |           78% |
 | `api-gateway`     |    10 |           97% |
-| `tests:e2e`       |    18 |             — |
+| `tests:e2e`       |   121 |             — |
 
-Итого **38 backend-тестов + 18 E2E = 56 тестов, 0 падений**. JaCoCo-порог 70% проходит.
+Итого **38 backend-тестов + 121 E2E = 159 тестов, 0 падений**. JaCoCo-порог 70% проходит.
+
+### UI-матрица (100 кейсов)
+
+- `docs/test-cases.md` — 100 кейсов TC-001…TC-100: catalog, plant, product, cart, checkout,
+  auth, legal, consent, SEO, admin, responsive, a11y.
+- Генератор: `scripts/generate-ui-cases.py`; данные: `tests/e2e/src/test/resources/ui-cases.json`;
+  runner: `UiMatrixE2ETest` (JUnit 5 `@TestFactory`, Playwright, один контекст, сброс cookies/storage).
+- Глубокие сценарии checkout/claims остаются в отдельных тестах; матрица закрывает страницы,
+  фильтры, вход, админ-вкладки, мобильный overflow и a11y-смоук.
+- Найдено и исправлено в ходе прогона: 404 favicon на storefront и в админке; отсутствие title
+  у `/cart` и `/checkout`; hero показывал 0 под фильтром; белая строка hover в админ-таблицах;
+  синие ссылки в админке; подчёркивание заголовков заказов.
 
 ## Следующие 3 шага
 

@@ -54,3 +54,6 @@ infra/mailhog/data/
 
 # Local agent scratch
 .superpowers/
+
+# Playwright MCP artifacts
+.playwright-mcp/

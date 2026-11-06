@@ -475,8 +475,18 @@ td {
   color: var(--ink);
 }
 
-tbody tr:hover {
+table tbody tr:hover {
   background: var(--surface-2);
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--accent-strong);
+  text-decoration: underline;
 }
 
 .badge-published {

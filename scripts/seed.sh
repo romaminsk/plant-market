@@ -10,6 +10,12 @@ ADMIN_EMAIL="${SEED_ADMIN_EMAIL:-admin@plantmarket.local}"
 ADMIN_PASSWORD="${SEED_ADMIN_PASSWORD:-AdminPassword123!}"
 CUSTOMER_EMAIL="${SEED_CUSTOMER_EMAIL:-customer@plantmarket.local}"
 CUSTOMER_PASSWORD="${SEED_CUSTOMER_PASSWORD:-CustomerPassword123!}"
+QA_CUSTOMER_EMAIL="${SEED_QA_CUSTOMER_EMAIL:-qa.customer@plantmarket.local}"
+QA_CUSTOMER_PASSWORD="${SEED_QA_CUSTOMER_PASSWORD:-QaCustomer123!}"
+OPERATOR_EMAIL="${SEED_OPERATOR_EMAIL:-qa.operator@plantmarket.local}"
+OPERATOR_PASSWORD="${SEED_OPERATOR_PASSWORD:-QaOperator123!}"
+MANAGER_EMAIL="${SEED_MANAGER_EMAIL:-qa.manager@plantmarket.local}"
+MANAGER_PASSWORD="${SEED_MANAGER_PASSWORD:-QaManager123!}"
 POSTGRES_USER="${POSTGRES_USER:-plantmarket}"
 
 if ! command -v jq >/dev/null 2>&1; then
@@ -383,6 +389,15 @@ docker compose exec -T postgres psql -U "$POSTGRES_USER" -d pm_auth -v ON_ERROR_
     -c "INSERT INTO user_roles (user_id, role_name) VALUES ('$ADMIN_ID', 'ADMIN') ON CONFLICT DO NOTHING;"
 # Re-login so the token carries the ADMIN role claim.
 ADMIN_TOKEN="$(register_or_login "$ADMIN_EMAIL" "$ADMIN_PASSWORD" "Plant Market Admin")"
+
+# QA users for UI/E2E runs: one customer and two staff roles for the admin claims flow.
+QA_CUSTOMER_TOKEN="$(register_or_login "$QA_CUSTOMER_EMAIL" "$QA_CUSTOMER_PASSWORD" "QA Customer")"
+OPERATOR_TOKEN="$(register_or_login "$OPERATOR_EMAIL" "$OPERATOR_PASSWORD" "QA Operator")"
+MANAGER_TOKEN="$(register_or_login "$MANAGER_EMAIL" "$MANAGER_PASSWORD" "QA Manager")"
+OPERATOR_ID="$(curl -sS -H "Authorization: Bearer $OPERATOR_TOKEN" "$API_URL/api/v1/auth/me" | jq -r '.id')"
+MANAGER_ID="$(curl -sS -H "Authorization: Bearer $MANAGER_TOKEN" "$API_URL/api/v1/auth/me" | jq -r '.id')"
+docker compose exec -T postgres psql -U "$POSTGRES_USER" -d pm_auth -v ON_ERROR_STOP=1 -q \
+    -c "INSERT INTO user_roles (user_id, role_name) VALUES ('$OPERATOR_ID', 'OPERATOR') ON CONFLICT DO NOTHING; INSERT INTO user_roles (user_id, role_name) VALUES ('$MANAGER_ID', 'MANAGER') ON CONFLICT DO NOTHING;"
 
 MONSTERA_ID="$(ensure_category "Монстеры" "monstera" "Крупнолистные тропические растения")"
 FERNS_ID="$(ensure_category "Папоротники" "ferns" "Влажные и тенистые помещения")"

@@ -17,6 +17,7 @@ final class ApiTokens {
   private static final HttpClient CLIENT = HttpClient.newHttpClient();
   private static String customerToken;
   private static String adminToken;
+  private static String qaCustomerToken;
 
   private ApiTokens() {}
 
@@ -33,6 +34,14 @@ final class ApiTokens {
       adminToken = login(apiUrl, "admin@plantmarket.local", "AdminPassword123!", "admin");
     }
     return adminToken;
+  }
+
+  static synchronized String qaCustomer(String apiUrl) throws Exception {
+    if (qaCustomerToken == null) {
+      qaCustomerToken =
+          login(apiUrl, "qa.customer@plantmarket.local", "QaCustomer123!", "qa-customer");
+    }
+    return qaCustomerToken;
   }
 
   private static String login(String apiUrl, String email, String password, String role)

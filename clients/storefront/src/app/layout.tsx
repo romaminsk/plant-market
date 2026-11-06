@@ -18,6 +18,7 @@ export const metadata: Metadata = {
     locale: 'ru_BY',
   },
   robots: { index: true, follow: true },
+  icons: { icon: '/favicon.svg' },
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: ReactNode }>) {

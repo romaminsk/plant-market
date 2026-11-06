@@ -34,10 +34,12 @@ export default async function CatalogPage({
 
   const filters: PlantFilters = { variegated, light, maxPriceMinor };
   const filtersActive = Boolean(variegated || light || maxPriceMinor !== undefined);
-  const [plants, products] = await Promise.all([
+  const [plants, products, allPlants] = await Promise.all([
     fetchIndividualPlants(filters),
     fetchPublishedProducts(),
+    filtersActive ? fetchIndividualPlants({}) : Promise.resolve(null),
   ]);
+  const totalAvailable = allPlants?.totalElements ?? plants.totalElements;
 
   return (
     <section>
@@ -54,8 +56,8 @@ export default async function CatalogPage({
             Открыть каталог →
           </a>
           <span className="hero-meta" aria-live="polite">
-            <strong>{plants.totalElements}</strong>
-            {pluralRu(plants.totalElements, 'растение', 'растения', 'растений')} в наличии
+            <strong>{totalAvailable}</strong>
+            {pluralRu(totalAvailable, 'растение', 'растения', 'растений')} в наличии
           </span>
         </div>
       </div>

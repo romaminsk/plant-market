@@ -2264,6 +2264,14 @@ button:disabled {
   color: var(--ink);
 }
 
+.order-card h2 a {
+  text-decoration: none;
+}
+
+.order-card h2 a:hover {
+  color: var(--accent-strong);
+}
+
 .mono {
   color: var(--accent-strong);
 }

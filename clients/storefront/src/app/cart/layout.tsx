@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
 export const metadata: Metadata = {
+  title: 'Корзина — Plant Market',
   robots: { index: false, follow: false },
 };
 

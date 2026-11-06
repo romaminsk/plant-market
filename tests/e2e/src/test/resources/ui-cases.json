@@ -1,0 +1,1630 @@
+{
+  "cases": [
+    {
+      "id": "TC-001",
+      "area": "catalog",
+      "name": "Каталог отвечает 200",
+      "start": "/catalog",
+      "steps": [
+        {
+          "action": "expectStatus",
+          "value": 200
+        }
+      ],
+      "expected": "HTTP 200"
+    },
+    {
+      "id": "TC-002",
+      "area": "catalog",
+      "name": "Hero каталога показывает заголовок",
+      "start": "/catalog",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "Растения, которые не повторить."
+        }
+      ],
+      "expected": "Заголовок hero виден"
+    },
+    {
+      "id": "TC-003",
+      "area": "catalog",
+      "name": "Каталог показывает не меньше 11 карточек растений",
+      "start": "/catalog",
+      "steps": [
+        {
+          "action": "expectMinCount",
+          "selector": ".plant-card",
+          "value": 11
+        }
+      ],
+      "expected": ">= 11 карточек"
+    },
+    {
+      "id": "TC-004",
+      "area": "catalog",
+      "name": "Индекс позиций показывает не меньше 11 строк",
+      "start": "/catalog",
+      "steps": [
+        {
+          "action": "expectMinCount",
+          "selector": ".product-row",
+          "value": 11
+        }
+      ],
+      "expected": ">= 11 позиций"
+    },
+    {
+      "id": "TC-005",
+      "area": "catalog",
+      "name": "Фильтр «Только вариегатные» сужает каталог",
+      "start": "/catalog?variegated=true",
+      "steps": [
+        {
+          "action": "expectUrl",
+          "value": "variegated=true"
+        },
+        {
+          "action": "expectMinCount",
+          "selector": ".plant-card",
+          "value": 6
+        }
+      ],
+      "expected": "Параметр в URL, >= 6 карточек"
+    },
+    {
+      "id": "TC-006",
+      "area": "catalog",
+      "name": "Фильтр по среднему свету сужает каталог",
+      "start": "/catalog?variegated=true&light=MEDIUM",
+      "steps": [
+        {
+          "action": "expectUrl",
+          "value": "light=MEDIUM"
+        },
+        {
+          "action": "expectMinCount",
+          "selector": ".plant-card",
+          "value": 3
+        }
+      ],
+      "expected": "Параметр в URL, >= 3 карточки"
+    },
+    {
+      "id": "TC-007",
+      "area": "catalog",
+      "name": "Фильтр по цене до 150 BYN сужает каталог",
+      "start": "/catalog?variegated=true&light=MEDIUM&maxPrice=150",
+      "steps": [
+        {
+          "action": "expectUrl",
+          "value": "maxPrice=150"
+        },
+        {
+          "action": "expectMinCount",
+          "selector": ".plant-card",
+          "value": 1
+        }
+      ],
+      "expected": "Параметр в URL, >= 1 карточка"
+    },
+    {
+      "id": "TC-008",
+      "area": "catalog",
+      "name": "Сброс фильтров возвращает полный каталог",
+      "start": "/catalog?variegated=true&light=MEDIUM&maxPrice=150",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "button:has-text('Сбросить фильтры')"
+        },
+        {
+          "action": "waitForFunction",
+          "value": "() => location.search === ''"
+        },
+        {
+          "action": "expectAttribute",
+          "selector": "button:has-text('Любой')",
+          "name": "aria-pressed",
+          "value": "true",
+          "match": "equals"
+        },
+        {
+          "action": "expectMinCount",
+          "selector": ".plant-card",
+          "value": 11
+        }
+      ],
+      "expected": "Фильтры сброшены, >= 11 карточек"
+    },
+    {
+      "id": "TC-009",
+      "area": "catalog",
+      "name": "Пилюля «Любой» активна по умолчанию",
+      "start": "/catalog",
+      "steps": [
+        {
+          "action": "expectAttribute",
+          "selector": "button:has-text('Любой')",
+          "name": "aria-pressed",
+          "value": "true",
+          "match": "equals"
+        }
+      ],
+      "expected": "aria-pressed=true"
+    },
+    {
+      "id": "TC-010",
+      "area": "catalog",
+      "name": "Тумблер вариегатности выключен по умолчанию",
+      "start": "/catalog",
+      "steps": [
+        {
+          "action": "expectAttribute",
+          "selector": ".filter-toggle",
+          "name": "aria-pressed",
+          "value": "false",
+          "match": "equals"
+        }
+      ],
+      "expected": "aria-pressed=false"
+    },
+    {
+      "id": "TC-011",
+      "area": "catalog",
+      "name": "Пустой результат фильтра показывает подсказку",
+      "start": "/catalog?maxPrice=1",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "Под эти фильтры растений нет"
+        }
+      ],
+      "expected": "Текст пустого состояния"
+    },
+    {
+      "id": "TC-012",
+      "area": "catalog",
+      "name": "Каждая карточка растения имеет бейдж WYSIWYG",
+      "start": "/catalog",
+      "steps": [
+        {
+          "action": "expectMinCount",
+          "selector": ".photo-badge",
+          "value": 11
+        }
+      ],
+      "expected": ">= 11 бейджей"
+    },
+    {
+      "id": "TC-013",
+      "area": "catalog",
+      "name": "Карточка IP-001 видна в каталоге",
+      "start": "/catalog",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "IP-001"
+        }
+      ],
+      "expected": "Код IP-001"
+    },
+    {
+      "id": "TC-014",
+      "area": "catalog",
+      "name": "Карточка IP-001 показывает цену",
+      "start": "/catalog",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "120,00"
+        }
+      ],
+      "expected": "Цена 120,00 BYN"
+    },
+    {
+      "id": "TC-015",
+      "area": "catalog",
+      "name": "Карточка растения ведёт на страницу экземпляра",
+      "start": "/catalog",
+      "steps": [
+        {
+          "action": "expectVisible",
+          "selector": "a[href^='/plants/']"
+        }
+      ],
+      "expected": "Ссылка /plants/..."
+    },
+    {
+      "id": "TC-016",
+      "area": "catalog",
+      "name": "Строка индекса ведёт на страницу продукта",
+      "start": "/catalog",
+      "steps": [
+        {
+          "action": "expectVisible",
+          "selector": ".product-row h2 a[href^='/catalog/']"
+        }
+      ],
+      "expected": "Ссылка /catalog/..."
+    },
+    {
+      "id": "TC-017",
+      "area": "catalog",
+      "name": "Hero показывает общий остаток, а не ноль под фильтром",
+      "start": "/catalog?variegated=true&light=MEDIUM&maxPrice=150",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "РАСТЕНИЙ В НАЛИЧИИ"
+        },
+        {
+          "action": "expectTextGone",
+          "value": "0 РАСТЕНИЙ В НАЛИЧИИ"
+        }
+      ],
+      "expected": "Нет «0 растений в наличии»"
+    },
+    {
+      "id": "TC-018",
+      "area": "catalog",
+      "name": "Meta title каталога задан",
+      "start": "/catalog",
+      "steps": [
+        {
+          "action": "expectTitle",
+          "value": "Каталог растений"
+        }
+      ],
+      "expected": "Title содержит «Каталог растений»"
+    },
+    {
+      "id": "TC-019",
+      "area": "plant",
+      "name": "Страница экземпляра отвечает 200",
+      "start": "/plants/{plantId}",
+      "steps": [
+        {
+          "action": "expectStatus",
+          "value": 200
+        }
+      ],
+      "expected": "HTTP 200"
+    },
+    {
+      "id": "TC-020",
+      "area": "plant",
+      "name": "Страница экземпляра показывает название",
+      "start": "/plants/{plantId}",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "{plantName}"
+        }
+      ],
+      "expected": "Название растения"
+    },
+    {
+      "id": "TC-021",
+      "area": "plant",
+      "name": "Страница экземпляра показывает цену",
+      "start": "/plants/{plantId}",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "{plantPrice}"
+        }
+      ],
+      "expected": "Цена экземпляра"
+    },
+    {
+      "id": "TC-022",
+      "area": "plant",
+      "name": "Бейдж WYSIWYG на странице экземпляра",
+      "start": "/plants/{plantId}",
+      "steps": [
+        {
+          "action": "expectVisible",
+          "selector": ".wysiwyg-badge"
+        }
+      ],
+      "expected": "Бейдж виден"
+    },
+    {
+      "id": "TC-023",
+      "area": "plant",
+      "name": "Главное фото галереи отображается",
+      "start": "/plants/{plantId}",
+      "steps": [
+        {
+          "action": "expectVisible",
+          "selector": ".gallery-main img"
+        }
+      ],
+      "expected": "Фото видно"
+    },
+    {
+      "id": "TC-024",
+      "area": "plant",
+      "name": "Галерея содержит минимум один ракурс",
+      "start": "/plants/{plantId}",
+      "steps": [
+        {
+          "action": "expectMinCount",
+          "selector": ".gallery-thumb",
+          "value": 1
+        }
+      ],
+      "expected": ">= 1 миниатюры"
+    },
+    {
+      "id": "TC-025",
+      "area": "plant",
+      "name": "Блок доверия содержит три пункта",
+      "start": "/plants/{plantId}",
+      "steps": [
+        {
+          "action": "expectCount",
+          "selector": ".trust-list li",
+          "value": 3
+        }
+      ],
+      "expected": "3 пункта"
+    },
+    {
+      "id": "TC-026",
+      "area": "plant",
+      "name": "Кнопка «В корзину» доступна",
+      "start": "/plants/{plantId}",
+      "steps": [
+        {
+          "action": "expectVisible",
+          "selector": "button:has-text('В корзину')"
+        }
+      ],
+      "expected": "Кнопка видна"
+    },
+    {
+      "id": "TC-027",
+      "area": "plant",
+      "name": "Кнопка «Купить сейчас» доступна",
+      "start": "/plants/{plantId}",
+      "steps": [
+        {
+          "action": "expectVisible",
+          "selector": "button:has-text('Купить сейчас')"
+        }
+      ],
+      "expected": "Кнопка видна"
+    },
+    {
+      "id": "TC-028",
+      "area": "plant",
+      "name": "Ссылка «Назад в каталог» доступна",
+      "start": "/plants/{plantId}",
+      "steps": [
+        {
+          "action": "expectVisible",
+          "selector": ".back-link"
+        }
+      ],
+      "expected": "Ссылка видна"
+    },
+    {
+      "id": "TC-029",
+      "area": "plant",
+      "name": "Страница экземпляра содержит JSON-LD",
+      "start": "/plants/{plantId}",
+      "steps": [
+        {
+          "action": "expectCount",
+          "selector": "script[type='application/ld+json']",
+          "value": 1
+        }
+      ],
+      "expected": "1 JSON-LD блок"
+    },
+    {
+      "id": "TC-030",
+      "area": "plant",
+      "name": "Meta title содержит название растения",
+      "start": "/plants/{plantId}",
+      "steps": [
+        {
+          "action": "expectTitle",
+          "value": "{plantName}"
+        }
+      ],
+      "expected": "Title с названием"
+    },
+    {
+      "id": "TC-031",
+      "area": "product",
+      "name": "Страница продукта отвечает 200",
+      "start": "/catalog/{productId}",
+      "steps": [
+        {
+          "action": "expectStatus",
+          "value": 200
+        }
+      ],
+      "expected": "HTTP 200"
+    },
+    {
+      "id": "TC-032",
+      "area": "product",
+      "name": "Страница продукта показывает название",
+      "start": "/catalog/{productId}",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "Monstera Deliciosa"
+        }
+      ],
+      "expected": "Название продукта"
+    },
+    {
+      "id": "TC-033",
+      "area": "product",
+      "name": "Страница продукта показывает цену",
+      "start": "/catalog/{productId}",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "299,00"
+        }
+      ],
+      "expected": "Цена продукта"
+    },
+    {
+      "id": "TC-034",
+      "area": "product",
+      "name": "Секция вариантов отображается",
+      "start": "/catalog/{productId}",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "Варианты"
+        }
+      ],
+      "expected": "Заголовок «Варианты»"
+    },
+    {
+      "id": "TC-035",
+      "area": "product",
+      "name": "У продукта есть минимум один вариант",
+      "start": "/catalog/{productId}",
+      "steps": [
+        {
+          "action": "expectMinCount",
+          "selector": ".variant-card",
+          "value": 1
+        }
+      ],
+      "expected": ">= 1 вариант"
+    },
+    {
+      "id": "TC-036",
+      "area": "product",
+      "name": "Главное фото продукта отображается",
+      "start": "/catalog/{productId}",
+      "steps": [
+        {
+          "action": "expectVisible",
+          "selector": ".product-hero img"
+        }
+      ],
+      "expected": "Фото видно"
+    },
+    {
+      "id": "TC-037",
+      "area": "cart",
+      "name": "Пустая корзина показывает заголовок",
+      "start": "/cart",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "Корзина"
+        }
+      ],
+      "expected": "Заголовок"
+    },
+    {
+      "id": "TC-038",
+      "area": "cart",
+      "name": "Пустая корзина предлагает перейти в каталог",
+      "start": "/cart",
+      "steps": [
+        {
+          "action": "expectVisible",
+          "selector": ".empty a[href='/catalog']"
+        }
+      ],
+      "expected": "Ссылка в каталог"
+    },
+    {
+      "id": "TC-039",
+      "area": "cart",
+      "name": "Ссылка на корзину есть в шапке",
+      "start": "/cart",
+      "steps": [
+        {
+          "action": "expectVisible",
+          "selector": "header a[href='/cart']"
+        }
+      ],
+      "expected": "Ссылка /cart"
+    },
+    {
+      "id": "TC-040",
+      "area": "cart",
+      "name": "Meta title корзины задан",
+      "start": "/cart",
+      "steps": [
+        {
+          "action": "expectTitle",
+          "value": "Корзина"
+        }
+      ],
+      "expected": "Title содержит «Корзина»"
+    },
+    {
+      "id": "TC-041",
+      "area": "cart",
+      "name": "Корзина не имеет горизонтального скролла на десктопе",
+      "start": "/cart",
+      "steps": [
+        {
+          "action": "expectNoOverflow"
+        }
+      ],
+      "expected": "scrollWidth <= clientWidth"
+    },
+    {
+      "id": "TC-042",
+      "area": "checkout",
+      "name": "Пустой checkout показывает заголовок",
+      "start": "/checkout",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "Оформление заказа"
+        }
+      ],
+      "expected": "Заголовок"
+    },
+    {
+      "id": "TC-043",
+      "area": "checkout",
+      "name": "Пустой checkout предлагает каталог",
+      "start": "/checkout",
+      "steps": [
+        {
+          "action": "expectVisible",
+          "selector": ".empty a[href='/catalog']"
+        }
+      ],
+      "expected": "Ссылка в каталог"
+    },
+    {
+      "id": "TC-044",
+      "area": "checkout",
+      "name": "Checkout с товаром требует вход",
+      "start": "/checkout",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "Нужно войти"
+        }
+      ],
+      "expected": "Экран «Нужно войти»",
+      "storage": {
+        "pm.cart.v1": "[{\"type\":\"INDIVIDUAL_PLANT\",\"id\":\"{plantId}\",\"name\":\"{plantName}\",\"priceMinor\":12000,\"currency\":\"BYN\",\"quantity\":1}]"
+      }
+    },
+    {
+      "id": "TC-045",
+      "area": "checkout",
+      "name": "Meta title checkout задан",
+      "start": "/checkout",
+      "steps": [
+        {
+          "action": "expectTitle",
+          "value": "Оформление заказа"
+        }
+      ],
+      "expected": "Title содержит «Оформление заказа»"
+    },
+    {
+      "id": "TC-046",
+      "area": "auth",
+      "name": "Storefront login редиректит на auth-service",
+      "start": "/api/auth/login?returnTo=/account/orders",
+      "steps": [
+        {
+          "action": "expectUrl",
+          "value": ":8090/login"
+        }
+      ],
+      "expected": "URL /login на auth-service"
+    },
+    {
+      "id": "TC-047",
+      "area": "auth",
+      "name": "Брендированный login имеет title",
+      "start": "/api/auth/login?returnTo=/account/orders",
+      "steps": [
+        {
+          "action": "expectTitle",
+          "value": "Вход — Plant Market"
+        }
+      ],
+      "expected": "Title «Вход — Plant Market»"
+    },
+    {
+      "id": "TC-048",
+      "area": "auth",
+      "name": "Брендированный login показывает заголовок «Вход»",
+      "start": "/api/auth/login?returnTo=/account/orders",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "Вход"
+        },
+        {
+          "action": "expectText",
+          "value": "ЛИЧНЫЙ КАБИНЕТ"
+        }
+      ],
+      "expected": "Заголовок и eyebrow"
+    },
+    {
+      "id": "TC-049",
+      "area": "auth",
+      "name": "Login показывает бренд Plant Market",
+      "start": "/api/auth/login?returnTo=/account/orders",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "Plant Market"
+        }
+      ],
+      "expected": "Бренд"
+    },
+    {
+      "id": "TC-050",
+      "area": "auth",
+      "name": "Login содержит поле E-mail",
+      "start": "/api/auth/login?returnTo=/account/orders",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "E-MAIL"
+        },
+        {
+          "action": "expectVisible",
+          "selector": "input[name='username']"
+        }
+      ],
+      "expected": "Поле username"
+    },
+    {
+      "id": "TC-051",
+      "area": "auth",
+      "name": "Login содержит поле Пароль",
+      "start": "/api/auth/login?returnTo=/account/orders",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "ПАРОЛЬ"
+        },
+        {
+          "action": "expectVisible",
+          "selector": "input[name='password']"
+        }
+      ],
+      "expected": "Поле password"
+    },
+    {
+      "id": "TC-052",
+      "area": "auth",
+      "name": "Login содержит CSRF-токен",
+      "start": "/api/auth/login?returnTo=/account/orders",
+      "steps": [
+        {
+          "action": "expectCount",
+          "selector": "input[name='_csrf']",
+          "value": 1
+        }
+      ],
+      "expected": "1 hidden _csrf"
+    },
+    {
+      "id": "TC-053",
+      "area": "auth",
+      "name": "Неверный пароль показывает ошибку",
+      "start": "/api/auth/login?returnTo=/account/orders",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "input[name='username']",
+          "value": "qa.customer@plantmarket.local"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='password']",
+          "value": "WrongPassword123!"
+        },
+        {
+          "action": "click",
+          "selector": "button[type='submit']"
+        },
+        {
+          "action": "waitText",
+          "value": "Неверный e-mail или пароль"
+        }
+      ],
+      "expected": "Сообщение об ошибке"
+    },
+    {
+      "id": "TC-054",
+      "area": "auth",
+      "name": "Верный пароль возвращает в личный кабинет",
+      "start": "/api/auth/login?returnTo=/account/orders",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "input[name='username']",
+          "value": "qa.customer@plantmarket.local"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='password']",
+          "value": "QaCustomer123!"
+        },
+        {
+          "action": "click",
+          "selector": "button[type='submit']"
+        },
+        {
+          "action": "waitText",
+          "value": "Мои заказы"
+        }
+      ],
+      "expected": "Страница «Мои заказы»"
+    },
+    {
+      "id": "TC-055",
+      "area": "auth",
+      "name": "Выход возвращает в каталог",
+      "start": "/api/auth/login?returnTo=/catalog",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "input[name='username']",
+          "value": "qa.customer@plantmarket.local"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='password']",
+          "value": "QaCustomer123!"
+        },
+        {
+          "action": "click",
+          "selector": "button[type='submit']"
+        },
+        {
+          "action": "waitText",
+          "value": "Выйти"
+        },
+        {
+          "action": "click",
+          "selector": "button.nav-button"
+        },
+        {
+          "action": "waitUrl",
+          "value": "/catalog"
+        },
+        {
+          "action": "waitText",
+          "value": "Войти"
+        }
+      ],
+      "expected": "URL /catalog и ссылка «Войти»"
+    },
+    {
+      "id": "TC-056",
+      "area": "legal",
+      "name": "Страница cookie открывается",
+      "start": "/legal/cookies",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "Cookie и аналитика"
+        }
+      ],
+      "expected": "Заголовок"
+    },
+    {
+      "id": "TC-057",
+      "area": "legal",
+      "name": "Страница cookie показывает статус черновика",
+      "start": "/legal/cookies",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "Черновик"
+        }
+      ],
+      "expected": "Плашка «Черновик»"
+    },
+    {
+      "id": "TC-058",
+      "area": "consent",
+      "name": "Cookie-баннер показывается при первом визите",
+      "start": "/catalog",
+      "steps": [
+        {
+          "action": "expectVisible",
+          "selector": ".cookie-banner"
+        },
+        {
+          "action": "expectText",
+          "value": "Используем необходимые cookie"
+        }
+      ],
+      "expected": "Баннер виден"
+    },
+    {
+      "id": "TC-059",
+      "area": "consent",
+      "name": "Отказ от аналитики скрывает баннер",
+      "start": "/catalog",
+      "steps": [
+        {
+          "action": "click",
+          "selector": ".cookie-banner button:has-text('Только необходимые')"
+        },
+        {
+          "action": "expectHidden",
+          "selector": ".cookie-banner"
+        }
+      ],
+      "expected": "Баннер скрыт"
+    },
+    {
+      "id": "TC-060",
+      "area": "consent",
+      "name": "Принятие аналитики сохраняет выбор",
+      "start": "/catalog",
+      "steps": [
+        {
+          "action": "click",
+          "selector": ".cookie-banner button:has-text('Принять аналитику')"
+        },
+        {
+          "action": "expectStorage",
+          "key": "pm.consent.v1",
+          "value": "all"
+        }
+      ],
+      "expected": "localStorage pm.consent.v1=all"
+    },
+    {
+      "id": "TC-061",
+      "area": "seo",
+      "name": "robots.txt содержит Sitemap",
+      "start": "/robots.txt",
+      "steps": [
+        {
+          "action": "expectStatus",
+          "value": 200
+        },
+        {
+          "action": "expectText",
+          "value": "Sitemap"
+        }
+      ],
+      "expected": "HTTP 200 + Sitemap"
+    },
+    {
+      "id": "TC-062",
+      "area": "seo",
+      "name": "sitemap.xml содержит /catalog",
+      "start": "/sitemap.xml",
+      "steps": [
+        {
+          "action": "expectStatus",
+          "value": 200
+        },
+        {
+          "action": "expectText",
+          "value": "/catalog"
+        }
+      ],
+      "expected": "HTTP 200 + URL"
+    },
+    {
+      "id": "TC-063",
+      "area": "seo",
+      "name": "Каталог содержит canonical",
+      "start": "/catalog",
+      "steps": [
+        {
+          "action": "expectAttribute",
+          "selector": "link[rel='canonical']",
+          "name": "href",
+          "value": "/catalog",
+          "match": "contains"
+        }
+      ],
+      "expected": "canonical на /catalog"
+    },
+    {
+      "id": "TC-064",
+      "area": "seo",
+      "name": "Каталог содержит meta description",
+      "start": "/catalog",
+      "steps": [
+        {
+          "action": "expectAttribute",
+          "selector": "meta[name='description']",
+          "name": "content",
+          "value": "",
+          "match": "nonEmpty"
+        }
+      ],
+      "expected": "meta description присутствует"
+    },
+    {
+      "id": "TC-065",
+      "area": "seo",
+      "name": "Футер содержит копирайт",
+      "start": "/catalog",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "© 2026 Plant Market"
+        }
+      ],
+      "expected": "Копирайт"
+    },
+    {
+      "id": "TC-066",
+      "area": "admin",
+      "name": "Экран входа админки показывает заголовок",
+      "start": "/",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "Админка"
+        }
+      ],
+      "expected": "Заголовок"
+    },
+    {
+      "id": "TC-067",
+      "area": "admin",
+      "name": "Экран входа админки содержит Email",
+      "start": "/",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "Email"
+        }
+      ],
+      "expected": "Label Email"
+    },
+    {
+      "id": "TC-068",
+      "area": "admin",
+      "name": "Экран входа админки содержит Пароль",
+      "start": "/",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "Пароль"
+        }
+      ],
+      "expected": "Label Пароль"
+    },
+    {
+      "id": "TC-069",
+      "area": "admin",
+      "name": "Экран входа админки содержит кнопку Войти",
+      "start": "/",
+      "steps": [
+        {
+          "action": "expectVisible",
+          "selector": "button[type='submit']"
+        }
+      ],
+      "expected": "Кнопка Войти"
+    },
+    {
+      "id": "TC-070",
+      "area": "admin",
+      "name": "Неверный пароль админки показывает ошибку",
+      "start": "/",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "input[type='email']",
+          "value": "admin@plantmarket.local"
+        },
+        {
+          "action": "fill",
+          "selector": "input[type='password']",
+          "value": "WrongPassword123!"
+        },
+        {
+          "action": "click",
+          "selector": "button[type='submit']"
+        },
+        {
+          "action": "waitText",
+          "value": "Invalid email or password"
+        }
+      ],
+      "expected": "Текст ошибки auth-service"
+    },
+    {
+      "id": "TC-071",
+      "area": "admin",
+      "name": "Вход администратора открывает продукты",
+      "start": "/",
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "input[type='email']",
+          "value": "admin@plantmarket.local"
+        },
+        {
+          "action": "fill",
+          "selector": "input[type='password']",
+          "value": "AdminPassword123!"
+        },
+        {
+          "action": "click",
+          "selector": "button[type='submit']"
+        },
+        {
+          "action": "waitText",
+          "value": "Продукты"
+        }
+      ],
+      "expected": "Раздел «Продукты»"
+    },
+    {
+      "id": "TC-072",
+      "area": "admin",
+      "name": "Таблица продуктов заполнена",
+      "start": "/",
+      "steps": [
+        {
+          "action": "waitSelector",
+          "selector": "tbody tr"
+        },
+        {
+          "action": "expectMinCount",
+          "selector": "tbody tr",
+          "value": 1
+        }
+      ],
+      "expected": ">= 1 строка",
+      "admin": true
+    },
+    {
+      "id": "TC-073",
+      "area": "admin",
+      "name": "Вкладка категорий открывается",
+      "start": "/",
+      "steps": [
+        {
+          "action": "adminTab",
+          "value": "Категории"
+        },
+        {
+          "action": "waitText",
+          "value": "Категории"
+        },
+        {
+          "action": "waitSelector",
+          "selector": "tbody tr"
+        },
+        {
+          "action": "expectMinCount",
+          "selector": "tbody tr",
+          "value": 1
+        }
+      ],
+      "expected": "Таблица категорий",
+      "admin": true
+    },
+    {
+      "id": "TC-074",
+      "area": "admin",
+      "name": "Вкладка экземпляров открывается",
+      "start": "/",
+      "steps": [
+        {
+          "action": "adminTab",
+          "value": "Экземпляры"
+        },
+        {
+          "action": "waitText",
+          "value": "Экземпляры"
+        },
+        {
+          "action": "waitSelector",
+          "selector": "tbody tr"
+        },
+        {
+          "action": "expectMinCount",
+          "selector": "tbody tr",
+          "value": 1
+        }
+      ],
+      "expected": "Таблица экземпляров",
+      "admin": true
+    },
+    {
+      "id": "TC-075",
+      "area": "admin",
+      "name": "Вкладка вариантов открывается",
+      "start": "/",
+      "steps": [
+        {
+          "action": "adminTab",
+          "value": "Варианты"
+        },
+        {
+          "action": "waitText",
+          "value": "Варианты продукта"
+        },
+        {
+          "action": "select",
+          "selector": "select[name='productId']",
+          "value": "Monstera Deliciosa"
+        },
+        {
+          "action": "waitSelector",
+          "selector": "tbody tr"
+        },
+        {
+          "action": "expectMinCount",
+          "selector": "tbody tr",
+          "value": 1
+        }
+      ],
+      "expected": "Таблица вариантов",
+      "admin": true
+    },
+    {
+      "id": "TC-076",
+      "area": "admin",
+      "name": "Вкладка партий открывается",
+      "start": "/",
+      "steps": [
+        {
+          "action": "adminTab",
+          "value": "Партии"
+        },
+        {
+          "action": "waitText",
+          "value": "Новая партия"
+        },
+        {
+          "action": "waitSelector",
+          "selector": "tbody tr"
+        },
+        {
+          "action": "expectMinCount",
+          "selector": "tbody tr",
+          "value": 1
+        }
+      ],
+      "expected": "Таблица партий",
+      "admin": true
+    },
+    {
+      "id": "TC-077",
+      "area": "admin",
+      "name": "Вкладка претензий открывается",
+      "start": "/",
+      "steps": [
+        {
+          "action": "adminTab",
+          "value": "Претензии"
+        },
+        {
+          "action": "waitText",
+          "value": "Претензии"
+        },
+        {
+          "action": "expectText",
+          "value": "Решение оператора"
+        }
+      ],
+      "expected": "Таблица претензий",
+      "admin": true
+    },
+    {
+      "id": "TC-078",
+      "area": "admin",
+      "name": "В админке шесть вкладок",
+      "start": "/",
+      "steps": [
+        {
+          "action": "expectCount",
+          "selector": ".tab",
+          "value": 6
+        }
+      ],
+      "expected": "6 вкладок",
+      "admin": true
+    },
+    {
+      "id": "TC-079",
+      "area": "admin",
+      "name": "Форма нового продукта отображается",
+      "start": "/",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "Новый продукт"
+        }
+      ],
+      "expected": "Заголовок формы",
+      "admin": true
+    },
+    {
+      "id": "TC-080",
+      "area": "admin",
+      "name": "Форма продукта содержит SKU",
+      "start": "/",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "SKU"
+        },
+        {
+          "action": "expectVisible",
+          "selector": "input[name='sku']"
+        }
+      ],
+      "expected": "Поле SKU",
+      "admin": true
+    },
+    {
+      "id": "TC-081",
+      "area": "admin",
+      "name": "Форма продукта содержит название",
+      "start": "/",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "Название"
+        },
+        {
+          "action": "expectVisible",
+          "selector": "input[name='name']"
+        }
+      ],
+      "expected": "Поле name",
+      "admin": true
+    },
+    {
+      "id": "TC-082",
+      "area": "admin",
+      "name": "Форма продукта содержит slug",
+      "start": "/",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "Slug"
+        },
+        {
+          "action": "expectVisible",
+          "selector": "input[name='slug']"
+        }
+      ],
+      "expected": "Поле slug",
+      "admin": true
+    },
+    {
+      "id": "TC-083",
+      "area": "admin",
+      "name": "Форма продукта содержит категорию",
+      "start": "/",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "Категория"
+        },
+        {
+          "action": "expectVisible",
+          "selector": "select[name='categoryId']"
+        }
+      ],
+      "expected": "Селект категории",
+      "admin": true
+    },
+    {
+      "id": "TC-084",
+      "area": "admin",
+      "name": "Форма продукта содержит цену",
+      "start": "/",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "Цена, BYN"
+        },
+        {
+          "action": "expectVisible",
+          "selector": "input[name='price']"
+        }
+      ],
+      "expected": "Поле цены",
+      "admin": true
+    },
+    {
+      "id": "TC-085",
+      "area": "admin",
+      "name": "Форма продукта содержит размер",
+      "start": "/",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "Размер"
+        },
+        {
+          "action": "expectVisible",
+          "selector": "input[name='size']"
+        }
+      ],
+      "expected": "Поле размера",
+      "admin": true
+    },
+    {
+      "id": "TC-086",
+      "area": "admin",
+      "name": "Форма продукта содержит статус",
+      "start": "/",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "Статус"
+        },
+        {
+          "action": "expectVisible",
+          "selector": "select[name='status']"
+        }
+      ],
+      "expected": "Селект статуса",
+      "admin": true
+    },
+    {
+      "id": "TC-087",
+      "area": "admin",
+      "name": "Форма продукта содержит свет",
+      "start": "/",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "Свет"
+        },
+        {
+          "action": "expectVisible",
+          "selector": "select[name='light']"
+        }
+      ],
+      "expected": "Селект света",
+      "admin": true
+    },
+    {
+      "id": "TC-088",
+      "area": "admin",
+      "name": "Форма продукта содержит уход",
+      "start": "/",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "Уход"
+        },
+        {
+          "action": "expectVisible",
+          "selector": "select[name='careLevel']"
+        }
+      ],
+      "expected": "Селект ухода",
+      "admin": true
+    },
+    {
+      "id": "TC-089",
+      "area": "admin",
+      "name": "Форма продукта содержит описание",
+      "start": "/",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "Описание"
+        },
+        {
+          "action": "expectVisible",
+          "selector": "textarea[name='description']"
+        }
+      ],
+      "expected": "Поле описания",
+      "admin": true
+    },
+    {
+      "id": "TC-090",
+      "area": "admin",
+      "name": "В таблице продуктов есть бейдж статуса",
+      "start": "/",
+      "steps": [
+        {
+          "action": "waitSelector",
+          "selector": ".badge"
+        },
+        {
+          "action": "expectVisible",
+          "selector": ".badge"
+        }
+      ],
+      "expected": "Бейдж статуса",
+      "admin": true
+    },
+    {
+      "id": "TC-091",
+      "area": "admin",
+      "name": "Верхняя панель содержит Обновить и Выйти",
+      "start": "/",
+      "steps": [
+        {
+          "action": "expectVisible",
+          "selector": "button:has-text('Обновить')"
+        },
+        {
+          "action": "expectVisible",
+          "selector": "button:has-text('Выйти')"
+        }
+      ],
+      "expected": "Две кнопки",
+      "admin": true
+    },
+    {
+      "id": "TC-092",
+      "area": "admin",
+      "name": "Строка таблицы при hover остаётся тёмной",
+      "start": "/",
+      "steps": [
+        {
+          "action": "waitSelector",
+          "selector": "tbody tr"
+        },
+        {
+          "action": "hover",
+          "selector": "tbody tr"
+        },
+        {
+          "action": "expectCss",
+          "selector": "tbody tr",
+          "property": "background-color",
+          "value": "rgb(23, 40, 31)"
+        }
+      ],
+      "expected": "background-color surface-2",
+      "admin": true
+    },
+    {
+      "id": "TC-093",
+      "area": "admin",
+      "name": "Выход из админки возвращает на экран входа",
+      "start": "/",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "button:has-text('Выйти')"
+        },
+        {
+          "action": "waitText",
+          "value": "Админка"
+        }
+      ],
+      "expected": "Экран входа",
+      "admin": true
+    },
+    {
+      "id": "TC-094",
+      "area": "responsive",
+      "name": "Каталог без горизонтального скролла на мобильном",
+      "start": "/catalog",
+      "steps": [
+        {
+          "action": "expectNoOverflow"
+        }
+      ],
+      "expected": "Нет overflow",
+      "viewport": [390, 844]
+    },
+    {
+      "id": "TC-095",
+      "area": "responsive",
+      "name": "Карточка растения без горизонтального скролла на мобильном",
+      "start": "/plants/{plantId}",
+      "steps": [
+        {
+          "action": "expectNoOverflow"
+        }
+      ],
+      "expected": "Нет overflow",
+      "viewport": [390, 844]
+    },
+    {
+      "id": "TC-096",
+      "area": "responsive",
+      "name": "Корзина без горизонтального скролла на мобильном",
+      "start": "/cart",
+      "steps": [
+        {
+          "action": "expectNoOverflow"
+        }
+      ],
+      "expected": "Нет overflow",
+      "viewport": [390, 844]
+    },
+    {
+      "id": "TC-097",
+      "area": "responsive",
+      "name": "Юридическая страница без горизонтального скролла на мобильном",
+      "start": "/legal/cookies",
+      "steps": [
+        {
+          "action": "expectNoOverflow"
+        }
+      ],
+      "expected": "Нет overflow",
+      "viewport": [390, 844]
+    },
+    {
+      "id": "TC-098",
+      "area": "responsive",
+      "name": "Экран входа без горизонтального скролла на мобильном",
+      "start": "/api/auth/login?returnTo=/catalog",
+      "steps": [
+        {
+          "action": "expectNoOverflow"
+        }
+      ],
+      "expected": "Нет overflow",
+      "viewport": [390, 844]
+    },
+    {
+      "id": "TC-099",
+      "area": "responsive",
+      "name": "Экран входа админки без горизонтального скролла на мобильном",
+      "start": "/",
+      "steps": [
+        {
+          "action": "expectNoOverflow"
+        }
+      ],
+      "expected": "Нет overflow",
+      "viewport": [390, 844]
+    },
+    {
+      "id": "TC-100",
+      "area": "a11y",
+      "name": "A11y-смоук каталога: alt, labels, h1, lang",
+      "start": "/catalog",
+      "steps": [
+        {
+          "action": "expectA11y"
+        }
+      ],
+      "expected": "Все проверки пройдены"
+    }
+  ]
+}
