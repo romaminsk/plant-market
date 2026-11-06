@@ -30,6 +30,18 @@ public class OutboxEventEntity {
   @Column(name = "published_at")
   private Instant publishedAt;
 
+  @Column(name = "attempts", nullable = false)
+  private int attempts;
+
+  @Column(name = "last_error", length = 500)
+  private String lastError;
+
+  @Column(name = "next_attempt_at")
+  private Instant nextAttemptAt;
+
+  @Column(name = "dead", nullable = false)
+  private boolean dead;
+
   protected OutboxEventEntity() {}
 
   public OutboxEventEntity(UUID aggregateId, String eventType, String payload) {
@@ -48,6 +60,23 @@ public class OutboxEventEntity {
 
   public void markPublished() {
     this.publishedAt = Instant.now();
+    this.lastError = null;
+    this.nextAttemptAt = null;
+  }
+
+  public void markFailed(String error, Instant nextAttemptAt) {
+    this.attempts += 1;
+    this.lastError = error;
+    this.nextAttemptAt = nextAttemptAt;
+  }
+
+  public void markDead() {
+    this.dead = true;
+    this.publishedAt = Instant.now();
+  }
+
+  public void scheduleNextAttempt(Instant instant) {
+    this.nextAttemptAt = instant;
   }
 
   public UUID getId() {
@@ -72,5 +101,21 @@ public class OutboxEventEntity {
 
   public Instant getPublishedAt() {
     return publishedAt;
+  }
+
+  public int getAttempts() {
+    return attempts;
+  }
+
+  public String getLastError() {
+    return lastError;
+  }
+
+  public Instant getNextAttemptAt() {
+    return nextAttemptAt;
+  }
+
+  public boolean isDead() {
+    return dead;
   }
 }

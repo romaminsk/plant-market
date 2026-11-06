@@ -4,7 +4,6 @@ import com.plantmarket.order.domain.OrderStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
-import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
@@ -29,15 +28,10 @@ public class OrderNotificationListener {
     if (event.status() != OrderStatus.PAID && event.status() != OrderStatus.CANCELLED) {
       return;
     }
-    try {
-      SimpleMailMessage message = new SimpleMailMessage();
-      message.setTo(event.customerEmail());
-      message.setSubject("Plant Market: заказ " + event.orderId() + " — " + event.status());
-      message.setText("Статус вашего заказа: " + event.status());
-      mailSender.send(message);
-    } catch (MailException exception) {
-      log.warn(
-          "Could not send order notification for {}: {}", event.orderId(), exception.getMessage());
-    }
+    SimpleMailMessage message = new SimpleMailMessage();
+    message.setTo(event.customerEmail());
+    message.setSubject("Plant Market: заказ " + event.orderId() + " — " + event.status());
+    message.setText("Статус вашего заказа: " + event.status());
+    mailSender.send(message);
   }
 }

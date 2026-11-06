@@ -1,6 +1,9 @@
 package com.plantmarket.order;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.reset;
 
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -18,6 +21,7 @@ import com.plantmarket.order.domain.CareReminderEntity;
 import com.plantmarket.order.domain.ClaimDecision;
 import com.plantmarket.order.domain.ClaimStatus;
 import com.plantmarket.order.domain.OrderStatus;
+import com.plantmarket.order.domain.OutboxEventEntity;
 import com.plantmarket.order.notification.OutboxPublisher;
 import com.plantmarket.order.repository.CareReminderRepository;
 import com.plantmarket.order.repository.OutboxEventRepository;
@@ -56,6 +60,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.MailSendException;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -64,7 +70,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    properties = "management.health.mail.enabled=false")
+    properties = {"management.health.mail.enabled=false", "spring.task.scheduling.enabled=false"})
 @AutoConfigureTestRestTemplate
 class OrderFlowIntegrationTest {
 
@@ -179,6 +185,43 @@ class OrderFlowIntegrationTest {
         restTemplate.exchange(
             "/api/v1/orders", HttpMethod.GET, new HttpEntity<>(headers), OrderResponse[].class);
     assertThat(list.getBody()).hasSize(2);
+  }
+
+  @Test
+  void outboxRetriesFailedNotificationAndPublishesAfterRecovery() {
+    UUID customerId = UUID.randomUUID();
+    HttpHeaders headers = headers(customerId);
+    UUID orderId = createVariantOrder(headers);
+    restTemplate.exchange(
+        "/api/v1/orders/" + orderId + "/checkout",
+        HttpMethod.POST,
+        new HttpEntity<>(Map.of(), headers),
+        OrderResponse.class);
+    restTemplate.exchange(
+        "/api/v1/orders/" + orderId + "/pay",
+        HttpMethod.POST,
+        new HttpEntity<>(Map.of(), headers),
+        OrderResponse.class);
+
+    doThrow(new MailSendException("smtp down")).when(mailSender).send(any(SimpleMailMessage.class));
+    outboxPublisher.publishPending();
+
+    OutboxEventEntity paid =
+        outboxEventRepository.findAll().stream()
+            .filter(event ->
+                "order.paid".equals(event.getEventType()) && event.getAggregateId().equals(orderId))
+            .findFirst()
+            .orElseThrow();
+    assertThat(paid.getPublishedAt()).isNull();
+    assertThat(paid.getAttempts()).isEqualTo(1);
+    assertThat(paid.getNextAttemptAt()).isAfter(Instant.now());
+
+    reset(mailSender);
+    paid.scheduleNextAttempt(Instant.now().minusSeconds(1));
+    outboxEventRepository.save(paid);
+    outboxPublisher.publishPending();
+    assertThat(outboxEventRepository.findById(paid.getId()).orElseThrow().getPublishedAt())
+        .isNotNull();
   }
 
   @Test

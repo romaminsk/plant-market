@@ -90,6 +90,15 @@
 - Seed добавляет по 4 placeholder-ракурса для IP-001…IP-005, не перезаписывая реальные фото.
 - E2E J1 проверяет переход в карточку и цену; integration-тест — замену галереи и 400 без GENERAL.
 
+### Phase 3 — outbox retry (✅)
+
+- `outbox_events`: `attempts`, `last_error`, `next_attempt_at`, `dead`; publisher выбирает только
+  готовые к попытке события (ADR-0012).
+- Ошибка SMTP в `OrderNotificationListener` теперь доходит до publisher: до 5 попыток с
+  экспоненциальной задержкой 30 с…1 ч, затем dead-letter.
+- Integration-тест: падение SMTP → `attempts=1` и будущий `next_attempt_at`, затем успешная
+  публикация после восстановления.
+
 ### Phase 3 — загрузка фото (✅)
 
 - `POST /api/v1/media` в `catalog-service`: JPEG/PNG/WebP до 10 MB, файлы на volume `media-data`,
@@ -123,16 +132,16 @@
 | `platform-common` |     9 |           74% |
 | `auth-service`    |     3 |           89% |
 | `catalog-service` |     8 |           85% |
-| `order-service`   |     4 |           76% |
+| `order-service`   |     5 |           77% |
 | `payment-service` |     1 |           77% |
 | `api-gateway`     |     8 |           97% |
 | `tests:e2e`       |    12 |             — |
 
-Итого **33 backend-теста + 12 E2E = 45 тестов, 0 падений**. JaCoCo-порог 70% проходит.
+Итого **34 backend-теста + 12 E2E = 46 тестов, 0 падений**. JaCoCo-порог 70% проходит.
 
 ## Следующие 3 шага
 
-1. Phase 3: UI загрузки фото в админке (галерея и претензии) + outbox retry/dead-letter.
+1. Phase 3: UI загрузки фото в админке (галерея и претензии) + redrive dead-letter.
 2. Phase 3: staging-метрики A1 и p95 в бюджете A15; замена volume на MinIO/S3.
 3. Юридический A11 (L1–L8): передать владельцу/юристу; до подписи prod запрещён.
 
@@ -147,7 +156,8 @@
 - A11 L1–L8 (торговый реестр, СКНО/ЕРИП, ПДн, CITES, оферта, налоги) не закрыты: нужен
   владелец/юрист. Phase 2 закрыт по коду, но не является разрешением на prod.
 - Уведомления restock/claims best-effort: нет retry/dead-letter; при недоступном SMTP письмо
-  теряется (статус подписки/претензии при этом сохраняется).
+  теряется (статус подписки/претензии при этом сохраняется). Order-уведомления ретраятся (ADR-0012).
+- Outbox at-least-once: возможны дубли писем; dead-letter без автоматического redrive.
 - Фото принимаются как URL; API загрузки есть, UI загрузки в админке — следующий шаг.
 - Media volume не реплицируется и не бэкапится; публичные файлы без content sniffing (ADR-0011).
 - Галерея в seed использует placehold.co; фотостандарт (нейтральный фон, линейка, 4 ракурса)
@@ -173,3 +183,5 @@
   при ошибке SMTP письмо повторяется, `next_send_at` не сдвигается.
 - **Ruling:** медиа — локальный volume за интерфейсом `MediaStorage`; MinIO/S3 подключается
   заменой bean, API `/api/v1/media` не меняется (ADR-0011).
+- **Ruling:** order-уведомления ретраятся через outbox (5 попыток, backoff, dead-letter);
+  claim/restock остаются best-effort (ADR-0012).
