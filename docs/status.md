@@ -85,6 +85,7 @@
 - CI run `42193571529` — success, E2E 15/15 с OAuth2 PKCE checkout через storefront BFF.
 - CI run `42201784705` — success, E2E 16/16 с consent-баннером.
 - CI run `42203258263` — success, E2E 16/16 с адресом доставки.
+- CI run `42204807910` — success, E2E 16/16 с timeline заказа и 400 без адреса.
 
 ### Phase 3 — WYSIWYG-галерея (✅ первый шаг)
 
