@@ -11,6 +11,7 @@ public record OrderResponse(
     String customerEmail,
     UUID shippingZoneId,
     boolean thermalPack,
+    String deliveryAddress,
     OrderStatus status,
     long subtotalMinor,
     long shippingMinor,

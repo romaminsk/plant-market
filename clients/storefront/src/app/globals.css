@@ -499,7 +499,8 @@ button.secondary {
   font-weight: 600;
 }
 
-.checkout-form select {
+.checkout-form select,
+.checkout-form textarea {
   padding: 0.55rem 0.6rem;
   border: 1px solid var(--line);
   border-radius: 8px;

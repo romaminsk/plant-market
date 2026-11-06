@@ -166,14 +166,26 @@ class OrderApiE2ETest {
         postRaw(
             "/api/v1/orders/" + orderId + "/checkout",
             token,
-            Map.of("shippingZoneId", winterZoneId, "thermalPack", false));
+            Map.of(
+                "shippingZoneId",
+                winterZoneId,
+                "thermalPack",
+                false,
+                "deliveryAddress",
+                "Gomel, Sovetskaya 1"));
     assertThat(rejected.statusCode()).isEqualTo(409);
 
     JsonNode accepted =
         post(
             "/api/v1/orders/" + orderId + "/checkout",
             token,
-            Map.of("shippingZoneId", winterZoneId, "thermalPack", true));
+            Map.of(
+                "shippingZoneId",
+                winterZoneId,
+                "thermalPack",
+                true,
+                "deliveryAddress",
+                "Gomel, Sovetskaya 1"));
     assertThat(accepted.path("status").asString()).isEqualTo("PENDING_PAYMENT");
     assertThat(accepted.path("thermalPack").asBoolean()).isTrue();
     assertThat(accepted.path("shippingMinor").asLong()).isEqualTo(500L);

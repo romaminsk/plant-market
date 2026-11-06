@@ -114,6 +114,10 @@ public class OrderService {
               .findById(request.shippingZoneId())
               .filter(ShippingZoneEntity::isActive)
               .orElseThrow(() -> ApiException.badRequest("Shipping zone is not available"));
+      String address = request.deliveryAddress() == null ? null : request.deliveryAddress().trim();
+      if (address == null || address.isBlank()) {
+        throw ApiException.badRequest("deliveryAddress is required for delivery");
+      }
       boolean thermal = Boolean.TRUE.equals(request.thermalPack());
       if (zone.isWinterRequiresThermal() && !thermal) {
         throw ApiException.conflict("Thermal packaging is required for this zone");
@@ -123,7 +127,7 @@ public class OrderService {
       if (thermal) {
         shipping += zone.getThermalPackMinor();
       }
-      order.applyShipping(zone.getId(), shipping, thermal);
+      order.applyShipping(zone.getId(), shipping, thermal, address);
     }
     List<ReservationRequest.Item> items =
         order.getItems().stream()
@@ -223,6 +227,7 @@ public class OrderService {
         order.getCustomerEmail(),
         order.getShippingZoneId(),
         order.isThermalPack(),
+        order.getDeliveryAddress(),
         order.getStatus(),
         order.getSubtotalMinor(),
         order.getShippingMinor(),

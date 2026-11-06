@@ -13,6 +13,7 @@ export default function CheckoutPage() {
   const [zones, setZones] = useState<ShippingZone[]>([]);
   const [zoneId, setZoneId] = useState('');
   const [thermal, setThermal] = useState(false);
+  const [address, setAddress] = useState('');
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
   const [status, setStatus] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
   const [message, setMessage] = useState('');
@@ -66,6 +67,7 @@ export default function CheckoutPage() {
           })),
           shippingZoneId: zoneId,
           thermalPack: thermal,
+          deliveryAddress: address,
         }),
       });
       const payload = (await response.json().catch(() => null)) as {
@@ -149,6 +151,16 @@ export default function CheckoutPage() {
         </div>
         <div className="checkout-form">
           <label>
+            Адрес доставки
+            <textarea
+              value={address}
+              onChange={(event) => setAddress(event.target.value)}
+              rows={2}
+              placeholder="Город, улица, дом, квартира"
+              required
+            />
+          </label>
+          <label>
             Зона доставки
             <select value={zoneId} onChange={(event) => setZoneId(event.target.value)}>
               {zones.map((item) => (
@@ -185,7 +197,12 @@ export default function CheckoutPage() {
           </dl>
           <button
             type="button"
-            disabled={status === 'sending' || !zoneId || authenticated !== true}
+            disabled={
+              status === 'sending' ||
+              !zoneId ||
+              authenticated !== true ||
+              address.trim().length === 0
+            }
             onClick={() => void submit()}
           >
             {status === 'sending' ? 'Оплачиваем…' : 'Оплатить'}

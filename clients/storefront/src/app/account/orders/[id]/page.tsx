@@ -19,6 +19,7 @@ interface OrderDetail {
   createdAt: string;
   shippingZoneId: string | null;
   thermalPack: boolean;
+  deliveryAddress: string | null;
   items: { id: string; name: string; quantity: number; lineTotalMinor: number }[];
 }
 
@@ -67,6 +68,9 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           <dd>{formatPrice(order.totalMinor, order.currency)}</dd>
         </div>
       </dl>
+      {order.deliveryAddress ? (
+        <p className="muted">Адрес доставки: {order.deliveryAddress}</p>
+      ) : null}
       {order.thermalPack ? <p className="muted">Термоупаковка включена.</p> : null}
     </section>
   );

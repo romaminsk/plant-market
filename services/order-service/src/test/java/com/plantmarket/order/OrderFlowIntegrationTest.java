@@ -358,7 +358,8 @@ class OrderFlowIntegrationTest {
         restTemplate.exchange(
             "/api/v1/orders/" + firstOrder + "/checkout",
             HttpMethod.POST,
-            new HttpEntity<>(new CheckoutRequest(normalZone.id(), false), headers),
+            new HttpEntity<>(
+                new CheckoutRequest(normalZone.id(), false, "Minsk, Nezavisimosti 1"), headers),
             OrderResponse.class);
     assertThat(firstCheckout.getBody()).isNotNull();
     assertThat(firstCheckout.getBody().shippingMinor()).isEqualTo(500L);
@@ -382,7 +383,8 @@ class OrderFlowIntegrationTest {
         restTemplate.exchange(
             "/api/v1/orders/" + secondOrder + "/checkout",
             HttpMethod.POST,
-            new HttpEntity<>(new CheckoutRequest(winterZone.id(), false), headers),
+            new HttpEntity<>(
+                new CheckoutRequest(winterZone.id(), false, "Gomel, Sovetskaya 1"), headers),
             String.class);
     assertThat(rejected.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
 
@@ -390,11 +392,13 @@ class OrderFlowIntegrationTest {
         restTemplate.exchange(
             "/api/v1/orders/" + secondOrder + "/checkout",
             HttpMethod.POST,
-            new HttpEntity<>(new CheckoutRequest(winterZone.id(), true), headers),
+            new HttpEntity<>(
+                new CheckoutRequest(winterZone.id(), true, "Gomel, Sovetskaya 1"), headers),
             OrderResponse.class);
     assertThat(accepted.getBody()).isNotNull();
     assertThat(accepted.getBody().shippingMinor()).isEqualTo(800L);
     assertThat(accepted.getBody().thermalPack()).isTrue();
+    assertThat(accepted.getBody().deliveryAddress()).isEqualTo("Gomel, Sovetskaya 1");
   }
 
   @Test

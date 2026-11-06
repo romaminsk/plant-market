@@ -615,6 +615,9 @@ components:
           format: uuid
         thermalPack:
           type: boolean
+        deliveryAddress:
+          type: string
+          maxLength: 500
         status:
           $ref: '#/components/schemas/OrderStatus'
         subtotalMinor:
@@ -663,6 +666,9 @@ components:
           format: uuid
         thermalPack:
           type: boolean
+        deliveryAddress:
+          type: string
+          maxLength: 500
 
     ShippingZoneRequest:
       type: object

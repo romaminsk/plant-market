@@ -59,10 +59,7 @@ class CheckoutFlowE2ETest extends PlaywrightTestBase {
     page.locator("input[name='password']").fill("CustomerPassword123!");
     page.locator("button[type='submit']").click();
 
-    page.getByRole(
-            AriaRole.BUTTON,
-            new com.microsoft.playwright.Page.GetByRoleOptions().setName("Оплатить"))
-        .click();
+    page.getByLabel("Адрес доставки").fill("Минск, Независимости 1");
     page.locator("select").selectOption(new SelectOption().setLabel("Минск · 1–2 дн."));
     page.getByRole(
             AriaRole.BUTTON,

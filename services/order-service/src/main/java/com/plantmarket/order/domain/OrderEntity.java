@@ -36,6 +36,9 @@ public class OrderEntity {
   @Column(name = "thermal_pack", nullable = false)
   private boolean thermalPack;
 
+  @Column(name = "delivery_address", length = 500)
+  private String deliveryAddress;
+
   @Enumerated(EnumType.STRING)
   @Column(name = "status", length = 30, nullable = false)
   private OrderStatus status;
@@ -93,10 +96,12 @@ public class OrderEntity {
     totalMinor = subtotalMinor + shippingMinor + taxMinor - discountMinor;
   }
 
-  public void applyShipping(UUID zoneId, long shippingMinor, boolean thermalPack) {
+  public void applyShipping(
+      UUID zoneId, long shippingMinor, boolean thermalPack, String deliveryAddress) {
     this.shippingZoneId = zoneId;
     this.shippingMinor = shippingMinor;
     this.thermalPack = thermalPack;
+    this.deliveryAddress = deliveryAddress;
     this.totalMinor = subtotalMinor + shippingMinor + taxMinor - discountMinor;
   }
 
@@ -171,6 +176,10 @@ public class OrderEntity {
 
   public boolean isThermalPack() {
     return thermalPack;
+  }
+
+  public String getDeliveryAddress() {
+    return deliveryAddress;
   }
 
   public OrderStatus getStatus() {

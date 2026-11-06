@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
     items?: CheckoutItem[];
     shippingZoneId?: string;
     thermalPack?: boolean;
+    deliveryAddress?: string;
   };
   const items = Array.isArray(payload.items) ? payload.items : [];
   if (items.length === 0 || items.length > 20) {
@@ -110,6 +111,7 @@ export async function POST(request: NextRequest) {
     body: JSON.stringify({
       shippingZoneId: payload.shippingZoneId ?? null,
       thermalPack: Boolean(payload.thermalPack),
+      deliveryAddress: payload.deliveryAddress ?? null,
     }),
   });
   if (!checkoutResponse.ok) {
