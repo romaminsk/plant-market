@@ -57,6 +57,17 @@ pnpm dev:admin
 Первый запуск скачивает Gradle-зависимости и Docker-образы; это занимает несколько минут.
 `dev-up.sh` собирает boot-jar и пересобирает образы сервисов при изменении кода.
 
+## Демо
+
+```bash
+./scripts/demo-up.sh          # сервисы + seed + storefront :3100 + админка :5173
+./scripts/demo-claim.sh       # создать оплаченный заказ и претензию для J4
+DEMO_RESET_CONFIRM=yes ./scripts/demo-reset.sh   # чистая демо-БД
+./scripts/demo-down.sh        # остановить frontends
+```
+
+Сценарии J1–J4 и учётные данные — в [`docs/demo.md`](docs/demo.md).
+
 ## Структура репозитория
 
 ```

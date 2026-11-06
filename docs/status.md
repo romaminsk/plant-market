@@ -86,6 +86,8 @@
 - CI run `42201784705` — success, E2E 16/16 с consent-баннером.
 - CI run `42203258263` — success, E2E 16/16 с адресом доставки.
 - CI run `42204807910` — success, E2E 16/16 с timeline заказа и 400 без адреса.
+- CI run `42212547510` — success после ревью: gateway authz, locks, security headers,
+  media magic bytes, J3 UI, 17/17 E2E; backend 38 тестов.
 
 ### Phase 3 — WYSIWYG-галерея (✅ первый шаг)
 

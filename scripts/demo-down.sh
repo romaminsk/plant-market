@@ -4,7 +4,8 @@ IFS=$'\n\t'
 
 cd "$(dirname "$0")/.."
 
-pkill -f "next start -p 3000" 2>/dev/null || true
+STORE_PORT="${DEMO_STOREFRONT_PORT:-3100}"
+pkill -f "next start -p $STORE_PORT" 2>/dev/null || true
 pkill -f "vite preview --port 5173" 2>/dev/null || true
 
 if [[ "${DEMO_DOWN_INFRA:-}" == "1" ]]; then
