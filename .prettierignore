@@ -10,3 +10,4 @@ allure-report
 MASTER_PROMPT.md
 .env
 .env.*
+clients/storefront/next-env.d.ts
