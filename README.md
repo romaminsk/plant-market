@@ -48,8 +48,7 @@ pnpm dev:admin
 ./scripts/lighthouse-a11y.sh http://localhost:3000/catalog
 
 # 7. E2E (нужны запущенные сервисы, storefront :3100 и админка :5173)
-E2E_BASE_URL=http://localhost:3100 E2E_ADMIN_URL=http://localhost:5173 \
-  ./gradlew :tests:e2e:test
+./scripts/test-e2e.sh
 
 # 8. Остановить
 ./scripts/dev-down.sh

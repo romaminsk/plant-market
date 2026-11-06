@@ -87,6 +87,7 @@ class CheckoutFlowE2ETest extends PlaywrightTestBase {
 
   private void addToCart(String plantId) {
     page.navigate(baseUrl + "/plants/" + plantId);
+    acceptEssentialCookies();
     page.getByRole(
             AriaRole.BUTTON,
             new com.microsoft.playwright.Page.GetByRoleOptions().setName("В корзину"))

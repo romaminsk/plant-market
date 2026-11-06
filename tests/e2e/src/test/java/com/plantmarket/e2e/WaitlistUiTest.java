@@ -47,6 +47,7 @@ class WaitlistUiTest extends PlaywrightTestBase {
     assertThat(plant.path("status").asString()).isEqualTo("ACQUIRED");
 
     page.navigate(baseUrl + "/plants/" + plant.path("id").asString());
+    acceptEssentialCookies();
     page.getByRole(AriaRole.HEADING, new Page.GetByRoleOptions().setName("Появится снова?"))
         .waitFor();
     page.getByLabel("E-mail").fill("waitlist-ui@example.test");

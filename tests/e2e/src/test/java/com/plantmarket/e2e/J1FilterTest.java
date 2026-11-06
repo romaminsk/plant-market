@@ -21,6 +21,7 @@ class J1FilterTest extends PlaywrightTestBase {
   @Test
   void filterFindsVariegatedPlantAndShowsWysiwygPrice() {
     page.navigate(baseUrl + "/catalog?variegated=true&light=MEDIUM&maxPrice=150");
+    acceptEssentialCookies();
 
     Locator plantCard =
         page.locator(".plant-card").filter(new Locator.FilterOptions().setHasText("IP-001"));

@@ -3,9 +3,12 @@ package com.plantmarket.e2e.support;
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserContext;
 import com.microsoft.playwright.BrowserType;
+import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
+import com.microsoft.playwright.PlaywrightException;
 import com.microsoft.playwright.Tracing;
+import com.microsoft.playwright.options.AriaRole;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.AfterAll;
@@ -64,6 +67,18 @@ public abstract class PlaywrightTestBase {
             .setFullPage(true));
     context.tracing().stop(new Tracing.StopOptions().setPath(artifacts.resolve("trace.zip")));
     context.close();
+  }
+
+  /** Dismisses the cookie banner when it is rendered; keeps UI tests stable on small viewports. */
+  protected void acceptEssentialCookies() {
+    Locator button =
+        page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Только необходимые"));
+    try {
+      button.waitFor(new Locator.WaitForOptions().setTimeout(3000));
+      button.click();
+    } catch (PlaywrightException ignored) {
+      // The banner is not shown when consent was already stored.
+    }
   }
 
   protected String env(String key, String fallback) {

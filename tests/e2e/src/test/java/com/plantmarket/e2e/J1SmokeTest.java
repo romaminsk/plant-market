@@ -21,6 +21,7 @@ class J1SmokeTest extends PlaywrightTestBase {
   @Test
   void catalogShowsSeededProductAndPrice() {
     CatalogPage catalog = new CatalogPage(page, baseUrl).open();
+    acceptEssentialCookies();
 
     assertThat(catalog.productCards().count()).isGreaterThan(0);
     assertThat(catalog.productLink("Monstera Deliciosa").isVisible()).isTrue();
