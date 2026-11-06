@@ -12,6 +12,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Map;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import tools.jackson.databind.JsonNode;
@@ -95,7 +96,7 @@ class CheckoutFlowE2ETest extends PlaywrightTestBase {
   private String createAvailablePlant() throws Exception {
     String token = ApiTokens.admin(apiUrl);
     String productId = findProductIdBySku("PLANT-001");
-    String code = "CHK-" + Long.toString(System.currentTimeMillis(), 36);
+    String code = "CHK-" + UUID.randomUUID().toString().substring(0, 8);
     JsonNode plant =
         post(
             "/api/v1/products/" + productId + "/individual-plants",

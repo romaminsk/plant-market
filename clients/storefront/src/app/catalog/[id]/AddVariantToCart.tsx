@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { addToCart } from '@/lib/cart';
+import { track } from '@/lib/analytics';
 import type { Variant } from '@/lib/api';
 
 export function AddVariantToCart({ variant }: { variant: Variant }) {
@@ -19,6 +20,12 @@ export function AddVariantToCart({ variant }: { variant: Variant }) {
           priceMinor: variant.priceMinor,
           currency: variant.currency,
           quantity: 1,
+        });
+        track('add_to_cart', {
+          id: variant.id,
+          name: variant.name,
+          priceMinor: variant.priceMinor,
+          currency: variant.currency,
         });
         setAdded(true);
       }}

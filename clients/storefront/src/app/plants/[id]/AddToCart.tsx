@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { addToCart } from '@/lib/cart';
+import { track } from '@/lib/analytics';
 import type { IndividualPlant } from '@/lib/api';
 
 export function AddToCart({ plant }: { plant: IndividualPlant }) {
@@ -17,6 +18,12 @@ export function AddToCart({ plant }: { plant: IndividualPlant }) {
       priceMinor: plant.priceMinor,
       currency: plant.currency,
       quantity: 1,
+    });
+    track('add_to_cart', {
+      id: plant.id,
+      name: plant.productName,
+      priceMinor: plant.priceMinor,
+      currency: plant.currency,
     });
     setAdded(true);
     if (goToCheckout) {

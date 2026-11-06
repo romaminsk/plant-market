@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { accessToken } from '@/lib/auth';
 import { CartLink } from './CartLink';
+import { CookieBanner } from './CookieBanner';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -43,6 +44,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           </nav>
         </header>
         <main className="container">{children}</main>
+        <CookieBanner />
       </body>
     </html>
   );

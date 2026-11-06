@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { fetchShippingZones, formatPrice } from '@/lib/api';
 import type { ShippingZone } from '@/lib/api';
 import { clearCart, readCart } from '@/lib/cart';
+import { track } from '@/lib/analytics';
 import type { CartItem } from '@/lib/cart';
 
 export default function CheckoutPage() {
@@ -18,7 +19,11 @@ export default function CheckoutPage() {
   const [orderId, setOrderId] = useState('');
 
   useEffect(() => {
-    setItems(readCart());
+    const loaded = readCart();
+    setItems(loaded);
+    if (loaded.length > 0) {
+      track('begin_checkout', { items: loaded.length });
+    }
     fetchShippingZones()
       .then((loaded) => {
         setZones(loaded);
@@ -76,6 +81,10 @@ export default function CheckoutPage() {
       if (!response.ok) {
         throw new Error(payload?.detail ?? `Оплата не прошла (HTTP ${response.status})`);
       }
+      track('purchase', {
+        orderId: payload?.orderId,
+        value: items.reduce((total, item) => total + item.priceMinor * item.quantity, 0),
+      });
       clearCart();
       setOrderId(payload?.orderId ?? '');
       setStatus('done');

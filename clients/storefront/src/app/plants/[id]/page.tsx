@@ -4,6 +4,7 @@ import { fetchIndividualPlant, formatPrice } from '@/lib/api';
 import { PlantGallery } from './PlantGallery';
 import { RestockForm } from './RestockForm';
 import { AddToCart } from './AddToCart';
+import { TrackView } from '../../TrackView';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,6 +46,12 @@ export default async function IndividualPlantPage({ params }: { params: Promise<
 
   return (
     <article className="product-detail">
+      <TrackView
+        id={plant.id}
+        name={plant.productName}
+        priceMinor={plant.priceMinor}
+        currency={plant.currency}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { fetchProduct, fetchVariants, formatPrice } from '@/lib/api';
 import { AddVariantToCart } from './AddVariantToCart';
+import { TrackView } from '../../TrackView';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,6 +46,12 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   return (
     <article className="product-detail">
+      <TrackView
+        id={product.id}
+        name={product.name}
+        priceMinor={product.priceMinor}
+        currency={product.currency}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

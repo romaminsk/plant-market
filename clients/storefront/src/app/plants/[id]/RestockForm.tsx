@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { track } from '@/lib/analytics';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080';
 
@@ -30,6 +31,7 @@ export function RestockForm({ targetId, code }: { targetId: string; code: string
         const problem = (await response.json().catch(() => null)) as { detail?: string } | null;
         throw new Error(problem?.detail ?? `Не удалось подписаться (HTTP ${response.status})`);
       }
+      track('restock_subscribe', { targetId, code });
       setState('done');
       setMessage(`Готово: напишем на ${email.trim()}, когда ${code} снова будет в наличии.`);
     } catch (cause) {

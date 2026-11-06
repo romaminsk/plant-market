@@ -143,6 +143,15 @@
 - E2E: создание, список, отключение; integration-тест проверяет отправку due-напоминания через
   мок `JavaMailSender` и 409 для неоплаченного заказа.
 
+### Phase 3 — cookie-consent и аналитика (✅)
+
+- Баннер согласия (`all`/`essential`), выбор в `localStorage`; необходимые cookie работают без
+  согласия (ADR-0014).
+- События `view_item`, `add_to_cart`, `begin_checkout`, `purchase`, `restock_subscribe` пишутся
+  в `window.dataLayer` только после согласия; сторонние трекеры не подключены.
+- E2E `ConsentAnalyticsE2ETest`: до согласия событий нет, после — `add_to_cart` появляется.
+- Юридические тексты (политика ПДн, оферта) всё ещё требуют юриста.
+
 ### Phase 3 — корзина, варианты и история заказов (✅)
 
 - Storefront: `localStorage`-корзина, счётчик в шапке, страница `/cart`, смешанная корзина
@@ -181,6 +190,13 @@
 - На staging метрики нужно снимать под нагрузкой (k6/Playwright) и сравнивать с A15; это
   следующий шаг после появления staging-окружения.
 
+### Runbooks
+
+- `docs/runbooks/payment-sandbox.md` — сбой WireMock/провайдера.
+- `docs/runbooks/outbox-dead-letter.md` — dead-letter и redrive.
+- `docs/runbooks/media-storage.md` — 404/500 медиа, volume и диск.
+- `docs/runbooks/gateway-5xx.md` — 5xx из-за Docker DNS и 429.
+
 ## Тесты и покрытие
 
 | Модуль            | Тесты | Line coverage |
@@ -191,13 +207,13 @@
 | `order-service`   |     6 |           78% |
 | `payment-service` |     1 |           77% |
 | `api-gateway`     |     8 |           97% |
-| `tests:e2e`       |    15 |             — |
+| `tests:e2e`       |    16 |             — |
 
-Итого **35 backend-тестов + 15 E2E = 50 тестов, 0 падений**. JaCoCo-порог 70% проходит.
+Итого **35 backend-тестов + 16 E2E = 51 тест, 0 падений**. JaCoCo-порог 70% проходит.
 
 ## Следующие 3 шага
 
-1. Storefront: refresh-rotation в BFF, адреса/слоты доставки, отзывы (ADR-0013).
+1. Storefront: адреса/слоты доставки, отзывы, consent-версионирование (ADR-0013/0014).
 2. Phase 3: staging A1/A15, замена volume на MinIO/S3, content sniffing загрузок.
 3. Юридический A11 (L1–L8): передать владельцу/юристу; до подписи prod запрещён.
 
@@ -210,13 +226,15 @@
 - Прямые порты auth/catalog открыты на localhost; перед prod закрыть.
 - MailHog `v1.0.1` — только `linux/amd64`.
 - A11 L1–L8 (торговый реестр, СКНО/ЕРИП, ПДн, CITES, оферта, налоги) не закрыты: нужен
-  владелец/юрист. Phase 2 закрыт по коду, но не является разрешением на prod.
+  владелец/юрист. Phase 2/3 закрыты по коду, но это не разрешение на prod.
 - Уведомления restock/claims best-effort: нет retry/dead-letter; при недоступном SMTP письмо
   теряется (статус подписки/претензии при этом сохраняется). Order-уведомления ретраятся (ADR-0012).
 - Outbox at-least-once: возможны дубли писем; dead-letter разбирается вручную через admin
   redrive, автоматического redrive нет.
-- Storefront checkout — MVP «Купить сейчас»: нет мульти-корзины, истории заказов и
-  автоматического refresh токена в BFF (ADR-0013).
+- CI E2E использует `docker-compose.test.yml`: rate limit 600/60 и опубликованный auth-service
+  `:8090` для PKCE-логина; prod-конфиг не меняется.
+- Storefront checkout: нет адресов/слотов доставки и отзывов; refresh в BFF реализован только
+  в checkout, history-страницы при истёкшем токене просят войти снова (ADR-0013).
 - Фото принимаются как URL; API загрузки есть, UI загрузки в админке — следующий шаг.
 - Media volume не реплицируется и не бэкапится; публичные файлы без content sniffing (ADR-0011).
 - Галерея в seed использует placehold.co; фотостандарт (нейтральный фон, линейка, 4 ракурса)
@@ -246,3 +264,5 @@
   claim/restock остаются best-effort (ADR-0012).
 - **Ruling:** checkout — BFF в Next.js с OAuth2 PKCE и httpOnly cookies; корзина на несколько
   позиций, refresh в BFF и история заказов реализованы (ADR-0013).
+- **Ruling:** аналитика пишется в `dataLayer` только после consent `all`; необходимые cookie
+  работают без согласия (ADR-0014).
