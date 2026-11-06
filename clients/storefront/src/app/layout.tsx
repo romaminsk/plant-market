@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { accessToken } from '@/lib/auth';
 import { CartLink } from './CartLink';
 import { CookieBanner } from './CookieBanner';
+import './fonts.css';
 import './globals.css';
 
 export const metadata: Metadata = {

@@ -1,0 +1,937 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Plant Market — варианты дизайна</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #e9e7e1;
+        color: #172018;
+        font-family: Inter, system-ui, sans-serif;
+      }
+      .intro {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 40px 24px 8px;
+      }
+      .intro h1 {
+        margin: 0 0 8px;
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: 44px;
+      }
+      .intro p {
+        margin: 0 0 18px;
+        color: #5c665a;
+        max-width: 900px;
+        line-height: 1.55;
+      }
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .legend span {
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: #fff;
+        border: 1px solid #d9ddd4;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .mockup {
+        max-width: 1280px;
+        margin: 28px auto 48px;
+        overflow: hidden;
+        border-radius: 24px;
+        box-shadow: 0 30px 80px rgb(0 0 0 / 14%);
+      }
+      .label {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 22px;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      .label b {
+        display: inline-grid;
+        place-items: center;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+      }
+      .note {
+        padding: 0 22px 18px;
+        font-size: 13px;
+        line-height: 1.5;
+        opacity: 0.75;
+      }
+      img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      /* A — Editorial botanical */
+      .a {
+        background: #f7f2e8;
+        color: #1e2a1f;
+      }
+      .a .label {
+        background: #1e2a1f;
+        color: #f7f2e8;
+      }
+      .a .label b {
+        background: #f7f2e8;
+        color: #1e2a1f;
+      }
+      .a-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 22px 54px;
+        border-bottom: 1px solid #ddd6c6;
+      }
+      .a-brand {
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+      .a-nav {
+        display: flex;
+        gap: 28px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #40503d;
+      }
+      .a-hero {
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: 46px;
+        padding: 54px 54px 34px;
+        align-items: center;
+      }
+      .a-eyebrow {
+        margin: 0 0 18px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: #5c7a55;
+      }
+      .a-hero h2 {
+        margin: 0 0 22px;
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: 72px;
+        line-height: 0.95;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+      .a-hero p {
+        max-width: 460px;
+        margin: 0 0 28px;
+        color: #5f685a;
+        line-height: 1.65;
+        font-size: 15px;
+      }
+      .a-cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 22px;
+        border-radius: 999px;
+        background: #2f5e3a;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+      }
+      .a-photo {
+        position: relative;
+        height: 430px;
+        border-radius: 220px 220px 28px 28px;
+        overflow: hidden;
+      }
+      .a-photo img {
+        object-position: center;
+      }
+      .a-stamp {
+        position: absolute;
+        right: 18px;
+        bottom: 18px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgb(247 242 232 / 92%);
+        color: #2f5e3a;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+      }
+      .a-filters {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+        padding: 0 54px 26px;
+      }
+      .a-filters button {
+        border: 1px solid #d8d1c0;
+        background: transparent;
+        color: #4d5a48;
+        padding: 9px 14px;
+        border-radius: 999px;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .a-filters button.active {
+        background: #2f5e3a;
+        border-color: #2f5e3a;
+        color: #fff;
+      }
+      .a-count {
+        margin-left: auto;
+        color: #6b7566;
+        font-size: 12px;
+      }
+      .a-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 28px;
+        padding: 0 54px 54px;
+      }
+      .a-card .a-img {
+        height: 330px;
+        overflow: hidden;
+        border-radius: 24px;
+        background: #e7e2d5;
+      }
+      .a-card h3 {
+        margin: 16px 0 4px;
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: 24px;
+        font-weight: 600;
+      }
+      .a-card p {
+        margin: 0;
+        color: #727b6c;
+        font-size: 12px;
+      }
+      .a-card .a-price {
+        margin-top: 8px;
+        color: #2f5e3a;
+        font-size: 15px;
+        font-weight: 700;
+      }
+      .a-card .a-badge {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 5px 9px;
+        border: 1px solid #c9d4c2;
+        border-radius: 999px;
+        color: #4d6b47;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+      }
+
+      /* B — Dark premium */
+      .b {
+        background: #0d1712;
+        color: #f4efe3;
+      }
+      .b .label {
+        background: #c8a96b;
+        color: #122016;
+      }
+      .b .label b {
+        background: #122016;
+        color: #c8a96b;
+      }
+      .b-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 22px 54px;
+      }
+      .b-brand {
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: 27px;
+        letter-spacing: 0.05em;
+        color: #f4efe3;
+      }
+      .b-nav {
+        display: flex;
+        gap: 26px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #b9c4b3;
+      }
+      .b-hero {
+        position: relative;
+        min-height: 430px;
+        margin: 0 26px;
+        border-radius: 22px;
+        overflow: hidden;
+        display: flex;
+        align-items: flex-end;
+      }
+      .b-hero img {
+        position: absolute;
+        inset: 0;
+      }
+      .b-hero::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          90deg,
+          rgb(13 23 18 / 92%) 0%,
+          rgb(13 23 18 / 45%) 55%,
+          transparent 100%
+        );
+      }
+      .b-hero-copy {
+        position: relative;
+        z-index: 1;
+        max-width: 640px;
+        padding: 54px;
+      }
+      .b-eyebrow {
+        margin: 0 0 14px;
+        color: #c8a96b;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+      .b-hero h2 {
+        margin: 0 0 18px;
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: 74px;
+        line-height: 0.95;
+        font-weight: 500;
+      }
+      .b-hero p {
+        max-width: 470px;
+        margin: 0 0 24px;
+        color: #c5cec0;
+        line-height: 1.6;
+        font-size: 14px;
+      }
+      .b-cta {
+        display: inline-flex;
+        padding: 13px 22px;
+        border-radius: 999px;
+        background: #c8a96b;
+        color: #122016;
+        font-size: 12px;
+        font-weight: 800;
+        text-decoration: none;
+      }
+      .b-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 26px 54px;
+      }
+      .b-filters button {
+        border: 1px solid rgb(255 255 255 / 18%);
+        background: rgb(255 255 255 / 4%);
+        color: #d7dfd2;
+        padding: 9px 14px;
+        border-radius: 999px;
+        font: inherit;
+        font-size: 12px;
+      }
+      .b-filters button.active {
+        background: #c8a96b;
+        border-color: #c8a96b;
+        color: #122016;
+        font-weight: 700;
+      }
+      .b-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+        padding: 0 54px 54px;
+      }
+      .b-card {
+        background: #14221a;
+        border: 1px solid rgb(255 255 255 / 8%);
+        border-radius: 18px;
+        overflow: hidden;
+      }
+      .b-card .b-img {
+        height: 300px;
+      }
+      .b-card .b-body {
+        padding: 18px;
+      }
+      .b-card h3 {
+        margin: 0 0 4px;
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: 24px;
+        font-weight: 500;
+      }
+      .b-card p {
+        margin: 0;
+        color: #93a18e;
+        font-size: 12px;
+      }
+      .b-card .b-price {
+        margin-top: 12px;
+        color: #e8d8b6;
+        font-size: 15px;
+        font-weight: 700;
+      }
+      .b-card .b-badge {
+        display: inline-block;
+        margin-bottom: 10px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        background: rgb(200 169 107 / 14%);
+        color: #c8a96b;
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+      }
+
+      /* C — Clean Nordic */
+      .c {
+        background: #fff;
+        color: #121612;
+        font-family: Manrope, Inter, sans-serif;
+      }
+      .c .label {
+        background: #121612;
+        color: #fff;
+      }
+      .c .label b {
+        background: #e7eee3;
+        color: #121612;
+      }
+      .c-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px 48px;
+        border-bottom: 1px solid #eceee9;
+      }
+      .c-brand {
+        font-size: 17px;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+      }
+      .c-nav {
+        display: flex;
+        gap: 24px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #596257;
+      }
+      .c-hero {
+        display: grid;
+        grid-template-columns: 1fr 0.95fr;
+        gap: 40px;
+        padding: 46px 48px 28px;
+        align-items: center;
+      }
+      .c-hero h2 {
+        margin: 0 0 16px;
+        font-size: 60px;
+        line-height: 0.98;
+        letter-spacing: -0.055em;
+        font-weight: 800;
+      }
+      .c-hero p {
+        max-width: 440px;
+        margin: 0 0 24px;
+        color: #667065;
+        line-height: 1.65;
+        font-size: 14px;
+      }
+      .c-cta {
+        display: inline-flex;
+        padding: 13px 20px;
+        border-radius: 12px;
+        background: #121612;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+        text-decoration: none;
+      }
+      .c-collage {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 190px 190px;
+        gap: 10px;
+      }
+      .c-collage div {
+        overflow: hidden;
+        border-radius: 16px;
+      }
+      .c-collage div:first-child {
+        grid-row: span 2;
+      }
+      .c-toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        padding: 14px 48px;
+        background: rgb(255 255 255 / 94%);
+        border-top: 1px solid #eceee9;
+        border-bottom: 1px solid #eceee9;
+        backdrop-filter: blur(10px);
+      }
+      .c-toolbar button {
+        border: 1px solid #e1e5de;
+        background: #fff;
+        color: #4f5a4d;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .c-toolbar button.active {
+        background: #e7eee3;
+        border-color: #c9d8c1;
+        color: #21361f;
+      }
+      .c-toolbar .c-count {
+        margin-left: auto;
+        color: #778075;
+        font-size: 12px;
+      }
+      .c-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        padding: 26px 48px 48px;
+      }
+      .c-card {
+        border: 1px solid #eceee9;
+        border-radius: 14px;
+        overflow: hidden;
+        background: #fff;
+      }
+      .c-card .c-img {
+        height: 230px;
+        background: #f3f5f1;
+      }
+      .c-card .c-body {
+        padding: 14px;
+      }
+      .c-card h3 {
+        margin: 0 0 3px;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      .c-card p {
+        margin: 0;
+        color: #7a8378;
+        font-size: 11px;
+      }
+      .c-card .c-bottom {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .c-card .c-price {
+        color: #121612;
+        font-size: 14px;
+        font-weight: 800;
+      }
+      .c-card .c-add {
+        padding: 7px 10px;
+        border: 0;
+        border-radius: 8px;
+        background: #121612;
+        color: #fff;
+        font: inherit;
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      @media (max-width: 900px) {
+        .a-hero,
+        .c-hero {
+          grid-template-columns: 1fr;
+        }
+        .a-grid,
+        .b-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+        .c-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+        .a-hero h2,
+        .b-hero h2,
+        .c-hero h2 {
+          font-size: 48px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="intro">
+      <h1>Три направления дизайна</h1>
+      <p>
+        Один и тот же каталог и контент, три разных характера. Выбери направление — доведу его до
+        всего сайта (каталог, карточка, корзина, checkout, админка), а не только до этой страницы.
+      </p>
+      <div class="legend">
+        <span
+          >A — Editorial Botanical: премиально, «журнал о растениях», ставка на фото и WYSIWYG</span
+        >
+        <span>B — Dark Premium: дорого и драматично, тёмный лес + латунь</span>
+        <span>C — Clean Nordic: современный маркетплейс, плотно и конверсионно</span>
+      </div>
+    </div>
+
+    <section class="mockup a">
+      <div class="label"><b>A</b> Editorial Botanical</div>
+      <div class="note">
+        Тёплый фон, крупная антиква, много воздуха, большие фото. Лучше всего продаёт «конкретное
+        растение», но каталог листается медленнее.
+      </div>
+      <header class="a-header">
+        <div class="a-brand">Plant Market</div>
+        <nav class="a-nav">
+          <span>Каталог</span><span>Доставка</span><span>Уход</span><span>Корзина · 2</span>
+        </nav>
+      </header>
+      <div class="a-hero">
+        <div>
+          <p class="a-eyebrow">WYSIWYG · растения с характером</p>
+          <h2>Не фото похожего. Это ваше растение.</h2>
+          <p>
+            Конкретный экземпляр с фото листьев, корней и дефектов. Уникальный код, гарантия 48
+            часов и честная зимняя доставка.
+          </p>
+          <a class="a-cta" href="#">Смотреть каталог <span>→</span></a>
+        </div>
+        <div class="a-photo">
+          <img src="http://localhost:3100/images/plants/monstera.jpg" alt="Монстера" />
+          <span class="a-stamp">1 экземпляр · IP-001</span>
+        </div>
+      </div>
+      <div class="a-filters">
+        <button class="active">Все</button><button>Вариегатные</button><button>Средний свет</button
+        ><button>До 150 BYN</button>
+        <span class="a-count">11 растений</span>
+      </div>
+      <div class="a-grid">
+        <article class="a-card">
+          <div class="a-img">
+            <img src="http://localhost:3100/images/plants/philodendron.jpg" alt="" />
+          </div>
+          <h3>Philodendron Pink Princess</h3>
+          <p>IP-001 · средний свет</p>
+          <div class="a-price">120,00 Br</div>
+          <span class="a-badge">WYSIWYG</span>
+        </article>
+        <article class="a-card">
+          <div class="a-img">
+            <img src="http://localhost:3100/images/plants/anthurium.jpg" alt="" />
+          </div>
+          <h3>Anthurium Clarinervium</h3>
+          <p>IP-002 · бархатные листья</p>
+          <div class="a-price">1 899,00 Br</div>
+          <span class="a-badge">WYSIWYG</span>
+        </article>
+        <article class="a-card">
+          <div class="a-img">
+            <img src="http://localhost:3100/images/plants/alocasia.jpg" alt="" />
+          </div>
+          <h3>Alocasia Frydek</h3>
+          <p>IP-003 · яркий свет</p>
+          <div class="a-price">899,00 Br</div>
+          <span class="a-badge">WYSIWYG</span>
+        </article>
+        <article class="a-card">
+          <div class="a-img">
+            <img src="http://localhost:3100/images/plants/syngonium.jpg" alt="" />
+          </div>
+          <h3>Syngonium Albo</h3>
+          <p>IP-004 · средний свет</p>
+          <div class="a-price">1 599,00 Br</div>
+          <span class="a-badge">WYSIWYG</span>
+        </article>
+        <article class="a-card">
+          <div class="a-img">
+            <img src="http://localhost:3100/images/plants/scindapsus.jpg" alt="" />
+          </div>
+          <h3>Scindapsus Treubii</h3>
+          <p>IP-005 · средний свет</p>
+          <div class="a-price">749,00 Br</div>
+          <span class="a-badge">WYSIWYG</span>
+        </article>
+        <article class="a-card">
+          <div class="a-img">
+            <img src="http://localhost:3100/images/plants/echeveria.jpg" alt="" />
+          </div>
+          <h3>Echeveria Elegans</h3>
+          <p>SUCC-001 · прямой свет</p>
+          <div class="a-price">38,00 Br</div>
+          <span class="a-badge">В наличии</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="mockup b">
+      <div class="label"><b>B</b> Dark Premium</div>
+      <div class="note">
+        Тёмный лес, крупные фото, латунные акценты. Самый «дорогой» вариант, но тяжёлый для длинного
+        каталога и мобильного.
+      </div>
+      <header class="b-header">
+        <div class="b-brand">Plant Market</div>
+        <nav class="b-nav">
+          <span>Каталог</span><span>Доставка</span><span>Уход</span><span>Корзина · 2</span>
+        </nav>
+      </header>
+      <div class="b-hero">
+        <img src="http://localhost:3100/images/plants/anthurium.jpg" alt="Антуриум" />
+        <div class="b-hero-copy">
+          <p class="b-eyebrow">Редкие растения · Минск</p>
+          <h2>Растения, которые не повторить.</h2>
+          <p>
+            Каждый экземпляр снят и промаркирован. Вы получаете именно его — с корнями, листьями и
+            историей.
+          </p>
+          <a class="b-cta" href="#">Открыть каталог</a>
+        </div>
+      </div>
+      <div class="b-filters">
+        <button class="active">Все</button><button>Вариегатные</button><button>Средний свет</button
+        ><button>До 150 BYN</button>
+      </div>
+      <div class="b-grid">
+        <article class="b-card">
+          <div class="b-img">
+            <img src="http://localhost:3100/images/plants/philodendron.jpg" alt="" />
+          </div>
+          <div class="b-body">
+            <span class="b-badge">WYSIWYG</span>
+            <h3>Philodendron Pink Princess</h3>
+            <p>IP-001 · 1 экземпляр</p>
+            <div class="b-price">120,00 Br</div>
+          </div>
+        </article>
+        <article class="b-card">
+          <div class="b-img">
+            <img src="http://localhost:3100/images/plants/anthurium.jpg" alt="" />
+          </div>
+          <div class="b-body">
+            <span class="b-badge">WYSIWYG</span>
+            <h3>Anthurium Clarinervium</h3>
+            <p>IP-002 · 1 экземпляр</p>
+            <div class="b-price">1 899,00 Br</div>
+          </div>
+        </article>
+        <article class="b-card">
+          <div class="b-img">
+            <img src="http://localhost:3100/images/plants/alocasia.jpg" alt="" />
+          </div>
+          <div class="b-body">
+            <span class="b-badge">WYSIWYG</span>
+            <h3>Alocasia Frydek</h3>
+            <p>IP-003 · 1 экземпляр</p>
+            <div class="b-price">899,00 Br</div>
+          </div>
+        </article>
+        <article class="b-card">
+          <div class="b-img">
+            <img src="http://localhost:3100/images/plants/syngonium.jpg" alt="" />
+          </div>
+          <div class="b-body">
+            <span class="b-badge">WYSIWYG</span>
+            <h3>Syngonium Albo</h3>
+            <p>IP-004 · 1 экземпляр</p>
+            <div class="b-price">1 599,00 Br</div>
+          </div>
+        </article>
+        <article class="b-card">
+          <div class="b-img">
+            <img src="http://localhost:3100/images/plants/scindapsus.jpg" alt="" />
+          </div>
+          <div class="b-body">
+            <span class="b-badge">WYSIWYG</span>
+            <h3>Scindapsus Treubii</h3>
+            <p>IP-005 · 1 экземпляр</p>
+            <div class="b-price">749,00 Br</div>
+          </div>
+        </article>
+        <article class="b-card">
+          <div class="b-img">
+            <img src="http://localhost:3100/images/plants/echeveria.jpg" alt="" />
+          </div>
+          <div class="b-body">
+            <span class="b-badge">В наличии</span>
+            <h3>Echeveria Elegans</h3>
+            <p>SUCC-001 · 1 экземпляр</p>
+            <div class="b-price">38,00 Br</div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="mockup c">
+      <div class="label"><b>C</b> Clean Nordic</div>
+      <div class="note">
+        Белый фон, плотная сетка, быстрые фильтры, кнопка «в корзину» на карточке. Самый
+        конверсионный и предсказуемый, но менее «ботанический».
+      </div>
+      <header class="c-header">
+        <div class="c-brand">plant market</div>
+        <nav class="c-nav">
+          <span>Каталог</span><span>Доставка</span><span>Уход</span><span>Корзина · 2</span>
+        </nav>
+      </header>
+      <div class="c-hero">
+        <div>
+          <h2>Растения, которые хочется оставить себе.</h2>
+          <p>
+            Конкретные экземпляры с фото и кодом. Быстрый выбор по свету, бюджету и характеру
+            растения.
+          </p>
+          <a class="c-cta" href="#">Перейти в каталог</a>
+        </div>
+        <div class="c-collage">
+          <div><img src="http://localhost:3100/images/plants/monstera.jpg" alt="" /></div>
+          <div><img src="http://localhost:3100/images/plants/philodendron.jpg" alt="" /></div>
+          <div><img src="http://localhost:3100/images/plants/anthurium.jpg" alt="" /></div>
+        </div>
+      </div>
+      <div class="c-toolbar">
+        <button class="active">Все</button><button>Вариегатные</button><button>Средний свет</button
+        ><button>До 150 BYN</button>
+        <span class="c-count">11 растений</span>
+      </div>
+      <div class="c-grid">
+        <article class="c-card">
+          <div class="c-img">
+            <img src="http://localhost:3100/images/plants/philodendron.jpg" alt="" />
+          </div>
+          <div class="c-body">
+            <h3>Philodendron Pink Princess</h3>
+            <p>IP-001 · средний свет</p>
+            <div class="c-bottom">
+              <span class="c-price">120,00 Br</span><button class="c-add">В корзину</button>
+            </div>
+          </div>
+        </article>
+        <article class="c-card">
+          <div class="c-img">
+            <img src="http://localhost:3100/images/plants/anthurium.jpg" alt="" />
+          </div>
+          <div class="c-body">
+            <h3>Anthurium Clarinervium</h3>
+            <p>IP-002 · средний свет</p>
+            <div class="c-bottom">
+              <span class="c-price">1 899,00 Br</span><button class="c-add">В корзину</button>
+            </div>
+          </div>
+        </article>
+        <article class="c-card">
+          <div class="c-img">
+            <img src="http://localhost:3100/images/plants/alocasia.jpg" alt="" />
+          </div>
+          <div class="c-body">
+            <h3>Alocasia Frydek</h3>
+            <p>IP-003 · яркий свет</p>
+            <div class="c-bottom">
+              <span class="c-price">899,00 Br</span><button class="c-add">В корзину</button>
+            </div>
+          </div>
+        </article>
+        <article class="c-card">
+          <div class="c-img">
+            <img src="http://localhost:3100/images/plants/syngonium.jpg" alt="" />
+          </div>
+          <div class="c-body">
+            <h3>Syngonium Albo</h3>
+            <p>IP-004 · средний свет</p>
+            <div class="c-bottom">
+              <span class="c-price">1 599,00 Br</span><button class="c-add">В корзину</button>
+            </div>
+          </div>
+        </article>
+        <article class="c-card">
+          <div class="c-img">
+            <img src="http://localhost:3100/images/plants/scindapsus.jpg" alt="" />
+          </div>
+          <div class="c-body">
+            <h3>Scindapsus Treubii</h3>
+            <p>IP-005 · средний свет</p>
+            <div class="c-bottom">
+              <span class="c-price">749,00 Br</span><button class="c-add">В корзину</button>
+            </div>
+          </div>
+        </article>
+        <article class="c-card">
+          <div class="c-img">
+            <img src="http://localhost:3100/images/plants/echeveria.jpg" alt="" />
+          </div>
+          <div class="c-body">
+            <h3>Echeveria Elegans</h3>
+            <p>SUCC-001 · прямой свет</p>
+            <div class="c-bottom">
+              <span class="c-price">38,00 Br</span><button class="c-add">В корзину</button>
+            </div>
+          </div>
+        </article>
+        <article class="c-card">
+          <div class="c-img">
+            <img src="http://localhost:3100/images/plants/haworthia.jpg" alt="" />
+          </div>
+          <div class="c-body">
+            <h3>Haworthia Fasciata</h3>
+            <p>SUCC-002 · яркий свет</p>
+            <div class="c-bottom">
+              <span class="c-price">29,00 Br</span><button class="c-add">В корзину</button>
+            </div>
+          </div>
+        </article>
+        <article class="c-card">
+          <div class="c-img"><img src="http://localhost:3100/images/plants/fern.jpg" alt="" /></div>
+          <div class="c-body">
+            <h3>Nephrolepis Boston</h3>
+            <p>FERN-001 · средний свет</p>
+            <div class="c-bottom">
+              <span class="c-price">45,00 Br</span><button class="c-add">В корзину</button>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </body>
+</html>

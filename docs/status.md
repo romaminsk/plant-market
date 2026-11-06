@@ -154,8 +154,11 @@
   карточки, галерея, футер, адаптив; исправлены «слипшиеся» ссылки навигации и футер не внизу.
 - Вместо нарисованных SVG — реальные фото растений (Unsplash/Wikimedia), локально в
   `clients/storefront/public/images/plants/` + `CREDITS.md`.
-- Каталог: современная sidebar-панель фильтров (вариегатность, свет, цена), hero, 11 доступных
-  экземпляров для проверки фильтра, скрытие нефільтруемых позиций при активном фильтре.
+- Выбранное направление — **Dark Premium**: тёмный лес + латунь, крупная антиква Cormorant
+  Garamond, локальные woff2-шрифты (без внешнего CDN), hero с фото и градиентом.
+- Каталог: горизонтальная панель фильтров (вариегатность, свет, цена), 11 доступных
+  экземпляров для проверки фильтра, компактный индекс позиций, скрытие индекса при активном
+  фильтре. Макеты трёх направлений — `docs/mockups/design-options.html`.
 - E2E `CatalogFilterE2ETest`: 11 → 6 (вариегатные) → 3 (+ средний свет) → 1 (+ до 150 BYN).
 - Админка: serif-заголовки, sticky topbar/tabs, таблицы на всю ширину, горизонтальный скролл.
 - E2E 17/17 после визуальных изменений; Lighthouse A11y 1.0.
@@ -299,7 +302,10 @@
 - **Ruling:** партии и экземпляры проходят явные state transitions; недопустимый переход — 409.
 - **Ruling:** J1-фильтр реализован на `/api/v1/individual-plants` (variegated + light + maxPriceMinor).
 - **Ruling:** Lighthouse запускается `scripts/lighthouse-a11y.sh` и как `LighthouseA11yTest` в E2E-сьюте; порог 0.95.
-- **Ruling:** rate limit: 60 rpm публично, 10 rpm login/register, 300 rpm для запросов с Bearer-токеном.
+- **Ruling:** rate limit: 60 rpm публично, 10 rpm login/register, 300 rpm для запросов с Bearer-токеном;
+  dev/CI используют 2000/100/300 из `.env.example`, чтобы SSR-каталог не упирался в лимит.
+- **Ruling:** визуальное направление — **Dark Premium** (тёмный лес + латунь, Cormorant Garamond);
+  шрифты self-hosted в `clients/storefront/public/fonts/`, без внешнего CDN из-за CSP.
 - **Ruling:** OAuth2 PKCE — SAS 7.1.2 с публичными клиентами и кастомным refresh-token генератором; ADR-0006.
 - **Ruling:** CSRF — double-submit cookie `XSRF-TOKEN`; session cookie `PM-SESSION`/`__Host-` prod.
 - **Ruling:** restock-подписки — в `catalog-service` (источник правды об остатках), претензии —

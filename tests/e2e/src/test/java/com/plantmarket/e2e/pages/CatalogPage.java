@@ -19,7 +19,8 @@ public final class CatalogPage {
     page.navigate(baseUrl + "/catalog");
     Locator heading =
         page.getByRole(
-            AriaRole.HEADING, new Page.GetByRoleOptions().setName("Растения для вашего дома"));
+            AriaRole.HEADING,
+            new Page.GetByRoleOptions().setName("Растения, которые не повторить."));
     try {
       heading.waitFor(new Locator.WaitForOptions().setTimeout(60_000));
     } catch (PlaywrightException firstAttempt) {
@@ -34,6 +35,6 @@ public final class CatalogPage {
   }
 
   public Locator productCards() {
-    return page.locator(".product-card");
+    return page.locator(".product-row");
   }
 }

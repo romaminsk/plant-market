@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { pluralRu } from '@/lib/plural';
 
 const LIGHT_OPTIONS = [
   { value: '', label: 'Любой' },
@@ -51,23 +50,8 @@ export function CatalogFilters({
     apply({ maxPrice: String(Math.round(value)) });
   }
 
-  const activeCount =
-    Number(Boolean(variegated)) + Number(Boolean(light)) + Number(maxPrice !== undefined);
-
   return (
-    <aside className="filter-panel" aria-label="Фильтры каталога">
-      <div className="filter-head">
-        <div>
-          <p className="eyebrow">Подбор</p>
-          <h2>Фильтры</h2>
-        </div>
-        <span className="filter-count">
-          {activeCount > 0
-            ? `${activeCount} ${pluralRu(activeCount, 'фильтр', 'фильтра', 'фильтров')}`
-            : 'все'}
-        </span>
-      </div>
-
+    <div className="catalog-toolbar" aria-label="Фильтры каталога">
       <div className="filter-group">
         <p className="filter-label">Вариегатность</p>
         <button
@@ -140,6 +124,6 @@ export function CatalogFilters({
         Сбросить фильтры
       </button>
       {isPending ? <p className="filter-pending">Обновляем…</p> : null}
-    </aside>
+    </div>
   );
 }
