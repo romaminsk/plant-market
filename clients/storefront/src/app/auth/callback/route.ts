@@ -55,6 +55,13 @@ export async function GET(request: NextRequest) {
       secure,
     });
   }
+  response.cookies.set('pm.csrf', crypto.randomUUID(), {
+    httpOnly: false,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 30 * 24 * 3600,
+    secure,
+  });
   response.cookies.delete('pm.pkce');
   response.cookies.delete('pm.state');
   response.cookies.delete('pm.return');

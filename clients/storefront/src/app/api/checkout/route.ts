@@ -7,6 +7,11 @@ export async function POST(request: NextRequest) {
   if (!token) {
     return NextResponse.json({ detail: 'Authentication required' }, { status: 401 });
   }
+  const csrfCookie = request.cookies.get('pm.csrf')?.value;
+  const csrfHeader = request.headers.get('x-csrf-token');
+  if (!csrfCookie || csrfHeader !== csrfCookie) {
+    return NextResponse.json({ detail: 'CSRF token mismatch' }, { status: 403 });
+  }
   const payload = (await request.json()) as {
     plantId?: string;
     shippingZoneId?: string;

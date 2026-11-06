@@ -147,11 +147,12 @@
 - OAuth2 PKCE через BFF в Next.js: `/api/auth/login` → auth-service `/oauth2/authorize` →
   `/auth/callback` (обмен code → tokens, httpOnly cookies) → `/checkout`.
 - `POST /api/checkout`: create → checkout (зона/термоупаковка) → pay; ошибки order-service
-  пробрасываются как JSON.
+  пробрасываются как JSON. POST защищён double-submit `pm.csrf` + `X-CSRF-Token`.
 - Страница `/checkout` показывает зоны, зимнюю термоупаковку и итог; кнопка «Купить сейчас» на
   карточке растения. Мульти-корзина и история заказов — следующая итерация (ADR-0013).
 - E2E `CheckoutFlowE2ETest`: гость → карточка → логин через форму auth-service → checkout →
   sandbox pay → «Заказ оплачен».
+- В шапке storefront — «Войти»/«Выйти»; access/refresh только в httpOnly cookie.
 - Auth-service принимает redirect URI для storefront на `:3000` и `:3100` (dev/E2E).
 
 ### Phase 3 — A15 perf smoke (✅ локально)
@@ -196,7 +197,7 @@
   теряется (статус подписки/претензии при этом сохраняется). Order-уведомления ретраятся (ADR-0012).
 - Outbox at-least-once: возможны дубли писем; dead-letter без автоматического redrive.
 - Storefront checkout — MVP «Купить сейчас»: нет мульти-корзины, истории заказов и
-  автоматического refresh токена в BFF; CSRF для BFF POST ещё не добавлен (ADR-0013).
+  автоматического refresh токена в BFF (ADR-0013).
 - Фото принимаются как URL; API загрузки есть, UI загрузки в админке — следующий шаг.
 - Media volume не реплицируется и не бэкапится; публичные файлы без content sniffing (ADR-0011).
 - Галерея в seed использует placehold.co; фотостандарт (нейтральный фон, линейка, 4 ракурса)

@@ -38,6 +38,7 @@ Storefront умел каталог, карточку WYSIWYG, фильтры и 
   (обмен code → tokens, access/refresh в httpOnly cookie, redirect на `returnTo`).
 - `POST /api/checkout`: create → checkout (зона/термоупаковка) → pay через order-service.
 - `POST /api/auth/logout`, кнопка «Купить сейчас», `/checkout` с зонами и итогом.
+- BFF POST защищён double-submit: `pm.csrf` cookie + `X-CSRF-Token`; в шапке «Войти»/«Выйти».
 - E2E `CheckoutFlowE2ETest`: гость → карточка → логин через форму auth-service → checkout → pay →
   «Заказ оплачен».
 
@@ -51,7 +52,8 @@ Storefront умел каталог, карточку WYSIWYG, фильтры и 
 
 - Access token живёт 10 минут и хранится в httpOnly cookie; refresh пока не используется BFF для
   автоматического обновления — при истечении токена пользователь входит снова.
-- CSRF для BFF POST ещё не добавлен (SameSite=Lax снижает риск, но для prod нужен double-submit).
+- CSRF для BFF POST — double-submit `pm.csrf` + `X-CSRF-Token`; cookie `Secure` включается
+  переменной `COOKIE_SECURE=true` на HTTPS.
 - Next.js route handlers становятся точкой отказа checkout; health/readiness и логи обязательны.
 - Мульти-корзина, адреса, слоты доставки и история заказов — после MVP; сейчас один товар на заказ.
 - E2E J1 расширен до полного сценария: логин PKCE → checkout → pay → подтверждение.

@@ -43,9 +43,14 @@ export function CheckoutForm({
     setStatus('sending');
     setMessage('');
     try {
+      const csrf =
+        document.cookie
+          .split('; ')
+          .find((item) => item.startsWith('pm.csrf='))
+          ?.split('=')[1] ?? '';
       const response = await fetch('/api/checkout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
         body: JSON.stringify({ plantId, shippingZoneId: zoneId, thermalPack: thermal }),
       });
       const payload = (await response.json().catch(() => null)) as {

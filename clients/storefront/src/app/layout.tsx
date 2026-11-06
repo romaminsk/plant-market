@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
+import { accessToken } from '@/lib/auth';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -16,7 +17,8 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
+  const token = await accessToken();
   return (
     <html lang="ru">
       <body>
@@ -26,6 +28,15 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
           </Link>
           <nav aria-label="Основная навигация">
             <Link href="/catalog">Каталог</Link>
+            {token ? (
+              <form action="/api/auth/logout" method="post">
+                <button type="submit" className="nav-button">
+                  Выйти
+                </button>
+              </form>
+            ) : (
+              <a href="/api/auth/login?returnTo=/catalog">Войти</a>
+            )}
           </nav>
         </header>
         <main className="container">{children}</main>

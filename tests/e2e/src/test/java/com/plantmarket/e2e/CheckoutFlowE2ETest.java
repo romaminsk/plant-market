@@ -41,8 +41,9 @@ class CheckoutFlowE2ETest extends PlaywrightTestBase {
             new com.microsoft.playwright.Page.GetByRoleOptions()
                 .setName("Войдите, чтобы оформить заказ"))
         .waitFor();
-    page.getByRole(
-            AriaRole.LINK, new com.microsoft.playwright.Page.GetByRoleOptions().setName("Войти"))
+    page.getByRole(AriaRole.STATUS)
+        .getByRole(
+            AriaRole.LINK, new com.microsoft.playwright.Locator.GetByRoleOptions().setName("Войти"))
         .click();
 
     page.locator("input[name='username']").fill("customer@plantmarket.local");

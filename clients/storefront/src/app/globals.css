@@ -312,6 +312,16 @@ button {
   font-size: 0.9rem;
 }
 
+.nav-button {
+  padding: 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
 .button-link {
   display: inline-block;
   padding: 0.65rem 1rem;
