@@ -88,6 +88,8 @@
 - CI run `42204807910` — success, E2E 16/16 с timeline заказа и 400 без адреса.
 - CI run `42212547510` — success после ревью: gateway authz, locks, security headers,
   media magic bytes, J3 UI, 17/17 E2E; backend 38 тестов.
+- CI run `42233064039` — success после подъёма dev/CI rate limit: E2E 18/18.
+- CI run `42237526777` — success после Dark Premium редизайна: E2E 18/18, Lighthouse a11y ≥ 0.95.
 
 ### Phase 3 — WYSIWYG-галерея (✅ первый шаг)
 
