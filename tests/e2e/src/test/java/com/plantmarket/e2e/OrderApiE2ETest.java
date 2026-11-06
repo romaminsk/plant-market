@@ -151,7 +151,7 @@ class OrderApiE2ETest {
 
   private JsonNode post(String path, String token, Map<String, Object> body) throws Exception {
     HttpResponse<String> response = postRaw(path, token, body);
-    assertThat(response.statusCode()).isBetween(200, 299);
+    assertThat(response.statusCode()).as("response body: %s", response.body()).isBetween(200, 299);
     return OBJECT_MAPPER.readTree(response.body());
   }
 
@@ -169,7 +169,7 @@ class OrderApiE2ETest {
 
   private JsonNode send(HttpRequest request) throws Exception {
     HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-    assertThat(response.statusCode()).isBetween(200, 299);
+    assertThat(response.statusCode()).as("response body: %s", response.body()).isBetween(200, 299);
     return OBJECT_MAPPER.readTree(response.body());
   }
 }
