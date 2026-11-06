@@ -28,8 +28,8 @@ Server 7.1.2 по умолчанию:
   `grant_type=refresh_token` по `client_id` без секрета и без `code_verifier`.
 - Браузерная сессия: cookie `PM-SESSION` в dev; в prod `__Host-PM-SESSION` + `Secure` +
   `HttpOnly` + `SameSite=Lax` через `SESSION_COOKIE_NAME`/`SESSION_COOKIE_SECURE`.
-- CSRF на форме логина включён (synchronizer token). Double-submit cookie — отдельный пункт
-  A11 T2, ещё не реализован.
+- CSRF на форме логина — double-submit cookie (`XSRF-TOKEN` + `_csrf`), не HttpOnly по
+  определению double-submit; session cookie остаётся HttpOnly.
 - Хранилища SAS (registered clients, authorizations, consents) — in-memory, один экземпляр.
 
 ## Последствия
@@ -40,7 +40,8 @@ Server 7.1.2 по умолчанию:
   допустимо, перед масштабированием — JDBC-хранилище.
 - HMAC-секрет общий для auth-service и gateway; секрет должен быть заменён в prod и храниться
   в Vault/SOPS.
-- CSRF double-submit и cookie `__Host-` включаются в prod-конфиге; dev использует `PM-SESSION`.
+- CSRF double-submit и cookie `__Host-` включаются в prod-конфиге; dev использует `PM-SESSION` и
+  `XSRF-TOKEN`.
 
 ## Проверка
 
