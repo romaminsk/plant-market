@@ -1,8 +1,8 @@
 # Plant Market — статус проекта
 
 **Обновлено:** 2026-11-05
-**Фаза:** 1 — завершена (кроме J5 order/reserve — Phase 2)
-**Текущая задача:** Phase 2 — order-service и резервы
+**Фаза:** 2 — orders и резервы готовы; следующий платёжный sandbox
+**Текущая задача:** Phase 2 — payment-service + WireMock
 
 ## Состояние окружения
 
@@ -32,7 +32,7 @@
 | OAuth2 Authorization Code + PKCE                           | ✅          |
 | Cookie security / CSRF                                     | ✅          |
 | Admin update forms                                         | ✅          |
-| J5 order/reserve/cancel                                    | Phase 2     |
+| J5 order/reserve/cancel                                    | ✅ Phase 2  |
 
 ## Сделано
 
@@ -51,10 +51,19 @@
 - Admin: вкладки продуктов, категорий, экземпляров, вариантов, партий; создание, архивирование/удаление, перевод в карантин/публикацию, списание, выпуск партии.
 - Lighthouse accessibility: **1.0** (порог 0.95).
 - Rate limit: 60 rpm публично, 10 rpm login/register, 300 rpm для запросов с Bearer-токеном (admin).
-- CI run `42170141399` — success, E2E 5/5 passed (включая Lighthouse 1.0); security run `42170140548` — success.
+- CI run `42172788895` — success, E2E 6/6 passed (включая Lighthouse и order reservation); security run `42172788831` — success.
 - **Admin update forms:** редактирование продуктов, категорий, вариантов и экземпляров; E2E проверяет обновление продукта.
 - **CSRF double-submit:** `XSRF-TOKEN` + `_csrf`, session cookie `PM-SESSION`; prod — `__Host-`/Secure.
 - **Auth Phase 1:** OAuth2 Authorization Code + PKCE (SAS 7.1.2), публичные клиенты storefront/admin, refresh rotation, сессионная cookie и CSRF на форме логина; ADR-0006. `OAuth2PkceIntegrationTest` проходит.
+
+### Phase 2 — orders и резервы (✅)
+
+- `order-service`: агрегат Order + OrderItem + status history + outbox, порт 8083, `pm_orders`.
+- Checkout-сага: reserve → PENDING_PAYMENT; pay → confirm; cancel → release.
+- `catalog-service`: таблица reservations, TTL 15 минут, `reserved_quantity` у вариантов, scheduled expiry; резерв вариантов и индивидуальных растений.
+- Gateway route `/api/v1/orders/**`; order-service в compose с healthcheck.
+- J5 API E2E: create → checkout → cancel → reservation released; отдельный integration-тест на reserve/confirm/release.
+- Payment в Phase 2 пока stub (`/pay` подтверждает резерв); payment-service — следующий шаг.
 
 ## Тесты и покрытие
 
@@ -62,17 +71,18 @@
 | ----------------- | ----: | ------------: |
 | `platform-common` |     9 |           74% |
 | `auth-service`    |     3 |           88% |
-| `catalog-service` |     3 |           81% |
+| `catalog-service` |     5 |           83% |
+| `order-service`   |     1 |           73% |
 | `api-gateway`     |     8 |           96% |
-| `tests:e2e`       |     5 |             — |
+| `tests:e2e`       |     6 |             — |
 
-Итого **23 backend-теста + 5 E2E = 28 тестов, 0 падений**. JaCoCo-порог 70% проходит.
+Итого **26 backend-тестов + 6 E2E = 32 теста, 0 падений**. JaCoCo-порог 70% проходит.
 
 ## Следующие 3 шага
 
-1. Phase 2: order-service — корзина, checkout, резервы с TTL.
-2. Phase 2: payment-service sandbox + WireMock.
-3. Phase 2: delivery zones, notifications, outbox на Spring events.
+1. Phase 2: payment-service sandbox + WireMock-стабы.
+2. Phase 2: delivery zones и расчёт доставки.
+3. Phase 2: notifications + outbox publisher на Spring events.
 
 ## Блокеры и риски
 
