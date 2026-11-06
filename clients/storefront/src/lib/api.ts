@@ -23,6 +23,13 @@ export interface ProductPage {
   totalPages: number;
 }
 
+export type PlantPhotoKind = 'GENERAL' | 'LEAF' | 'ROOTS' | 'DEFECTS';
+
+export interface PlantPhoto {
+  url: string;
+  kind: PlantPhotoKind;
+}
+
 export interface IndividualPlant {
   id: string;
   productId: string;
@@ -31,6 +38,7 @@ export interface IndividualPlant {
   code: string;
   description: string | null;
   photoUrl: string | null;
+  photos: PlantPhoto[];
   priceMinor: number;
   currency: 'BYN';
   status:

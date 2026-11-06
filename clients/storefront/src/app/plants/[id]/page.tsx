@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { fetchIndividualPlant, formatPrice } from '@/lib/api';
+import { PlantGallery } from './PlantGallery';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,13 +31,17 @@ export default async function IndividualPlantPage({ params }: { params: Promise<
         ← Назад в каталог
       </Link>
       <div className="detail-layout">
-        <div className="detail-photo" aria-hidden="true">
-          🌿
-        </div>
+        <PlantGallery
+          photos={plant.photos ?? []}
+          fallbackUrl={plant.photoUrl}
+          name={plant.productName}
+          code={plant.code}
+        />
         <div>
           <p className="sku">
             {plant.code} · WYSIWYG · {plant.status}
           </p>
+          <p className="wysiwyg-badge">Что видите — то и получите</p>
           <h1>{plant.productName}</h1>
           {plant.description ? <p className="muted">{plant.description}</p> : null}
           <p className="price detail-price" data-testid="plant-price">
@@ -57,9 +62,14 @@ export default async function IndividualPlantPage({ params }: { params: Promise<
             </div>
           </dl>
           <p className="muted">
-            Это конкретный экземпляр. Фото и код закреплены за растением; после продажи позиция
-            исчезает из каталога.
+            Это конкретный экземпляр: фото общего плана, листа, корней и дефектов закреплены за
+            кодом {plant.code}. После продажи позиция исчезает из каталога.
           </p>
+          <ul className="trust-list">
+            <li>Гарантия 48 часов после получения</li>
+            <li>Зимняя доставка: термоупаковка для морозных городов</li>
+            <li>Остаток: 1 экземпляр</li>
+          </ul>
         </div>
       </div>
     </article>

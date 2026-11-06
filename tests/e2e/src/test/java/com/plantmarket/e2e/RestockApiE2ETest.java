@@ -27,8 +27,6 @@ class RestockApiE2ETest {
   private final String apiUrl =
       System.getenv().getOrDefault("E2E_API_URL", "http://localhost:8080");
   private final HttpClient client = HttpClient.newHttpClient();
-  private static String cachedCustomerToken;
-  private static String cachedAdminToken;
 
   @Test
   void soldOutSubscriptionNotifiesAndAllowsPurchase() throws Exception {
@@ -135,29 +133,11 @@ class RestockApiE2ETest {
   }
 
   private String customerLogin() throws Exception {
-    if (cachedCustomerToken != null) {
-      return cachedCustomerToken;
-    }
-    JsonNode response =
-        post(
-            "/api/v1/auth/login",
-            null,
-            Map.of("email", "customer@plantmarket.local", "password", "CustomerPassword123!"));
-    cachedCustomerToken = response.path("accessToken").asString();
-    return cachedCustomerToken;
+    return ApiTokens.customer(apiUrl);
   }
 
   private String adminLogin() throws Exception {
-    if (cachedAdminToken != null) {
-      return cachedAdminToken;
-    }
-    JsonNode response =
-        post(
-            "/api/v1/auth/login",
-            null,
-            Map.of("email", "admin@plantmarket.local", "password", "AdminPassword123!"));
-    cachedAdminToken = response.path("accessToken").asString();
-    return cachedAdminToken;
+    return ApiTokens.admin(apiUrl);
   }
 
   private JsonNode get(String path, String token) throws Exception {

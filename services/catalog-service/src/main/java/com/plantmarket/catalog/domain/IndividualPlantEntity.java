@@ -1,7 +1,9 @@
 package com.plantmarket.catalog.domain;
 
 import com.plantmarket.common.id.UuidV7;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -9,10 +11,13 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OrderColumn;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -57,6 +62,11 @@ public class IndividualPlantEntity {
 
   @Column(name = "photo_url", length = 1000)
   private String photoUrl;
+
+  @ElementCollection(fetch = FetchType.EAGER)
+  @CollectionTable(name = "individual_plant_photos", joinColumns = @JoinColumn(name = "plant_id"))
+  @OrderColumn(name = "position")
+  private List<IndividualPlantPhoto> photos = new ArrayList<>();
 
   @Column(name = "price_minor", nullable = false)
   private long priceMinor;
@@ -144,6 +154,14 @@ public class IndividualPlantEntity {
     this.petSafe = petSafe;
   }
 
+  public void replacePhotos(List<IndividualPlantPhoto> newPhotos) {
+    this.photos.clear();
+    this.photos.addAll(newPhotos);
+    if (!newPhotos.isEmpty()) {
+      this.photoUrl = newPhotos.getFirst().getUrl();
+    }
+  }
+
   public boolean canTransitionTo(IndividualPlantStatus target) {
     return ALLOWED_TRANSITIONS.getOrDefault(status, Set.of()).contains(target);
   }
@@ -174,6 +192,10 @@ public class IndividualPlantEntity {
 
   public String getPhotoUrl() {
     return photoUrl;
+  }
+
+  public List<IndividualPlantPhoto> getPhotos() {
+    return List.copyOf(photos);
   }
 
   public long getPriceMinor() {

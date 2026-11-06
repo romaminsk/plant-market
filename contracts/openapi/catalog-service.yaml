@@ -447,6 +447,38 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /api/v1/individual-plants/{id}/photos:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateIndividualPlantPhotos
+      tags: [individual-plants]
+      summary: Replace the WYSIWYG photo gallery of an individual plant
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePlantPhotosRequest'
+      responses:
+        '200':
+          description: Photos replaced
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IndividualPlant'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
   /api/v1/individual-plants/{id}/transitions:
     parameters:
       - name: id
@@ -1096,6 +1128,10 @@ components:
           type: string
         photoUrl:
           type: string
+        photos:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlantPhoto'
         priceMinor:
           type: integer
           format: int64
@@ -1117,6 +1153,41 @@ components:
         updatedAt:
           type: string
           format: date-time
+
+    PlantPhotoKind:
+      type: string
+      enum: [GENERAL, LEAF, ROOTS, DEFECTS]
+
+    PlantPhoto:
+      type: object
+      additionalProperties: false
+      required: [url, kind]
+      properties:
+        url:
+          type: string
+          maxLength: 1000
+        kind:
+          $ref: '#/components/schemas/PlantPhotoKind'
+
+    UpdatePlantPhotosRequest:
+      type: object
+      additionalProperties: false
+      required: [photos]
+      properties:
+        photos:
+          type: array
+          minItems: 1
+          maxItems: 8
+          items:
+            type: object
+            additionalProperties: false
+            required: [url, kind]
+            properties:
+              url:
+                type: string
+                maxLength: 1000
+              kind:
+                $ref: '#/components/schemas/PlantPhotoKind'
 
     PlantTransitionRequest:
       type: object

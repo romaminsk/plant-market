@@ -6,6 +6,7 @@ import com.plantmarket.catalog.service.IndividualPlantService;
 import com.plantmarket.catalog.web.dto.IndividualPlantRequest;
 import com.plantmarket.catalog.web.dto.IndividualPlantResponse;
 import com.plantmarket.catalog.web.dto.PlantTransitionRequest;
+import com.plantmarket.catalog.web.dto.UpdatePlantPhotosRequest;
 import com.plantmarket.common.api.PageResponse;
 import jakarta.validation.Valid;
 import java.util.UUID;
@@ -61,6 +62,12 @@ public class IndividualPlantController {
   public IndividualPlantResponse update(
       @PathVariable UUID id, @Valid @RequestBody IndividualPlantRequest request) {
     return plantService.update(id, request);
+  }
+
+  @PutMapping("/individual-plants/{id}/photos")
+  public IndividualPlantResponse updatePhotos(
+      @PathVariable UUID id, @Valid @RequestBody UpdatePlantPhotosRequest request) {
+    return plantService.updatePhotos(id, request);
   }
 
   @PostMapping("/individual-plants/{id}/transitions")

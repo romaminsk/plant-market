@@ -91,7 +91,17 @@ export default async function CatalogPage({
           {plants.items.map((plant) => (
             <li key={plant.id} className="plant-card">
               <Link className="plant-photo" href={`/plants/${plant.id}`} aria-label={plant.code}>
-                🌿
+                {(plant.photos?.[0]?.url ?? plant.photoUrl) ? (
+                  <img
+                    src={plant.photos?.[0]?.url ?? plant.photoUrl ?? ''}
+                    alt={`${plant.productName}, ${plant.code}`}
+                    width={400}
+                    height={300}
+                    loading="lazy"
+                  />
+                ) : (
+                  '🌿'
+                )}
               </Link>
               <div className="product-body">
                 <p className="sku">{plant.code} · WYSIWYG</p>

@@ -1,13 +1,17 @@
 package com.plantmarket.catalog.service;
 
 import com.plantmarket.catalog.domain.IndividualPlantEntity;
+import com.plantmarket.catalog.domain.IndividualPlantPhoto;
 import com.plantmarket.catalog.domain.IndividualPlantStatus;
 import com.plantmarket.catalog.domain.LightLevel;
+import com.plantmarket.catalog.domain.PlantPhotoKind;
 import com.plantmarket.catalog.domain.ProductEntity;
 import com.plantmarket.catalog.repository.IndividualPlantRepository;
 import com.plantmarket.catalog.repository.ProductRepository;
 import com.plantmarket.catalog.web.dto.IndividualPlantRequest;
 import com.plantmarket.catalog.web.dto.IndividualPlantResponse;
+import com.plantmarket.catalog.web.dto.PlantPhotoResponse;
+import com.plantmarket.catalog.web.dto.UpdatePlantPhotosRequest;
 import com.plantmarket.common.api.PageResponse;
 import com.plantmarket.common.error.ApiException;
 import jakarta.persistence.criteria.Predicate;
@@ -105,6 +109,19 @@ public class IndividualPlantService {
         request.careLevel(),
         request.light(),
         request.petSafe());
+    return toResponse(plant);
+  }
+
+  @Transactional
+  public IndividualPlantResponse updatePhotos(UUID id, UpdatePlantPhotosRequest request) {
+    IndividualPlantEntity plant = find(id);
+    if (request.photos().stream().noneMatch(photo -> photo.kind() == PlantPhotoKind.GENERAL)) {
+      throw ApiException.badRequest("At least one GENERAL photo is required");
+    }
+    plant.replacePhotos(
+        request.photos().stream()
+            .map(photo -> new IndividualPlantPhoto(photo.url().trim(), photo.kind()))
+            .toList());
     return toResponse(plant);
   }
 
@@ -212,6 +229,9 @@ public class IndividualPlantService {
         plant.getCode(),
         plant.getDescription(),
         plant.getPhotoUrl(),
+        plant.getPhotos().stream()
+            .map(photo -> new PlantPhotoResponse(photo.getUrl(), photo.getKind()))
+            .toList(),
         plant.getPriceMinor(),
         plant.getCurrency(),
         plant.getStatus(),

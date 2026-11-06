@@ -228,6 +228,30 @@ ensure_individual_plant() {
     fi
 }
 
+ensure_plant_photos() {
+    local code="$1"
+    local plant_id count
+
+    plant_id="$(curl -sS "$API_URL/api/v1/individual-plants?search=$code&size=100" \
+        | jq -r --arg code "$code" '.items[] | select(.code == $code) | .id' | head -n 1)"
+    count="$(curl -sS "$API_URL/api/v1/individual-plants/$plant_id" | jq -r '.photos | length')"
+    if (( count > 0 )); then
+        return 0
+    fi
+
+    curl -sS -o /dev/null -X PUT \
+        -H "Authorization: Bearer $ADMIN_TOKEN" \
+        -H 'Content-Type: application/json' \
+        -d "$(jq -n --arg code "$code" \
+            '{photos: [
+                {url: ("https://placehold.co/800x1000?text=" + $code + "+general"), kind: "GENERAL"},
+                {url: ("https://placehold.co/800x1000?text=" + $code + "+leaf"), kind: "LEAF"},
+                {url: ("https://placehold.co/800x1000?text=" + $code + "+roots"), kind: "ROOTS"},
+                {url: ("https://placehold.co/800x1000?text=" + $code + "+defects"), kind: "DEFECTS"}
+            ]}')" \
+        "$API_URL/api/v1/individual-plants/$plant_id/photos"
+}
+
 ensure_stock_batch() {
     local product_sku="$1"
     local variant_sku="$2"
@@ -353,6 +377,10 @@ ensure_individual_plant "PLANT-002" "IP-002" 189900 "HARD" "MEDIUM" false
 ensure_individual_plant "PLANT-003" "IP-003" 89900 "MEDIUM" "BRIGHT" false
 ensure_individual_plant "PLANT-004" "IP-004" 159900 "EASY" "MEDIUM" false
 ensure_individual_plant "PLANT-005" "IP-005" 74900 "EASY" "MEDIUM" false
+
+for code in IP-001 IP-002 IP-003 IP-004 IP-005; do
+    ensure_plant_photos "$code"
+done
 
 ensure_stock_batch "MON-001" "MON-001-12" "Seed Supplier" 10 5000
 ensure_available_stock "MON-001" "MON-001-12" 5 10

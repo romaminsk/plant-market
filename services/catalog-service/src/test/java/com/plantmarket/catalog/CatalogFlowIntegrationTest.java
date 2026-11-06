@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.plantmarket.catalog.domain.CareLevel;
 import com.plantmarket.catalog.domain.Currency;
 import com.plantmarket.catalog.domain.LightLevel;
+import com.plantmarket.catalog.domain.PlantPhotoKind;
 import com.plantmarket.catalog.domain.ProductStatus;
 import com.plantmarket.catalog.domain.ReservationTargetType;
 import com.plantmarket.catalog.domain.RestockSubscriptionStatus;
@@ -12,6 +13,9 @@ import com.plantmarket.catalog.domain.RestockTargetType;
 import com.plantmarket.catalog.domain.VariantStatus;
 import com.plantmarket.catalog.web.dto.CategoryRequest;
 import com.plantmarket.catalog.web.dto.CategoryResponse;
+import com.plantmarket.catalog.web.dto.IndividualPlantRequest;
+import com.plantmarket.catalog.web.dto.IndividualPlantResponse;
+import com.plantmarket.catalog.web.dto.PlantPhotoRequest;
 import com.plantmarket.catalog.web.dto.ProductRequest;
 import com.plantmarket.catalog.web.dto.ProductResponse;
 import com.plantmarket.catalog.web.dto.ReservationItemRequest;
@@ -21,6 +25,7 @@ import com.plantmarket.catalog.web.dto.RestockSubscriptionRequest;
 import com.plantmarket.catalog.web.dto.RestockSubscriptionResponse;
 import com.plantmarket.catalog.web.dto.StockBatchRequest;
 import com.plantmarket.catalog.web.dto.StockBatchResponse;
+import com.plantmarket.catalog.web.dto.UpdatePlantPhotosRequest;
 import com.plantmarket.catalog.web.dto.VariantRequest;
 import com.plantmarket.catalog.web.dto.VariantResponse;
 import com.plantmarket.common.api.PageResponse;
@@ -163,6 +168,92 @@ class CatalogFlowIntegrationTest {
         restTemplate.exchange(
             "/api/v1/categories/" + category.id(), HttpMethod.DELETE, null, String.class);
     assertThat(deleteCategory.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+  }
+
+  @Test
+  void individualPlantGalleryRequiresGeneralPhoto() {
+    String suffix = UUID.randomUUID().toString().substring(0, 8);
+    CategoryResponse category =
+        restTemplate
+            .postForEntity(
+                "/api/v1/categories",
+                new CategoryRequest("Gallery " + suffix, "gallery-" + suffix, null),
+                CategoryResponse.class)
+            .getBody();
+    assertThat(category).isNotNull();
+
+    ProductResponse product =
+        restTemplate
+            .postForEntity(
+                "/api/v1/products",
+                new ProductRequest(
+                    "GAL-" + suffix,
+                    "Gallery Plant",
+                    "gallery-plant-" + suffix,
+                    null,
+                    category.id(),
+                    7000L,
+                    Currency.BYN,
+                    ProductStatus.PUBLISHED,
+                    CareLevel.EASY,
+                    LightLevel.MEDIUM,
+                    true,
+                    false,
+                    null,
+                    null),
+                ProductResponse.class)
+            .getBody();
+    assertThat(product).isNotNull();
+
+    IndividualPlantResponse plant =
+        restTemplate
+            .postForEntity(
+                "/api/v1/products/" + product.id() + "/individual-plants",
+                new IndividualPlantRequest(
+                    "GAL-IP-" + suffix,
+                    "Gallery plant",
+                    null,
+                    7000L,
+                    Currency.BYN,
+                    CareLevel.EASY,
+                    LightLevel.MEDIUM,
+                    true),
+                IndividualPlantResponse.class)
+            .getBody();
+    assertThat(plant).isNotNull();
+
+    ResponseEntity<IndividualPlantResponse> updated =
+        restTemplate.exchange(
+            "/api/v1/individual-plants/" + plant.id() + "/photos",
+            HttpMethod.PUT,
+            new HttpEntity<UpdatePlantPhotosRequest>(
+                new UpdatePlantPhotosRequest(
+                    List.of(
+                        new PlantPhotoRequest(
+                            "https://example.test/general.jpg", PlantPhotoKind.GENERAL),
+                        new PlantPhotoRequest("https://example.test/leaf.jpg", PlantPhotoKind.LEAF),
+                        new PlantPhotoRequest(
+                            "https://example.test/roots.jpg", PlantPhotoKind.ROOTS),
+                        new PlantPhotoRequest(
+                            "https://example.test/defects.jpg", PlantPhotoKind.DEFECTS)))),
+            IndividualPlantResponse.class);
+    assertThat(updated.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(updated.getBody()).isNotNull();
+    assertThat(updated.getBody().photos()).hasSize(4);
+    assertThat(updated.getBody().photos().getFirst().kind()).isEqualTo(PlantPhotoKind.GENERAL);
+    assertThat(updated.getBody().photoUrl()).isEqualTo("https://example.test/general.jpg");
+
+    ResponseEntity<String> withoutGeneral =
+        restTemplate.exchange(
+            "/api/v1/individual-plants/" + plant.id() + "/photos",
+            HttpMethod.PUT,
+            new HttpEntity<UpdatePlantPhotosRequest>(
+                new UpdatePlantPhotosRequest(
+                    List.of(
+                        new PlantPhotoRequest(
+                            "https://example.test/leaf-only.jpg", PlantPhotoKind.LEAF)))),
+            String.class);
+    assertThat(withoutGeneral.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
   }
 
   @Test

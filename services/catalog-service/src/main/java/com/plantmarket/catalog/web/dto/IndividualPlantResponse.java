@@ -5,6 +5,7 @@ import com.plantmarket.catalog.domain.Currency;
 import com.plantmarket.catalog.domain.IndividualPlantStatus;
 import com.plantmarket.catalog.domain.LightLevel;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 public record IndividualPlantResponse(
@@ -15,6 +16,7 @@ public record IndividualPlantResponse(
     String code,
     String description,
     String photoUrl,
+    List<PlantPhotoResponse> photos,
     long priceMinor,
     Currency currency,
     IndividualPlantStatus status,
