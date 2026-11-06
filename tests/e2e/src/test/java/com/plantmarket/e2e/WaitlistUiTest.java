@@ -56,13 +56,7 @@ class WaitlistUiTest extends PlaywrightTestBase {
   }
 
   private String findProductId(String token) throws Exception {
-    JsonNode products = get("/api/v1/products?size=100", token);
-    for (JsonNode item : products.path("items")) {
-      if ("PLANT-001".equals(item.path("sku").asString())) {
-        return item.path("id").asString();
-      }
-    }
-    throw new IllegalStateException("Seed product PLANT-001 is missing");
+    return SeedData.productId(apiUrl, "PLANT-001");
   }
 
   private JsonNode get(String path, String token) throws Exception {

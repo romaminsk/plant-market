@@ -27,10 +27,7 @@ class OrderApiE2ETest {
   @Test
   void createCheckoutAndCancelOrderReleasesReservation() throws Exception {
     String token = login();
-    JsonNode products = get("/api/v1/products?size=100", null);
-    String productId = findProductId(products);
-    JsonNode variants = get("/api/v1/products/" + productId + "/variants", null);
-    String variantId = variants.get(0).path("id").asString();
+    String variantId = SeedData.variantId(apiUrl);
 
     JsonNode created =
         post(
@@ -185,19 +182,7 @@ class OrderApiE2ETest {
   }
 
   private String seedVariantId() throws Exception {
-    JsonNode products = get("/api/v1/products?size=100", null);
-    String productId = findProductId(products);
-    JsonNode variants = get("/api/v1/products/" + productId + "/variants", null);
-    return variants.get(0).path("id").asString();
-  }
-
-  private String findProductId(JsonNode products) {
-    for (JsonNode item : products.path("items")) {
-      if ("MON-001".equals(item.path("sku").asString())) {
-        return item.path("id").asString();
-      }
-    }
-    throw new IllegalStateException("Seed product MON-001 is missing");
+    return SeedData.variantId(apiUrl);
   }
 
   private String login() throws Exception {

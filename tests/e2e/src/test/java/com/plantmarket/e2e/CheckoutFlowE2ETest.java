@@ -123,14 +123,7 @@ class CheckoutFlowE2ETest extends PlaywrightTestBase {
   }
 
   private String findProductIdBySku(String sku) throws Exception {
-    String token = ApiTokens.admin(apiUrl);
-    JsonNode products = get("/api/v1/products?size=100", token);
-    for (JsonNode item : products.path("items")) {
-      if (sku.equals(item.path("sku").asString())) {
-        return item.path("id").asString();
-      }
-    }
-    throw new IllegalStateException("Seed product " + sku + " is missing");
+    return SeedData.productId(apiUrl, sku);
   }
 
   private JsonNode get(String path, String token) throws Exception {

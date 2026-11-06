@@ -1,15 +1,54 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { fetchProduct, fetchVariants, formatPrice } from '@/lib/api';
 import { AddVariantToCart } from './AddVariantToCart';
 
 export const dynamic = 'force-dynamic';
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const product = await fetchProduct(id);
+  return {
+    title: `${product.name} — Plant Market`,
+    description:
+      product.description ?? `${product.name}: фото, уход, свет и цена. Доставка по Беларуси.`,
+    alternates: { canonical: `/catalog/${product.id}` },
+    openGraph: {
+      title: `${product.name} — Plant Market`,
+      description: product.description ?? undefined,
+      type: 'website',
+    },
+  };
+}
+
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const [product, variants] = await Promise.all([fetchProduct(id), fetchVariants(id)]);
+  const inStock = variants.some((variant) => variant.availableQuantity > 0);
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    sku: product.sku,
+    description: product.description ?? undefined,
+    offers: {
+      '@type': 'Offer',
+      price: (product.priceMinor / 100).toFixed(2),
+      priceCurrency: product.currency,
+      availability: inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+    },
+  };
 
   return (
     <article className="product-detail">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Link className="back-link" href="/catalog">
         ← Назад в каталог
       </Link>

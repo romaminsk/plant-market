@@ -50,7 +50,7 @@ class AdminClaimsUiTest extends PlaywrightTestBase {
 
   private String createClaim() throws Exception {
     String token = ApiTokens.customer(apiUrl);
-    String variantId = seedVariantId();
+    String variantId = SeedData.variantId(apiUrl);
     JsonNode order =
         post(
             "/api/v1/orders",

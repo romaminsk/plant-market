@@ -26,9 +26,29 @@ export async function generateMetadata({
 export default async function IndividualPlantPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const plant = await fetchIndividualPlant(id);
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: plant.productName,
+    sku: plant.code,
+    description: plant.description ?? undefined,
+    offers: {
+      '@type': 'Offer',
+      price: (plant.priceMinor / 100).toFixed(2),
+      priceCurrency: plant.currency,
+      availability:
+        plant.status === 'AVAILABLE'
+          ? 'https://schema.org/InStock'
+          : 'https://schema.org/OutOfStock',
+    },
+  };
 
   return (
     <article className="product-detail">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Link className="back-link" href="/catalog">
         ← Назад в каталог
       </Link>

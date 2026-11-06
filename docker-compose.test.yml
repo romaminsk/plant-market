@@ -28,3 +28,8 @@ services:
 
   payment-service:
     ports: !reset []
+
+  api-gateway:
+    environment:
+      RATE_LIMIT_PUBLIC_RPM: 600
+      RATE_LIMIT_AUTH_RPM: 60
