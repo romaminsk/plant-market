@@ -24,11 +24,13 @@ import {
   updateVariant,
 } from './api';
 import type { Category, IndividualPlant, Product, StockBatch, Variant } from './api';
+import { PlantGalleryEditor } from './PlantGalleryEditor';
+import { ClaimsPanel } from './ClaimsPanel';
 
 const TOKEN_KEY = 'pm.admin.accessToken';
 const CURRENCY = 'BYN';
 
-type Tab = 'products' | 'categories' | 'plants' | 'variants' | 'stock';
+type Tab = 'products' | 'categories' | 'plants' | 'variants' | 'stock' | 'claims';
 
 function formValue(form: FormData, key: string): string {
   return String(form.get(key) ?? '').trim();
@@ -279,6 +281,7 @@ export default function App() {
             ['plants', 'Экземпляры'],
             ['variants', 'Варианты'],
             ['stock', 'Партии'],
+            ['claims', 'Претензии'],
           ] as const
         ).map(([value, label]) => (
           <button
@@ -294,6 +297,8 @@ export default function App() {
 
       {error ? <p className="error">{error}</p> : null}
       {message ? <p className="success">{message}</p> : null}
+
+      {tab === 'claims' && accessToken ? <ClaimsPanel accessToken={accessToken} /> : null}
 
       {tab === 'products' ? (
         <section className="panel-grid">
@@ -720,6 +725,18 @@ export default function App() {
               ) : null}
             </form>
           </div>
+          {editingPlant && accessToken ? (
+            <PlantGalleryEditor
+              accessToken={accessToken}
+              plant={editingPlant}
+              onSaved={(updated) => {
+                setEditingPlant(updated);
+                setPlants((previous) =>
+                  previous.map((plant) => (plant.id === updated.id ? updated : plant)),
+                );
+              }}
+            />
+          ) : null}
           <div className="card panel">
             <h2>Экземпляры</h2>
             <table>

@@ -14,19 +14,18 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 class AdminCrudTest extends PlaywrightTestBase {
 
   private final String adminUrl = env("E2E_ADMIN_URL", "http://localhost:5173");
-  private final String email = env("E2E_ADMIN_EMAIL", "admin@plantmarket.local");
-  private final String password = env("E2E_ADMIN_PASSWORD", "AdminPassword123!");
+  private final String apiUrl = env("E2E_API_URL", "http://localhost:8080");
 
   @Test
-  void adminCanCreateCatalogEntitiesAndReleaseStock() {
+  void adminCanCreateCatalogEntitiesAndReleaseStock() throws Exception {
     String suffix = UUID.randomUUID().toString().substring(0, 8);
     String categoryName = "E2E Category " + suffix;
     String productName = "E2E Product " + suffix;
     String plantCode = "E2E-IP-" + suffix;
     String variantSku = "E2E-VAR-" + suffix;
 
-    AdminPage admin = new AdminPage(page).open(adminUrl);
-    admin.login(email, password);
+    AdminPage admin = new AdminPage(page);
+    admin.openWithToken(adminUrl, ApiTokens.admin(apiUrl));
     admin.waitForProducts();
 
     page.getByRole(

@@ -36,6 +36,13 @@ export interface Variant {
   status: 'DRAFT' | 'ACTIVE' | 'ARCHIVED';
 }
 
+export type PlantPhotoKind = 'GENERAL' | 'LEAF' | 'ROOTS' | 'DEFECTS';
+
+export interface PlantPhoto {
+  url: string;
+  kind: PlantPhotoKind;
+}
+
 export interface IndividualPlant {
   id: string;
   productId: string;
@@ -44,6 +51,7 @@ export interface IndividualPlant {
   code: string;
   description: string | null;
   photoUrl: string | null;
+  photos: PlantPhoto[];
   priceMinor: number;
   currency: string;
   status:
@@ -58,6 +66,22 @@ export interface IndividualPlant {
   careLevel: 'EASY' | 'MEDIUM' | 'HARD';
   light: 'LOW' | 'MEDIUM' | 'BRIGHT' | 'DIRECT';
   petSafe: boolean;
+}
+
+export type ClaimStatus = 'OPEN' | 'REPLACEMENT' | 'REFUND' | 'REJECTED';
+export type ClaimDecision = 'REPLACEMENT' | 'REFUND' | 'REJECT';
+
+export interface Claim {
+  id: string;
+  orderId: string;
+  customerId: string;
+  status: ClaimStatus;
+  reason: string;
+  photoUrls: string[];
+  decisionComment: string | null;
+  createdAt: string;
+  updatedAt: string;
+  decidedAt: string | null;
 }
 
 export interface StockBatch {
@@ -241,6 +265,32 @@ export async function updateIndividualPlant(
   });
 }
 
+export async function updatePlantPhotos(
+  accessToken: string,
+  plantId: string,
+  photos: PlantPhoto[],
+): Promise<IndividualPlant> {
+  return request<IndividualPlant>(`/api/v1/individual-plants/${plantId}/photos`, accessToken, {
+    method: 'PUT',
+    body: JSON.stringify({ photos }),
+  });
+}
+
+export async function uploadMedia(accessToken: string, file: File): Promise<string> {
+  const form = new FormData();
+  form.append('file', file);
+  const response = await fetch(`${API_URL}/api/v1/media`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: form,
+  });
+  if (!response.ok) {
+    const problem = (await response.json().catch(() => ({}))) as Problem;
+    throw new Error(problem.detail ?? problem.title ?? `Upload failed (${response.status})`);
+  }
+  return ((await response.json()) as { url: string }).url;
+}
+
 export async function transitionPlant(
   accessToken: string,
   plantId: string,
@@ -249,6 +299,22 @@ export async function transitionPlant(
   return request<IndividualPlant>(`/api/v1/individual-plants/${plantId}/transitions`, accessToken, {
     method: 'POST',
     body: JSON.stringify({ status }),
+  });
+}
+
+export async function fetchClaims(accessToken: string): Promise<Claim[]> {
+  return request<Claim[]>('/api/v1/claims', accessToken);
+}
+
+export async function decideClaim(
+  accessToken: string,
+  claimId: string,
+  decision: ClaimDecision,
+  comment: string | null,
+): Promise<Claim> {
+  return request<Claim>(`/api/v1/claims/${claimId}/decision`, accessToken, {
+    method: 'POST',
+    body: JSON.stringify({ decision, comment }),
   });
 }
 

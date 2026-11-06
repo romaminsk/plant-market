@@ -17,6 +17,12 @@ public final class AdminPage {
     return this;
   }
 
+  public void openWithToken(String baseUrl, String accessToken) {
+    page.navigate(baseUrl);
+    page.evaluate("token => localStorage.setItem('pm.admin.accessToken', token)", accessToken);
+    page.reload();
+  }
+
   public void login(String email, String password) {
     page.getByRole(AriaRole.HEADING, new Page.GetByRoleOptions().setName("Админка")).waitFor();
     page.getByLabel("Email").fill(email);

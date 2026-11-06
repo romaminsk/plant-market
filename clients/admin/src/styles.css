@@ -231,6 +231,48 @@ tbody tr:last-child td {
   font-size: 1.2rem;
 }
 
+.claim-decision {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.claim-decision select,
+.claim-decision input {
+  padding: 0.35rem 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.82rem;
+}
+
+.gallery-editor {
+  align-self: start;
+}
+
+.gallery-editor-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: end;
+  margin-bottom: 0.6rem;
+}
+
+.gallery-upload {
+  display: grid;
+  gap: 0.25rem;
+  padding-bottom: 0.1rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.gallery-upload input[type='file'] {
+  max-width: 160px;
+  font-size: 0.72rem;
+}
+
 .form-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));

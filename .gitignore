@@ -47,6 +47,7 @@ blob-report/
 logs/
 
 # Local infrastructure data
+data/
 infra/postgres/data/
 infra/minio/data/
 infra/mailhog/data/
