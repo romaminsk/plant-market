@@ -1,6 +1,6 @@
 # Архитектура Plant Market
 
-**Статус:** Phase 0. Документ описывает целевые границы; в Phase 0 реализуются только `api-gateway`, `auth-service`, `catalog-service` и `platform-common`.
+**Статус:** Phase 2. Реализованы `api-gateway`, `auth-service`, `catalog-service`, `order-service`; `payment-service` — следующий шаг.
 
 ## Контекст
 
@@ -34,11 +34,12 @@ admin (React + Vite) ─┘                     ─→ catalog-service :8081 →
 - GraphQL — только в BFF для storefront/admin, не внутри сервисов (AR-6).
 - Распределённых транзакций, 2PC и XA нет (AR-8).
 
-## Потоки Phase 0
+## Потоки Phase 0–2
 
 1. **Логин:** storefront/admin → gateway `/api/v1/auth/**` → auth-service → JWT + refresh.
 2. **Каталог:** storefront → gateway `/api/v1/catalog/**` → catalog-service → `pm_catalog`.
 3. **Защищённый запрос:** gateway проверяет JWT, прокидывает `X-Request-Id` и данные пользователя.
+4. **Checkout:** order-service создаёт DRAFT, вызывает catalog reservation (TTL 15 минут), переводит заказ в PENDING_PAYMENT; pay подтверждает резерв, cancel освобождает его.
 
 ## Ограничения
 
