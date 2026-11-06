@@ -234,7 +234,20 @@ components:
       type: object
       additionalProperties: false
       required:
-        [id, customerId, status, subtotalMinor, shippingMinor, taxMinor, discountMinor, totalMinor, currency, items, createdAt, updatedAt]
+        [
+          id,
+          customerId,
+          status,
+          subtotalMinor,
+          shippingMinor,
+          taxMinor,
+          discountMinor,
+          totalMinor,
+          currency,
+          items,
+          createdAt,
+          updatedAt,
+        ]
       properties:
         id:
           type: string
