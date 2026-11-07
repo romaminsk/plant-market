@@ -214,7 +214,7 @@ def plant_fixture(price: int = 12000, sold_out: bool = False, store: str = "plan
         "createSoldOutPlant" if sold_out else "createPlant",
         store,
         productSku="PLANT-001",
-        code="SC-{uid}",
+        code=f"SC-{store}-{{uid}}",
         priceMinor=price,
     )
 
@@ -619,6 +619,7 @@ sc(
         },
         goto("/cart"),
         wait_text("270,00"),
+        {"action": "expectPricesAligned"},
     ],
 )
 sc(
@@ -1929,6 +1930,7 @@ for zone, label, thermal, total, email in guest_checkout_cases:
         cart_plant(),
         goto("/checkout"),
         wait_text("Оформление заказа"),
+        {"action": "reload"},
         fill("input[name='guestEmail']", f"{email}@example.test"),
         fill(".checkout-form textarea", "Минск, Независимости 1"),
         select(".checkout-form select", label),
@@ -2001,6 +2003,8 @@ sc(
             ],
         },
         goto("/checkout"),
+        wait_text("Оформление заказа"),
+        {"action": "reload"},
         fill("input[name='guestEmail']", "guest-two@example.test"),
         fill(".checkout-form textarea", "Минск, Независимости 1"),
         select(".checkout-form select", "Минск · 1–2 дн."),
@@ -2017,6 +2021,8 @@ sc(
         *variant_fixture(),
         cart_variant(),
         goto("/checkout"),
+        wait_text("Оформление заказа"),
+        {"action": "reload"},
         fill("input[name='guestEmail']", "guest-variant@example.test"),
         fill(".checkout-form textarea", "Минск, Независимости 1"),
         select(".checkout-form select", "Минск · 1–2 дн."),
@@ -2197,9 +2203,360 @@ sc("SC-248", "a11y", "A11y admin login", "OK", [goto_admin("/"), a11y()])
 sc("SC-249", "a11y", "Keyboard focus каталога", "A", [goto("/catalog"), press("body", "Tab"), {"action": "expectActiveTag", "value": "A"}])
 sc("SC-250", "a11y", "Keyboard focus login", "INPUT", [goto("/api/auth/login?returnTo=/catalog"), press("body", "Tab"), {"action": "expectActiveTag", "value": "INPUT"}])
 
+# =============================================================================
+# I. 100 combined journeys — SC-251 .. SC-350
+# =============================================================================
+
+# --- 20 customer purchase journeys ------------------------------------------
+for i in range(20):
+    idx = 251 + i
+    auth = "guest" if i % 2 == 0 else "customer"
+    item = "plant" if i % 4 < 2 else "variant"
+    zone = "GOMEL" if i % 5 == 0 else "MINSK"
+    thermal = zone == "GOMEL"
+    two = i % 6 == 0
+    price = 12000 if i % 3 else 15000
+    steps: list = []
+    if item == "plant" and two:
+        steps += [
+            plant_fixture(price, store="plantA"),
+            plant_fixture(price + 3000, store="plantB"),
+            {
+                "action": "setCart",
+                "items": [
+                    {"type": "INDIVIDUAL_PLANT", "id": "{plantA.id}", "name": "{plantA.productName} ({plantA.code})", "priceMinor": price, "currency": "BYN", "quantity": 1},
+                    {"type": "INDIVIDUAL_PLANT", "id": "{plantB.id}", "name": "{plantB.productName} ({plantB.code})", "priceMinor": price + 3000, "currency": "BYN", "quantity": 1},
+                ],
+            },
+        ]
+    elif item == "plant":
+        steps += [
+            plant_fixture(price),
+            goto("/plants/{plant.id}"),
+            click("button:has-text('В корзину')"),
+            wait_text("В корзине"),
+            click("header a[href='/cart']"),
+            wait_url("/cart"),
+        ]
+    else:
+        steps += variant_fixture(price)
+        steps += [
+            goto("/catalog/{product.id}"),
+            click(".variant-card button"),
+            wait_text("Корзина (1)"),
+        ]
+    steps += [goto("/checkout"), wait_text("Оформление заказа"), {"action": "reload"}]
+    if auth == "guest":
+        steps.append(fill("input[name='guestEmail']", f"journey-{idx}@example.test"))
+    steps += [
+        fill(".checkout-form textarea", "Минск, Независимости 1"),
+        select(".checkout-form select", "Гомель (зима) · 2–4 дн." if thermal else "Минск · 1–2 дн."),
+    ]
+    if thermal:
+        steps.append(check(".checkout-thermal input"))
+    steps += [click("button:has-text('Оплатить')"), wait_text("Заказ оплачен")]
+    if auth == "customer":
+        steps += [goto("/account/orders"), wait_text("PAID")]
+    sc(
+        f"SC-{idx}",
+        "journey",
+        f"Покупка: {auth}, {item}, {zone}, {'2 товара' if two else '1 товар'}",
+        "Заказ оплачен" + (" и виден в истории" if auth == "customer" else ""),
+        steps,
+        auth=auth,
+    )
+
+# --- 20 admin lifecycle journeys --------------------------------------------
+for i in range(20):
+    idx = 271 + i
+    cat = f"Journey Cat {idx}-{{uid}}"
+    prod = f"Journey Product {idx}-{{uid}}"
+    code = f"J-IP-{idx}-{{uid}}"
+    sku = f"J-V-{idx}-{{uid}}"
+    supplier = f"J Supplier {idx}-{{uid}}"
+    steps = [
+        tab("Категории"),
+        fill("input[name='name']", cat),
+        fill("input[name='slug']", f"journey-cat-{idx}-{{uid}}"),
+        click("button:has-text('Создать')"),
+        wait_text("Категория создана"),
+        {"action": "reload"},
+        tab("Продукты"),
+        fill("input[name='sku']", f"J-P-{idx}-{{uid}}"),
+        fill("input[name='name']", prod),
+        fill("input[name='slug']", f"journey-p-{idx}-{{uid}}"),
+        select("select[name='categoryId']", cat),
+        fill("input[name='price']", "100"),
+        click("button:has-text('Создать продукт')"),
+        wait_text("Продукт создан"),
+        {"action": "reload"},
+        tab("Экземпляры"),
+        select("select[name='productId']", prod),
+        fill("input[name='code']", code),
+        fill("input[name='price']", "120"),
+        click("button:has-text('Создать экземпляр')"),
+        wait_text("Экземпляр создан (ACQUIRED)"),
+        {"action": "reload"},
+        tab("Экземпляры"),
+        click(f"tr:has-text('{code}') button:has-text('В карантин')"),
+        wait_text("Переведён в карантин"),
+        click(f"tr:has-text('{code}') button:has-text('Опубликовать')"),
+        wait_text("Опубликован"),
+        tab("Варианты"),
+        select("select[name='productId']", prod),
+        fill("input[name='sku']", sku),
+        fill("input[name='name']", "12 cm pot"),
+        fill("input[name='price']", "150"),
+        click("button:has-text('Создать вариант')"),
+        wait_text("Вариант создан"),
+        {"action": "reload"},
+        tab("Партии"),
+        select("select", prod),
+        select("select[name='productVariantId']", f"{sku} · 12 cm pot"),
+        fill("input[name='supplier']", supplier),
+        fill("input[name='quantity']", "5"),
+        fill("input[name='unitCost']", "40"),
+        click("button:has-text('Создать партию')"),
+        wait_text("Партия создана (QUARANTINE)"),
+    ]
+    if i % 4 == 0:
+        steps += [click(f"tr:has-text('{supplier}') button:has-text('Выпустить')"), wait_text("Партия опубликована")]
+    elif i % 4 == 1:
+        steps += [
+            tab("Экземпляры"),
+            click(f"tr:has-text('{code}') button:has-text('Редактировать')"),
+            fill("input[name='price']", "121"),
+            click("button:has-text('Сохранить экземпляр')"),
+            wait_text("Экземпляр обновлён"),
+        ]
+    elif i % 4 == 2:
+        steps += [
+            tab("Продукты"),
+            click(f"tr:has-text('J-P-{idx}-{{uid}}') button:has-text('Редактировать')"),
+            fill("input[name='price']", "101"),
+            click("button:has-text('Сохранить продукт')"),
+            wait_text("Продукт обновлён"),
+        ]
+    else:
+        steps += [
+            tab("Экземпляры"),
+            click(f"tr:has-text('{code}') button:has-text('Редактировать')"),
+            wait_text("Галерея WYSIWYG"),
+            fill("input[placeholder='https://…']", f"https://example.test/j-{idx}.jpg"),
+            click("button:has-text('Сохранить галерею')"),
+            wait_text("Галерея сохранена"),
+        ]
+    steps += [tab("Продукты"), wait_text("Продукты")]
+    sc(
+        f"SC-{idx}",
+        "journey",
+        f"Админ-цикл: категория → продукт → экземпляр → вариант → партия ({idx})",
+        "Все сущности созданы и видны в таблицах",
+        steps,
+        auth="admin",
+    )
+
+# --- 20 auth/account journeys -----------------------------------------------
+for i in range(20):
+    idx = 291 + i
+    if i < 5:
+        email = f"journey-reg-{idx}-{{uid}}@example.test"
+        steps = [
+            goto("/api/auth/login?returnTo=/catalog"),
+            click("a[href='/register']"),
+            wait_text("Регистрация"),
+            fill("input[name='fullName']", f"Journey User {idx}"),
+            fill("input[name='email']", email),
+            fill("input[name='password']", "Qa1234"),
+            fill("input[name='confirmPassword']", "Qa1234"),
+            click("button[type='submit']"),
+            wait_text("Аккаунт создан. Войдите."),
+        ]
+        steps += [
+            fill("input[name='password']", "Qa1234"),
+            click("button[type='submit']"),
+            wait_text("Выйти"),
+            click("button.nav-button"),
+            wait_url("/catalog"),
+            wait_text("Войти"),
+        ]
+        name = f"Регистрация → вход → выход ({idx})"
+    elif i < 10:
+        email = f"journey-val-{idx}-{{uid}}@example.test"
+        steps = [
+            goto("/api/auth/login?returnTo=/catalog"),
+            click("a[href='/register']"),
+            wait_text("Регистрация"),
+            fill("input[name='fullName']", f"Journey Val {idx}"),
+            fill("input[name='email']", email),
+            fill("input[name='password']", "Qa1234"),
+            fill("input[name='confirmPassword']", "Qa9999" if i % 2 == 0 else "Qa1234"),
+            click("button[type='submit']"),
+        ]
+        if i % 2 == 0:
+            steps.append(wait_text("Пароли не совпадают."))
+        else:
+            steps.append(wait_text("Аккаунт создан. Войдите."))
+        name = f"Валидация регистрации ({idx})"
+    elif i < 15:
+        steps = [
+            goto("/api/auth/login?returnTo=/catalog"),
+            fill("input[name='username']", "qa.customer@plantmarket.local"),
+            fill("input[name='password']", "WrongPassword123!" if i % 2 == 0 else "QaCustomer123!"),
+            click("button[type='submit']"),
+            wait_text("Неверный e-mail или пароль" if i % 2 == 0 else "Выйти"),
+        ]
+        if i % 2 == 1:
+            steps += [{"action": "reload"}, wait_text("Выйти")]
+        name = f"Вход и сессия ({idx})"
+    else:
+        operator = i % 2 == 0
+        steps = [
+            goto_admin("/"),
+            fill("input[type='email']", "qa.operator@plantmarket.local" if operator else "qa.manager@plantmarket.local"),
+            fill("input[type='password']", "QaOperator123!" if operator else "QaManager123!"),
+            click("button[type='submit']"),
+            wait_text("Продукты"),
+            click("button:has-text('Претензии')"),
+            wait_text("Претензии"),
+            click("button:has-text('Выйти')"),
+            wait_text("Админка"),
+        ]
+        name = f"Админ-роль {('operator' if operator else 'manager')} ({idx})"
+    sc(f"SC-{idx}", "journey", name, "Сценарий входа/аккаунта завершён", steps)
+
+# --- 20 restock/claim/gallery/stock journeys --------------------------------
+for i in range(20):
+    idx = 311 + i
+    if i < 8:
+        steps = [
+            plant_fixture(sold_out=True),
+            goto("/plants/{plant.id}"),
+            fill("#restock-email", f"journey-restock-{idx}-{{uid}}@example.test"),
+            click("button:has-text('Сообщить о поступлении')"),
+            wait_text(f"Готово: напишем на journey-restock-{idx}-{{uid}}@example.test"),
+        ]
+        name = f"Restock подписка ({idx})"
+    elif i < 12:
+        steps = [
+            plant_fixture(sold_out=True),
+            goto("/plants/{plant.id}"),
+            fill("#restock-email", "bad"),
+            click("button:has-text('Сообщить о поступлении')"),
+            visible("#restock-email:invalid"),
+        ]
+        name = f"Restock невалидный e-mail ({idx})"
+    elif i < 16:
+        decision = ["REPLACEMENT", "REFUND", "REJECT", "REPLACEMENT"][i % 4]
+        label = {"REPLACEMENT": "Замена", "REFUND": "Возврат", "REJECT": "Отказ"}[decision]
+        steps = [
+            *paid_order(),
+            api("createClaim", "claim", orderId="{order.id}", reason=f"Journey claim {idx}"),
+            tab("Претензии"),
+            wait_sel("tr:has-text('{claim.short}')"),
+        ]
+        if decision != "REPLACEMENT":
+            steps.append(select("tr:has-text('{claim.short}') select", label))
+        steps += [
+            click("tr:has-text('{claim.short}') button:has-text('Решить')"),
+            wait_text(decision),
+        ]
+        name = f"Претензия: {decision} ({idx})"
+    else:
+        steps = [
+            plant_fixture(),
+            {"action": "reload"},
+            tab("Экземпляры"),
+            click("tr:has-text('{plant.code}') button:has-text('Редактировать')"),
+            wait_text("Галерея WYSIWYG"),
+            upload("input[type='file']", "../../clients/storefront/public/images/plants/leaf.jpg"),
+            wait_text("Фото загружено — не забудьте сохранить галерею"),
+            click("button:has-text('Сохранить галерею')"),
+            wait_text("Галерея сохранена"),
+        ]
+        name = f"Галерея: загрузка файла ({idx})"
+    sc(
+        f"SC-{idx}",
+        "journey",
+        name,
+        "Сценарий restock/claim/gallery завершён",
+        steps,
+        auth="admin" if i >= 12 else "none",
+    )
+
+# --- 20 consent/SEO/mobile/a11y journeys ------------------------------------
+for i in range(20):
+    idx = 331 + i
+    if i < 5:
+        steps = [
+            goto("/catalog"),
+            wait_sel(".cookie-banner"),
+            click(".cookie-banner button:has-text('Принять аналитику')" if i % 2 == 0 else ".cookie-banner button:has-text('Только необходимые')"),
+            storage("pm.consent.v1", "all" if i % 2 == 0 else "essential"),
+            {"action": "reload"},
+            hidden(".cookie-banner"),
+            goto("/catalog?variegated=true"),
+            wait_text("Найдено"),
+        ]
+        name = f"Consent + фильтр ({idx})"
+    elif i < 10:
+        paths = ["/robots.txt", "/sitemap.xml", "/catalog", "/legal/cookies", "/catalog"]
+        checks = [
+            [text("Sitemap")],
+            [text("/catalog")],
+            [attr("link[rel='canonical']", "href", "/catalog", "contains")],
+            [text("Cookie и аналитика")],
+            [attr("meta[property='og:title']", "content", "", "nonEmpty")],
+        ]
+        steps = [goto(paths[i % 5])] + checks[i % 5]
+        name = f"SEO/legal страница ({idx})"
+    elif i < 15:
+        pages = [
+            ("/catalog", None),
+            ("/plants/{plant.id}", "plant"),
+            ("/checkout", "checkout"),
+            ("/register", None),
+            ("/", "admin"),
+        ]
+        path, kind = pages[i % 5]
+        steps = []
+        auth = "none"
+        if kind == "plant":
+            steps.append(plant_fixture())
+        if kind == "checkout":
+            steps += [plant_fixture(), cart_plant()]
+            auth = "customer"
+        steps.append(goto_admin("/") if kind == "admin" else goto(path))
+        if kind == "checkout":
+            steps.append(wait_sel(".checkout-form"))
+        steps.append(overflow())
+        name = f"Mobile overflow: {path} ({idx})"
+    else:
+        pages = ["/catalog", "/api/auth/login?returnTo=/catalog", "/register", "/checkout", "/"]
+        path = pages[i % 5]
+        steps = []
+        auth = "none"
+        if path == "/checkout":
+            steps += [plant_fixture(), cart_plant()]
+            auth = "customer"
+        steps.append(goto_admin("/") if path == "/" else goto(path))
+        if path == "/checkout":
+            steps.append(wait_sel(".checkout-form"))
+        steps.append(a11y())
+        name = f"A11y: {path} ({idx})"
+    sc(
+        f"SC-{idx}",
+        "journey",
+        name,
+        "Сценарий consent/SEO/mobile/a11y завершён",
+        steps,
+        auth=auth if i >= 10 else "none",
+        viewport=[390, 844] if 10 <= i < 15 else None,
+    )
+
 def main() -> None:
-    if len(SCENARIOS) != 250:
-        raise SystemExit(f"Expected 250 scenarios, got {len(SCENARIOS)}")
+    if len(SCENARIOS) != 350:
+        raise SystemExit(f"Expected 350 scenarios, got {len(SCENARIOS)}")
     ids = [entry["id"] for entry in SCENARIOS]
     if len(set(ids)) != len(ids):
         raise SystemExit("Duplicate scenario ids")
@@ -2213,7 +2570,7 @@ def main() -> None:
     )
 
     lines = [
-        "# 250 пользовательских E2E-сценариев",
+        "# 350 пользовательских E2E-сценариев",
         "",
         "Single source of truth: `scripts/generate-user-scenarios.py`.",
         "Данные: `tests/e2e/src/test/resources/user-scenarios.json`.",

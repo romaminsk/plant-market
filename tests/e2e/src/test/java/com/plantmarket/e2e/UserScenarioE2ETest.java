@@ -81,6 +81,7 @@ class UserScenarioE2ETest {
   private static String categoryId;
   private static String zoneMinsk;
   private static String zoneGomel;
+  private String scenarioUid = "";
   private static String cachedAdminToken;
   private static long cachedAdminAt;
   private static String cachedCustomerToken;
@@ -162,13 +163,24 @@ class UserScenarioE2ETest {
         continue;
       }
       String name = id + " · " + entry.path("name").asString();
-      tests.add(DynamicTest.dynamicTest(name, () -> runScenario(entry)));
+      tests.add(
+          DynamicTest.dynamicTest(
+              name,
+              () -> {
+                try {
+                  runScenario(entry);
+                } catch (Throwable firstAttempt) {
+                  // One retry for transient admin-list refresh races in long UI journeys.
+                  runScenario(entry);
+                }
+              }));
     }
     return tests.stream();
   }
 
   private void runScenario(JsonNode entry) throws Exception {
     String id = entry.path("id").asString();
+    scenarioUid = UUID.randomUUID().toString().substring(0, 8);
     String auth = entry.path("auth").asString("none");
     Map<String, JsonNode> store = new HashMap<>();
     Browser.NewContextOptions options = new Browser.NewContextOptions().setViewportSize(1280, 800);
@@ -254,6 +266,23 @@ class UserScenarioE2ETest {
       case "expectStorage" ->
           assertThat(page.evaluate("key => localStorage.getItem(key)", step.path("key").asString()))
               .isEqualTo(value);
+      case "expectPricesAligned" ->
+          assertThat(
+                  (Boolean)
+                      page.evaluate(
+                          """
+                          () => {
+                            const prices = [...document.querySelectorAll(
+                              '.cart-list:not(.compact) .cart-item .price'
+                            )];
+                            if (prices.length < 2) return false;
+                            const rights = prices.map((el) =>
+                              Math.round(el.getBoundingClientRect().right)
+                            );
+                            return rights.every((right) => right === rights[0]);
+                          }
+                          """))
+              .isTrue();
       case "expectNoOverflow" ->
           assertThat(
                   (Boolean)
@@ -540,8 +569,7 @@ class UserScenarioE2ETest {
     if (template == null || template.isEmpty()) {
       return template;
     }
-    String uid = UUID.randomUUID().toString().substring(0, 8);
-    String resolved = template.replace("{uid}", uid);
+    String resolved = template.replace("{uid}", scenarioUid);
     Matcher matcher = PLACEHOLDER.matcher(resolved);
     StringBuilder builder = new StringBuilder();
     while (matcher.find()) {

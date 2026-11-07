@@ -20,6 +20,7 @@ allprojects {
 
 val catalog = libs
 
+
 subprojects {
     apply(plugin = "java")
     apply(plugin = "checkstyle")
@@ -83,6 +84,12 @@ subprojects {
     tasks.named("check") {
         dependsOn(tasks.withType<JacocoCoverageVerification>())
     }
+}
+
+tasks.register("mutationTest") {
+    group = "verification"
+    description = "Runs PIT mutation testing for platform-common"
+    dependsOn(":platform-common:mutationTest")
 }
 
 tasks.named<Wrapper>("wrapper") {
