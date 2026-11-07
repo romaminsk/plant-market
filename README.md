@@ -84,6 +84,7 @@ scripts/             # dev-up.sh, dev-down.sh, test-backend.sh, seed.sh
 ## Документация
 
 - [`docs/status.md`](docs/status.md) — память проекта между сессиями.
+- [`docs/technical-guide.html`](docs/technical-guide.html) — подробное объяснение технической реализации простыми словами и полное ревью проекта.
 - [`docs/architecture.md`](docs/architecture.md) — контекст и границы сервисов.
 - [`docs/domain-model.md`](docs/domain-model.md) — сущности, инварианты, state machines.
 - [`docs/api-conventions.md`](docs/api-conventions.md) — REST, события, БД.
