@@ -252,6 +252,11 @@ tbody tr:last-child td {
   font-size: 0.82rem;
 }
 
+.claim-decision input {
+  flex: 1 1 120px;
+  min-width: 0;
+}
+
 .gallery-editor {
   align-self: start;
 }
@@ -280,8 +285,12 @@ tbody tr:last-child td {
 
 .form-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
   gap: 0.75rem;
+}
+
+.form-row > label {
+  min-width: 0;
 }
 
 select,
@@ -407,9 +416,17 @@ h1,
 input,
 select,
 textarea {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   background: var(--surface-2);
   border: 1px solid var(--line);
   color: var(--ink);
+}
+
+input[type='checkbox'],
+input[type='radio'] {
+  width: auto;
 }
 
 input::placeholder,
