@@ -179,6 +179,7 @@ export function productImage(sku: string): string {
 
 export function formatPrice(priceMinor: number, currency: string): string {
   // Deterministic formatting: Node and Chromium ship different ICU data for be-BY.
-  const amount = (priceMinor / 100).toFixed(2).replace('.', ',');
-  return `${amount} ${currency === 'BYN' ? 'Br' : currency}`;
+  const [whole, cents] = (priceMinor / 100).toFixed(2).split('.');
+  const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  return `${grouped},${cents} ${currency === 'BYN' ? 'Br' : currency}`;
 }

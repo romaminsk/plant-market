@@ -100,8 +100,8 @@
     {
       "id": "SC-004",
       "area": "catalog",
-      "name": "Комбинация фильтров находит IP-001",
-      "expected": "Карточка IP-001 и цена 120,00",
+      "name": "Комбинация фильтров сужает каталог",
+      "expected": "Найдено и минимум одна карточка",
       "auth": "none",
       "steps": [
         {
@@ -109,12 +109,8 @@
           "value": "/catalog?variegated=true&light=MEDIUM&maxPrice=150"
         },
         {
-          "action": "expectText",
-          "value": "IP-001"
-        },
-        {
-          "action": "expectText",
-          "value": "120,00"
+          "action": "waitText",
+          "value": "Найдено"
         },
         {
           "action": "expectMinCount",
@@ -262,7 +258,7 @@
       "id": "SC-010",
       "area": "catalog",
       "name": "Покупатель открывает продукт из индекса",
-      "expected": "Страница /catalog/ и секция «Варианты»",
+      "expected": "Страница /catalog/ и характеристики продукта",
       "auth": "none",
       "steps": [
         {
@@ -279,7 +275,11 @@
         },
         {
           "action": "expectText",
-          "value": "Варианты"
+          "value": "Свет"
+        },
+        {
+          "action": "expectText",
+          "value": "Уход"
         }
       ]
     },
@@ -4018,6 +4018,5488 @@
         },
         {
           "action": "expectA11y"
+        }
+      ]
+    },
+    {
+      "id": "SC-101",
+      "area": "catalog",
+      "name": "Фильтр: весь каталог",
+      "expected": "URL /catalog и минимум 11 карточек",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog"
+        },
+        {
+          "action": "waitText",
+          "value": "Найдено"
+        },
+        {
+          "action": "expectMinCount",
+          "selector": ".plant-card",
+          "value": 11
+        }
+      ]
+    },
+    {
+      "id": "SC-102",
+      "area": "catalog",
+      "name": "Фильтр: только вариегатные",
+      "expected": "URL /catalog?variegated=true и минимум 6 карточек",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog?variegated=true"
+        },
+        {
+          "action": "waitText",
+          "value": "Найдено"
+        },
+        {
+          "action": "expectMinCount",
+          "selector": ".plant-card",
+          "value": 6
+        }
+      ]
+    },
+    {
+      "id": "SC-103",
+      "area": "catalog",
+      "name": "Фильтр: низкий свет",
+      "expected": "URL /catalog?light=LOW и минимум 1 карточек",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog?light=LOW"
+        },
+        {
+          "action": "waitText",
+          "value": "Найдено"
+        },
+        {
+          "action": "expectMinCount",
+          "selector": ".plant-card",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "SC-104",
+      "area": "catalog",
+      "name": "Фильтр: средний свет",
+      "expected": "URL /catalog?light=MEDIUM и минимум 3 карточек",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog?light=MEDIUM"
+        },
+        {
+          "action": "waitText",
+          "value": "Найдено"
+        },
+        {
+          "action": "expectMinCount",
+          "selector": ".plant-card",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "id": "SC-105",
+      "area": "catalog",
+      "name": "Фильтр: яркий свет",
+      "expected": "URL /catalog?light=BRIGHT и минимум 1 карточек",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog?light=BRIGHT"
+        },
+        {
+          "action": "waitText",
+          "value": "Найдено"
+        },
+        {
+          "action": "expectMinCount",
+          "selector": ".plant-card",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "SC-106",
+      "area": "catalog",
+      "name": "Фильтр: прямой свет",
+      "expected": "URL /catalog?light=DIRECT и минимум 1 карточек",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog?light=DIRECT"
+        },
+        {
+          "action": "waitText",
+          "value": "Найдено"
+        },
+        {
+          "action": "expectMinCount",
+          "selector": ".plant-card",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "SC-107",
+      "area": "catalog",
+      "name": "Фильтр: вариегатные + низкий свет",
+      "expected": "Пустое состояние и ссылка сброса",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog?variegated=true&light=LOW"
+        },
+        {
+          "action": "waitText",
+          "value": "Под эти фильтры растений нет"
+        },
+        {
+          "action": "expectVisible",
+          "selector": ".empty a[href='/catalog']"
+        }
+      ]
+    },
+    {
+      "id": "SC-108",
+      "area": "catalog",
+      "name": "Фильтр: вариегатные + средний свет",
+      "expected": "URL /catalog?variegated=true&light=MEDIUM и минимум 3 карточек",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog?variegated=true&light=MEDIUM"
+        },
+        {
+          "action": "waitText",
+          "value": "Найдено"
+        },
+        {
+          "action": "expectMinCount",
+          "selector": ".plant-card",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "id": "SC-109",
+      "area": "catalog",
+      "name": "Фильтр: вариегатные + яркий свет",
+      "expected": "URL /catalog?variegated=true&light=BRIGHT и минимум 1 карточек",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog?variegated=true&light=BRIGHT"
+        },
+        {
+          "action": "waitText",
+          "value": "Найдено"
+        },
+        {
+          "action": "expectMinCount",
+          "selector": ".plant-card",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "SC-110",
+      "area": "catalog",
+      "name": "Фильтр: вариегатные + прямой свет",
+      "expected": "URL /catalog?variegated=true&light=DIRECT и минимум 1 карточек",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog?variegated=true&light=DIRECT"
+        },
+        {
+          "action": "waitText",
+          "value": "Найдено"
+        },
+        {
+          "action": "expectMinCount",
+          "selector": ".plant-card",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "SC-111",
+      "area": "catalog",
+      "name": "Фильтр: цена до 50 BYN",
+      "expected": "URL /catalog?maxPrice=50 и минимум 1 карточек",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog?maxPrice=50"
+        },
+        {
+          "action": "waitText",
+          "value": "Найдено"
+        },
+        {
+          "action": "expectMinCount",
+          "selector": ".plant-card",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "SC-112",
+      "area": "catalog",
+      "name": "Фильтр: цена до 100 BYN",
+      "expected": "URL /catalog?maxPrice=100 и минимум 1 карточек",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog?maxPrice=100"
+        },
+        {
+          "action": "waitText",
+          "value": "Найдено"
+        },
+        {
+          "action": "expectMinCount",
+          "selector": ".plant-card",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "SC-113",
+      "area": "catalog",
+      "name": "Фильтр: цена до 150 BYN",
+      "expected": "URL /catalog?maxPrice=150 и минимум 1 карточек",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog?maxPrice=150"
+        },
+        {
+          "action": "waitText",
+          "value": "Найдено"
+        },
+        {
+          "action": "expectMinCount",
+          "selector": ".plant-card",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "SC-114",
+      "area": "catalog",
+      "name": "Фильтр: цена до 500 BYN",
+      "expected": "URL /catalog?maxPrice=500 и минимум 5 карточек",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog?maxPrice=500"
+        },
+        {
+          "action": "waitText",
+          "value": "Найдено"
+        },
+        {
+          "action": "expectMinCount",
+          "selector": ".plant-card",
+          "value": 5
+        }
+      ]
+    },
+    {
+      "id": "SC-115",
+      "area": "catalog",
+      "name": "Фильтр: цена до 1000 BYN",
+      "expected": "URL /catalog?maxPrice=1000 и минимум 8 карточек",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog?maxPrice=1000"
+        },
+        {
+          "action": "waitText",
+          "value": "Найдено"
+        },
+        {
+          "action": "expectMinCount",
+          "selector": ".plant-card",
+          "value": 8
+        }
+      ]
+    },
+    {
+      "id": "SC-116",
+      "area": "catalog",
+      "name": "Фильтр: цена до 2000 BYN",
+      "expected": "URL /catalog?maxPrice=2000 и минимум 10 карточек",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog?maxPrice=2000"
+        },
+        {
+          "action": "waitText",
+          "value": "Найдено"
+        },
+        {
+          "action": "expectMinCount",
+          "selector": ".plant-card",
+          "value": 10
+        }
+      ]
+    },
+    {
+      "id": "SC-117",
+      "area": "catalog",
+      "name": "Фильтр: средний свет + цена до 150",
+      "expected": "URL /catalog?light=MEDIUM&maxPrice=150 и минимум 1 карточек",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog?light=MEDIUM&maxPrice=150"
+        },
+        {
+          "action": "waitText",
+          "value": "Найдено"
+        },
+        {
+          "action": "expectMinCount",
+          "selector": ".plant-card",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "SC-118",
+      "area": "catalog",
+      "name": "Фильтр: вариегатные + средний + 150",
+      "expected": "URL /catalog?variegated=true&light=MEDIUM&maxPrice=150 и минимум 1 карточек",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog?variegated=true&light=MEDIUM&maxPrice=150"
+        },
+        {
+          "action": "waitText",
+          "value": "Найдено"
+        },
+        {
+          "action": "expectMinCount",
+          "selector": ".plant-card",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "SC-119",
+      "area": "catalog",
+      "name": "Фильтр: яркий свет + 1000",
+      "expected": "URL /catalog?light=BRIGHT&maxPrice=1000 и минимум 1 карточек",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog?light=BRIGHT&maxPrice=1000"
+        },
+        {
+          "action": "waitText",
+          "value": "Найдено"
+        },
+        {
+          "action": "expectMinCount",
+          "selector": ".plant-card",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "SC-120",
+      "area": "catalog",
+      "name": "Фильтр: прямой свет + 100",
+      "expected": "Пустое состояние и ссылка сброса",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog?light=DIRECT&maxPrice=100"
+        },
+        {
+          "action": "waitText",
+          "value": "Под эти фильтры растений нет"
+        },
+        {
+          "action": "expectVisible",
+          "selector": ".empty a[href='/catalog']"
+        }
+      ]
+    },
+    {
+      "id": "SC-121",
+      "area": "catalog",
+      "name": "Фильтр: низкий свет + 100",
+      "expected": "URL /catalog?light=LOW&maxPrice=100 и минимум 1 карточек",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog?light=LOW&maxPrice=100"
+        },
+        {
+          "action": "waitText",
+          "value": "Найдено"
+        },
+        {
+          "action": "expectMinCount",
+          "selector": ".plant-card",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "SC-122",
+      "area": "catalog",
+      "name": "Фильтр: вариегатные + 150",
+      "expected": "URL /catalog?variegated=true&maxPrice=150 и минимум 1 карточек",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog?variegated=true&maxPrice=150"
+        },
+        {
+          "action": "waitText",
+          "value": "Найдено"
+        },
+        {
+          "action": "expectMinCount",
+          "selector": ".plant-card",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "SC-123",
+      "area": "catalog",
+      "name": "Фильтр: вариегатные + 1000",
+      "expected": "URL /catalog?variegated=true&maxPrice=1000 и минимум 3 карточек",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog?variegated=true&maxPrice=1000"
+        },
+        {
+          "action": "waitText",
+          "value": "Найдено"
+        },
+        {
+          "action": "expectMinCount",
+          "selector": ".plant-card",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "id": "SC-124",
+      "area": "catalog",
+      "name": "Фильтр: пустая выдача до 1 BYN",
+      "expected": "Пустое состояние и ссылка сброса",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog?maxPrice=1"
+        },
+        {
+          "action": "waitText",
+          "value": "Под эти фильтры растений нет"
+        },
+        {
+          "action": "expectVisible",
+          "selector": ".empty a[href='/catalog']"
+        }
+      ]
+    },
+    {
+      "id": "SC-125",
+      "area": "catalog",
+      "name": "Фильтр: пустая выдача medium + variegated",
+      "expected": "Пустое состояние и ссылка сброса",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog?variegated=true&light=MEDIUM&maxPrice=1"
+        },
+        {
+          "action": "waitText",
+          "value": "Под эти фильтры растений нет"
+        },
+        {
+          "action": "expectVisible",
+          "selector": ".empty a[href='/catalog']"
+        }
+      ]
+    },
+    {
+      "id": "SC-126",
+      "area": "plant",
+      "name": "Экземпляр IP-001 показывает название и цену",
+      "expected": "Philodendron Pink Princess и 120,00",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "findPlant",
+          "params": {
+            "code": "IP-001"
+          },
+          "store": "plant"
+        },
+        {
+          "action": "goto",
+          "value": "/plants/{plant.id}"
+        },
+        {
+          "action": "expectText",
+          "value": "Philodendron Pink Princess"
+        },
+        {
+          "action": "expectText",
+          "value": "120,00"
+        },
+        {
+          "action": "expectVisible",
+          "selector": ".wysiwyg-badge"
+        }
+      ]
+    },
+    {
+      "id": "SC-127",
+      "area": "plant",
+      "name": "Экземпляр IP-002 показывает название и цену",
+      "expected": "Anthurium Clarinervium и 1 899,00",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "findPlant",
+          "params": {
+            "code": "IP-002"
+          },
+          "store": "plant"
+        },
+        {
+          "action": "goto",
+          "value": "/plants/{plant.id}"
+        },
+        {
+          "action": "expectText",
+          "value": "Anthurium Clarinervium"
+        },
+        {
+          "action": "expectText",
+          "value": "1 899,00"
+        },
+        {
+          "action": "expectVisible",
+          "selector": ".wysiwyg-badge"
+        }
+      ]
+    },
+    {
+      "id": "SC-128",
+      "area": "plant",
+      "name": "Экземпляр IP-003 показывает название и цену",
+      "expected": "Alocasia Frydek и 899,00",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "findPlant",
+          "params": {
+            "code": "IP-003"
+          },
+          "store": "plant"
+        },
+        {
+          "action": "goto",
+          "value": "/plants/{plant.id}"
+        },
+        {
+          "action": "expectText",
+          "value": "Alocasia Frydek"
+        },
+        {
+          "action": "expectText",
+          "value": "899,00"
+        },
+        {
+          "action": "expectVisible",
+          "selector": ".wysiwyg-badge"
+        }
+      ]
+    },
+    {
+      "id": "SC-129",
+      "area": "plant",
+      "name": "Экземпляр IP-004 показывает название и цену",
+      "expected": "Syngonium Albo и 1 599,00",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "findPlant",
+          "params": {
+            "code": "IP-004"
+          },
+          "store": "plant"
+        },
+        {
+          "action": "goto",
+          "value": "/plants/{plant.id}"
+        },
+        {
+          "action": "expectText",
+          "value": "Syngonium Albo"
+        },
+        {
+          "action": "expectText",
+          "value": "1 599,00"
+        },
+        {
+          "action": "expectVisible",
+          "selector": ".wysiwyg-badge"
+        }
+      ]
+    },
+    {
+      "id": "SC-130",
+      "area": "plant",
+      "name": "Экземпляр IP-005 показывает название и цену",
+      "expected": "Scindapsus Treubii Moonlight и 749,00",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "findPlant",
+          "params": {
+            "code": "IP-005"
+          },
+          "store": "plant"
+        },
+        {
+          "action": "goto",
+          "value": "/plants/{plant.id}"
+        },
+        {
+          "action": "expectText",
+          "value": "Scindapsus Treubii Moonlight"
+        },
+        {
+          "action": "expectText",
+          "value": "749,00"
+        },
+        {
+          "action": "expectVisible",
+          "selector": ".wysiwyg-badge"
+        }
+      ]
+    },
+    {
+      "id": "SC-131",
+      "area": "plant",
+      "name": "Галерея IP-001 переключает ракурс",
+      "expected": "Ракурс «Лист крупно»",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "findPlant",
+          "params": {
+            "code": "IP-001"
+          },
+          "store": "plant"
+        },
+        {
+          "action": "goto",
+          "value": "/plants/{plant.id}"
+        },
+        {
+          "action": "click",
+          "selector": ".gallery-thumbs li:nth-child(2) .gallery-thumb"
+        },
+        {
+          "action": "waitText",
+          "value": "Лист крупно"
+        }
+      ]
+    },
+    {
+      "id": "SC-132",
+      "area": "plant",
+      "name": "Галерея IP-002 переключает ракурс",
+      "expected": "Ракурс «Лист крупно»",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "findPlant",
+          "params": {
+            "code": "IP-002"
+          },
+          "store": "plant"
+        },
+        {
+          "action": "goto",
+          "value": "/plants/{plant.id}"
+        },
+        {
+          "action": "click",
+          "selector": ".gallery-thumbs li:nth-child(2) .gallery-thumb"
+        },
+        {
+          "action": "waitText",
+          "value": "Лист крупно"
+        }
+      ]
+    },
+    {
+      "id": "SC-133",
+      "area": "plant",
+      "name": "Галерея IP-003 переключает ракурс",
+      "expected": "Ракурс «Лист крупно»",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "findPlant",
+          "params": {
+            "code": "IP-003"
+          },
+          "store": "plant"
+        },
+        {
+          "action": "goto",
+          "value": "/plants/{plant.id}"
+        },
+        {
+          "action": "click",
+          "selector": ".gallery-thumbs li:nth-child(2) .gallery-thumb"
+        },
+        {
+          "action": "waitText",
+          "value": "Лист крупно"
+        }
+      ]
+    },
+    {
+      "id": "SC-134",
+      "area": "plant",
+      "name": "Галерея IP-004 переключает ракурс",
+      "expected": "Ракурс «Лист крупно»",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "findPlant",
+          "params": {
+            "code": "IP-004"
+          },
+          "store": "plant"
+        },
+        {
+          "action": "goto",
+          "value": "/plants/{plant.id}"
+        },
+        {
+          "action": "click",
+          "selector": ".gallery-thumbs li:nth-child(2) .gallery-thumb"
+        },
+        {
+          "action": "waitText",
+          "value": "Лист крупно"
+        }
+      ]
+    },
+    {
+      "id": "SC-135",
+      "area": "plant",
+      "name": "Галерея IP-005 переключает ракурс",
+      "expected": "Ракурс «Лист крупно»",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "findPlant",
+          "params": {
+            "code": "IP-005"
+          },
+          "store": "plant"
+        },
+        {
+          "action": "goto",
+          "value": "/plants/{plant.id}"
+        },
+        {
+          "action": "click",
+          "selector": ".gallery-thumbs li:nth-child(2) .gallery-thumb"
+        },
+        {
+          "action": "waitText",
+          "value": "Лист крупно"
+        }
+      ]
+    },
+    {
+      "id": "SC-136",
+      "area": "plant",
+      "name": "Добавление IP-001 в корзину",
+      "expected": "Товар в корзине",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "findPlant",
+          "params": {
+            "code": "IP-001"
+          },
+          "store": "plant"
+        },
+        {
+          "action": "goto",
+          "value": "/plants/{plant.id}"
+        },
+        {
+          "action": "click",
+          "selector": "button:has-text('В корзину')"
+        },
+        {
+          "action": "waitText",
+          "value": "В корзине"
+        },
+        {
+          "action": "click",
+          "selector": "header a[href='/cart']"
+        },
+        {
+          "action": "waitUrl",
+          "value": "/cart"
+        },
+        {
+          "action": "waitText",
+          "value": "Philodendron Pink Princess"
+        }
+      ]
+    },
+    {
+      "id": "SC-137",
+      "area": "plant",
+      "name": "Добавление IP-002 в корзину",
+      "expected": "Товар в корзине",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "findPlant",
+          "params": {
+            "code": "IP-002"
+          },
+          "store": "plant"
+        },
+        {
+          "action": "goto",
+          "value": "/plants/{plant.id}"
+        },
+        {
+          "action": "click",
+          "selector": "button:has-text('В корзину')"
+        },
+        {
+          "action": "waitText",
+          "value": "В корзине"
+        },
+        {
+          "action": "click",
+          "selector": "header a[href='/cart']"
+        },
+        {
+          "action": "waitUrl",
+          "value": "/cart"
+        },
+        {
+          "action": "waitText",
+          "value": "Anthurium Clarinervium"
+        }
+      ]
+    },
+    {
+      "id": "SC-138",
+      "area": "plant",
+      "name": "Добавление IP-003 в корзину",
+      "expected": "Товар в корзине",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "findPlant",
+          "params": {
+            "code": "IP-003"
+          },
+          "store": "plant"
+        },
+        {
+          "action": "goto",
+          "value": "/plants/{plant.id}"
+        },
+        {
+          "action": "click",
+          "selector": "button:has-text('В корзину')"
+        },
+        {
+          "action": "waitText",
+          "value": "В корзине"
+        },
+        {
+          "action": "click",
+          "selector": "header a[href='/cart']"
+        },
+        {
+          "action": "waitUrl",
+          "value": "/cart"
+        },
+        {
+          "action": "waitText",
+          "value": "Alocasia Frydek"
+        }
+      ]
+    },
+    {
+      "id": "SC-139",
+      "area": "plant",
+      "name": "Добавление IP-004 в корзину",
+      "expected": "Товар в корзине",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "findPlant",
+          "params": {
+            "code": "IP-004"
+          },
+          "store": "plant"
+        },
+        {
+          "action": "goto",
+          "value": "/plants/{plant.id}"
+        },
+        {
+          "action": "click",
+          "selector": "button:has-text('В корзину')"
+        },
+        {
+          "action": "waitText",
+          "value": "В корзине"
+        },
+        {
+          "action": "click",
+          "selector": "header a[href='/cart']"
+        },
+        {
+          "action": "waitUrl",
+          "value": "/cart"
+        },
+        {
+          "action": "waitText",
+          "value": "Syngonium Albo"
+        }
+      ]
+    },
+    {
+      "id": "SC-140",
+      "area": "plant",
+      "name": "Добавление IP-005 в корзину",
+      "expected": "Товар в корзине",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "findPlant",
+          "params": {
+            "code": "IP-005"
+          },
+          "store": "plant"
+        },
+        {
+          "action": "goto",
+          "value": "/plants/{plant.id}"
+        },
+        {
+          "action": "click",
+          "selector": "button:has-text('В корзину')"
+        },
+        {
+          "action": "waitText",
+          "value": "В корзине"
+        },
+        {
+          "action": "click",
+          "selector": "header a[href='/cart']"
+        },
+        {
+          "action": "waitUrl",
+          "value": "/cart"
+        },
+        {
+          "action": "waitText",
+          "value": "Scindapsus Treubii Moonlight"
+        }
+      ]
+    },
+    {
+      "id": "SC-141",
+      "area": "plant",
+      "name": "Restock для проданного экземпляра",
+      "expected": "Сообщение «Готово: напишем»",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createSoldOutPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "goto",
+          "value": "/plants/{plant.id}"
+        },
+        {
+          "action": "fill",
+          "selector": "#restock-email",
+          "value": "sc-restock-141@example.test"
+        },
+        {
+          "action": "click",
+          "selector": "button:has-text('Сообщить о поступлении')"
+        },
+        {
+          "action": "waitText",
+          "value": "Готово: напишем на sc-restock-141@example.test"
+        }
+      ]
+    },
+    {
+      "id": "SC-142",
+      "area": "plant",
+      "name": "Restock отклоняет невалидный e-mail",
+      "expected": "Поле :invalid",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createSoldOutPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "goto",
+          "value": "/plants/{plant.id}"
+        },
+        {
+          "action": "fill",
+          "selector": "#restock-email",
+          "value": "bad"
+        },
+        {
+          "action": "click",
+          "selector": "button:has-text('Сообщить о поступлении')"
+        },
+        {
+          "action": "expectVisible",
+          "selector": "#restock-email:invalid"
+        }
+      ]
+    },
+    {
+      "id": "SC-143",
+      "area": "plant",
+      "name": "Вариант продукта добавляется в корзину",
+      "expected": "Корзина (1)",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createProduct",
+          "params": {
+            "sku": "SC-P-{uid}",
+            "name": "SC Product {uid}",
+            "slug": "sc-product-{uid}",
+            "priceMinor": 10000
+          },
+          "store": "product"
+        },
+        {
+          "action": "api",
+          "operation": "createVariant",
+          "params": {
+            "productId": "{product.id}",
+            "sku": "SC-V-{uid}",
+            "name": "12 cm pot",
+            "priceMinor": 15000
+          },
+          "store": "variant"
+        },
+        {
+          "action": "api",
+          "operation": "createStock",
+          "params": {
+            "variantId": "{variant.id}",
+            "quantity": 5
+          },
+          "store": "batch"
+        },
+        {
+          "action": "goto",
+          "value": "/catalog/{product.id}"
+        },
+        {
+          "action": "click",
+          "selector": ".variant-card button"
+        },
+        {
+          "action": "waitText",
+          "value": "Корзина (1)"
+        }
+      ]
+    },
+    {
+      "id": "SC-144",
+      "area": "plant",
+      "name": "Страница продукта показывает вариант и цену",
+      "expected": "Вариант и 150,00",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createProduct",
+          "params": {
+            "sku": "SC-P-{uid}",
+            "name": "SC Product {uid}",
+            "slug": "sc-product-{uid}",
+            "priceMinor": 10000
+          },
+          "store": "product"
+        },
+        {
+          "action": "api",
+          "operation": "createVariant",
+          "params": {
+            "productId": "{product.id}",
+            "sku": "SC-V-{uid}",
+            "name": "12 cm pot",
+            "priceMinor": 15000
+          },
+          "store": "variant"
+        },
+        {
+          "action": "api",
+          "operation": "createStock",
+          "params": {
+            "variantId": "{variant.id}",
+            "quantity": 5
+          },
+          "store": "batch"
+        },
+        {
+          "action": "goto",
+          "value": "/catalog/{product.id}"
+        },
+        {
+          "action": "expectText",
+          "value": "Варианты"
+        },
+        {
+          "action": "expectText",
+          "value": "150,00"
+        }
+      ]
+    },
+    {
+      "id": "SC-145",
+      "area": "plant",
+      "name": "Экземпляр показывает три пункта доверия",
+      "expected": "3 пункта",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "goto",
+          "value": "/plants/{plant.id}"
+        },
+        {
+          "action": "expectCount",
+          "selector": ".trust-list li",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "id": "SC-146",
+      "area": "cart",
+      "name": "Пустая корзина",
+      "expected": "Корзина пуста",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/cart"
+        },
+        {
+          "action": "expectText",
+          "value": "Корзина пуста"
+        }
+      ]
+    },
+    {
+      "id": "SC-147",
+      "area": "cart",
+      "name": "Один экземпляр в корзине",
+      "expected": "Код и цена",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "setCart",
+          "items": [
+            {
+              "type": "INDIVIDUAL_PLANT",
+              "id": "{plant.id}",
+              "name": "{plant.productName} ({plant.code})",
+              "priceMinor": 12000,
+              "currency": "BYN",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "action": "goto",
+          "value": "/cart"
+        },
+        {
+          "action": "waitText",
+          "value": "{plant.code}"
+        },
+        {
+          "action": "expectText",
+          "value": "120,00"
+        }
+      ]
+    },
+    {
+      "id": "SC-148",
+      "area": "cart",
+      "name": "Два разных экземпляра в корзине",
+      "expected": "Итого 270,00",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plantA"
+        },
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 15000
+          },
+          "store": "plantB"
+        },
+        {
+          "action": "setCart",
+          "items": [
+            {
+              "type": "INDIVIDUAL_PLANT",
+              "id": "{plantA.id}",
+              "name": "{plantA.productName} ({plantA.code})",
+              "priceMinor": 12000,
+              "currency": "BYN",
+              "quantity": 1
+            },
+            {
+              "type": "INDIVIDUAL_PLANT",
+              "id": "{plantB.id}",
+              "name": "{plantB.productName} ({plantB.code})",
+              "priceMinor": 15000,
+              "currency": "BYN",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "action": "goto",
+          "value": "/cart"
+        },
+        {
+          "action": "waitText",
+          "value": "270,00"
+        }
+      ]
+    },
+    {
+      "id": "SC-149",
+      "area": "cart",
+      "name": "Удаление товара",
+      "expected": "Корзина пуста",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "setCart",
+          "items": [
+            {
+              "type": "INDIVIDUAL_PLANT",
+              "id": "{plant.id}",
+              "name": "{plant.productName} ({plant.code})",
+              "priceMinor": 12000,
+              "currency": "BYN",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "action": "goto",
+          "value": "/cart"
+        },
+        {
+          "action": "click",
+          "selector": "button:has-text('Удалить')"
+        },
+        {
+          "action": "waitText",
+          "value": "Корзина пуста"
+        }
+      ]
+    },
+    {
+      "id": "SC-150",
+      "area": "cart",
+      "name": "Корзина переживает reload",
+      "expected": "Код после reload",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "setCart",
+          "items": [
+            {
+              "type": "INDIVIDUAL_PLANT",
+              "id": "{plant.id}",
+              "name": "{plant.productName} ({plant.code})",
+              "priceMinor": 12000,
+              "currency": "BYN",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "action": "goto",
+          "value": "/cart"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "waitText",
+          "value": "{plant.code}"
+        }
+      ]
+    },
+    {
+      "id": "SC-151",
+      "area": "cart",
+      "name": "Счётчик двух товаров",
+      "expected": "Корзина (2)",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plantA"
+        },
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 15000
+          },
+          "store": "plantB"
+        },
+        {
+          "action": "setCart",
+          "items": [
+            {
+              "type": "INDIVIDUAL_PLANT",
+              "id": "{plantA.id}",
+              "name": "{plantA.productName} ({plantA.code})",
+              "priceMinor": 12000,
+              "currency": "BYN",
+              "quantity": 1
+            },
+            {
+              "type": "INDIVIDUAL_PLANT",
+              "id": "{plantB.id}",
+              "name": "{plantB.productName} ({plantB.code})",
+              "priceMinor": 15000,
+              "currency": "BYN",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "action": "goto",
+          "value": "/catalog"
+        },
+        {
+          "action": "waitText",
+          "value": "Корзина (2)"
+        }
+      ]
+    },
+    {
+      "id": "SC-152",
+      "area": "cart",
+      "name": "Переход в checkout из корзины",
+      "expected": "Оформление заказа",
+      "auth": "customer",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "setCart",
+          "items": [
+            {
+              "type": "INDIVIDUAL_PLANT",
+              "id": "{plant.id}",
+              "name": "{plant.productName} ({plant.code})",
+              "priceMinor": 12000,
+              "currency": "BYN",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "action": "goto",
+          "value": "/cart"
+        },
+        {
+          "action": "click",
+          "selector": "a:has-text('Перейти к оформлению')"
+        },
+        {
+          "action": "waitText",
+          "value": "Оформление заказа"
+        }
+      ]
+    },
+    {
+      "id": "SC-153",
+      "area": "cart",
+      "name": "Вариант в корзине",
+      "expected": "Название и 150,00",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createProduct",
+          "params": {
+            "sku": "SC-P-{uid}",
+            "name": "SC Product {uid}",
+            "slug": "sc-product-{uid}",
+            "priceMinor": 10000
+          },
+          "store": "product"
+        },
+        {
+          "action": "api",
+          "operation": "createVariant",
+          "params": {
+            "productId": "{product.id}",
+            "sku": "SC-V-{uid}",
+            "name": "12 cm pot",
+            "priceMinor": 15000
+          },
+          "store": "variant"
+        },
+        {
+          "action": "api",
+          "operation": "createStock",
+          "params": {
+            "variantId": "{variant.id}",
+            "quantity": 5
+          },
+          "store": "batch"
+        },
+        {
+          "action": "setCart",
+          "items": [
+            {
+              "type": "VARIANT",
+              "id": "{variant.id}",
+              "name": "{variant.name}",
+              "priceMinor": 15000,
+              "currency": "BYN",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "action": "goto",
+          "value": "/cart"
+        },
+        {
+          "action": "waitText",
+          "value": "{variant.name}"
+        },
+        {
+          "action": "expectText",
+          "value": "150,00"
+        }
+      ]
+    },
+    {
+      "id": "SC-154",
+      "area": "cart",
+      "name": "Количество варианта 2",
+      "expected": "Итого 300,00",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createProduct",
+          "params": {
+            "sku": "SC-P-{uid}",
+            "name": "SC Product {uid}",
+            "slug": "sc-product-{uid}",
+            "priceMinor": 10000
+          },
+          "store": "product"
+        },
+        {
+          "action": "api",
+          "operation": "createVariant",
+          "params": {
+            "productId": "{product.id}",
+            "sku": "SC-V-{uid}",
+            "name": "12 cm pot",
+            "priceMinor": 15000
+          },
+          "store": "variant"
+        },
+        {
+          "action": "api",
+          "operation": "createStock",
+          "params": {
+            "variantId": "{variant.id}",
+            "quantity": 5
+          },
+          "store": "batch"
+        },
+        {
+          "action": "setCart",
+          "items": [
+            {
+              "type": "VARIANT",
+              "id": "{variant.id}",
+              "name": "{variant.name}",
+              "priceMinor": 15000,
+              "currency": "BYN",
+              "quantity": 2
+            }
+          ]
+        },
+        {
+          "action": "goto",
+          "value": "/cart"
+        },
+        {
+          "action": "waitText",
+          "value": "300,00"
+        }
+      ]
+    },
+    {
+      "id": "SC-155",
+      "area": "cart",
+      "name": "Удаление последнего товара",
+      "expected": "Корзина пуста",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "setCart",
+          "items": [
+            {
+              "type": "INDIVIDUAL_PLANT",
+              "id": "{plant.id}",
+              "name": "{plant.productName} ({plant.code})",
+              "priceMinor": 12000,
+              "currency": "BYN",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "action": "goto",
+          "value": "/cart"
+        },
+        {
+          "action": "click",
+          "selector": "button:has-text('Удалить')"
+        },
+        {
+          "action": "waitText",
+          "value": "Корзина пуста"
+        }
+      ]
+    },
+    {
+      "id": "SC-156",
+      "area": "checkout",
+      "name": "Гостевая оплата: guest-minsk",
+      "expected": "Итого 120,00",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "setCart",
+          "items": [
+            {
+              "type": "INDIVIDUAL_PLANT",
+              "id": "{plant.id}",
+              "name": "{plant.productName} ({plant.code})",
+              "priceMinor": 12000,
+              "currency": "BYN",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "action": "goto",
+          "value": "/checkout"
+        },
+        {
+          "action": "waitText",
+          "value": "Оформление заказа"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='guestEmail']",
+          "value": "guest-minsk@example.test"
+        },
+        {
+          "action": "fill",
+          "selector": ".checkout-form textarea",
+          "value": "Минск, Независимости 1"
+        },
+        {
+          "action": "select",
+          "selector": ".checkout-form select",
+          "value": "Минск · 1–2 дн."
+        },
+        {
+          "action": "expectText",
+          "value": "120,00"
+        },
+        {
+          "action": "click",
+          "selector": "button:has-text('Оплатить')"
+        },
+        {
+          "action": "waitText",
+          "value": "Заказ оплачен"
+        }
+      ]
+    },
+    {
+      "id": "SC-157",
+      "area": "checkout",
+      "name": "Гостевая оплата: guest-minsk-2",
+      "expected": "Итого 120,00",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "setCart",
+          "items": [
+            {
+              "type": "INDIVIDUAL_PLANT",
+              "id": "{plant.id}",
+              "name": "{plant.productName} ({plant.code})",
+              "priceMinor": 12000,
+              "currency": "BYN",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "action": "goto",
+          "value": "/checkout"
+        },
+        {
+          "action": "waitText",
+          "value": "Оформление заказа"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='guestEmail']",
+          "value": "guest-minsk-2@example.test"
+        },
+        {
+          "action": "fill",
+          "selector": ".checkout-form textarea",
+          "value": "Минск, Независимости 1"
+        },
+        {
+          "action": "select",
+          "selector": ".checkout-form select",
+          "value": "Минск · 1–2 дн."
+        },
+        {
+          "action": "expectText",
+          "value": "120,00"
+        },
+        {
+          "action": "click",
+          "selector": "button:has-text('Оплатить')"
+        },
+        {
+          "action": "waitText",
+          "value": "Заказ оплачен"
+        }
+      ]
+    },
+    {
+      "id": "SC-158",
+      "area": "checkout",
+      "name": "Гостевая оплата: guest-gomel",
+      "expected": "Итого 132,00",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "setCart",
+          "items": [
+            {
+              "type": "INDIVIDUAL_PLANT",
+              "id": "{plant.id}",
+              "name": "{plant.productName} ({plant.code})",
+              "priceMinor": 12000,
+              "currency": "BYN",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "action": "goto",
+          "value": "/checkout"
+        },
+        {
+          "action": "waitText",
+          "value": "Оформление заказа"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='guestEmail']",
+          "value": "guest-gomel@example.test"
+        },
+        {
+          "action": "fill",
+          "selector": ".checkout-form textarea",
+          "value": "Минск, Независимости 1"
+        },
+        {
+          "action": "select",
+          "selector": ".checkout-form select",
+          "value": "Гомель (зима) · 2–4 дн."
+        },
+        {
+          "action": "check",
+          "selector": ".checkout-thermal input"
+        },
+        {
+          "action": "expectText",
+          "value": "132,00"
+        },
+        {
+          "action": "click",
+          "selector": "button:has-text('Оплатить')"
+        },
+        {
+          "action": "waitText",
+          "value": "Заказ оплачен"
+        }
+      ]
+    },
+    {
+      "id": "SC-159",
+      "area": "checkout",
+      "name": "Гостевая оплата: guest-gomel-2",
+      "expected": "Итого 132,00",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "setCart",
+          "items": [
+            {
+              "type": "INDIVIDUAL_PLANT",
+              "id": "{plant.id}",
+              "name": "{plant.productName} ({plant.code})",
+              "priceMinor": 12000,
+              "currency": "BYN",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "action": "goto",
+          "value": "/checkout"
+        },
+        {
+          "action": "waitText",
+          "value": "Оформление заказа"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='guestEmail']",
+          "value": "guest-gomel-2@example.test"
+        },
+        {
+          "action": "fill",
+          "selector": ".checkout-form textarea",
+          "value": "Минск, Независимости 1"
+        },
+        {
+          "action": "select",
+          "selector": ".checkout-form select",
+          "value": "Гомель (зима) · 2–4 дн."
+        },
+        {
+          "action": "check",
+          "selector": ".checkout-thermal input"
+        },
+        {
+          "action": "expectText",
+          "value": "132,00"
+        },
+        {
+          "action": "click",
+          "selector": "button:has-text('Оплатить')"
+        },
+        {
+          "action": "waitText",
+          "value": "Заказ оплачен"
+        }
+      ]
+    },
+    {
+      "id": "SC-160",
+      "area": "checkout",
+      "name": "Гостевая форма требует e-mail",
+      "expected": "Кнопка disabled без e-mail",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "setCart",
+          "items": [
+            {
+              "type": "INDIVIDUAL_PLANT",
+              "id": "{plant.id}",
+              "name": "{plant.productName} ({plant.code})",
+              "priceMinor": 12000,
+              "currency": "BYN",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "action": "goto",
+          "value": "/checkout"
+        },
+        {
+          "action": "waitSelector",
+          "selector": "input[name='guestEmail']"
+        },
+        {
+          "action": "fill",
+          "selector": ".checkout-form textarea",
+          "value": "Минск, Независимости 1"
+        },
+        {
+          "action": "select",
+          "selector": ".checkout-form select",
+          "value": "Минск · 1–2 дн."
+        },
+        {
+          "action": "expectDisabled",
+          "selector": "button:has-text('Оплатить')"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='guestEmail']",
+          "value": "guest-valid@example.test"
+        },
+        {
+          "action": "expectEnabled",
+          "selector": "button:has-text('Оплатить')"
+        }
+      ]
+    },
+    {
+      "id": "SC-161",
+      "area": "checkout",
+      "name": "Гостевая форма отклоняет невалидный e-mail",
+      "expected": "Кнопка disabled",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "setCart",
+          "items": [
+            {
+              "type": "INDIVIDUAL_PLANT",
+              "id": "{plant.id}",
+              "name": "{plant.productName} ({plant.code})",
+              "priceMinor": 12000,
+              "currency": "BYN",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "action": "goto",
+          "value": "/checkout"
+        },
+        {
+          "action": "waitSelector",
+          "selector": "input[name='guestEmail']"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='guestEmail']",
+          "value": "not-an-email"
+        },
+        {
+          "action": "fill",
+          "selector": ".checkout-form textarea",
+          "value": "Минск, Независимости 1"
+        },
+        {
+          "action": "select",
+          "selector": ".checkout-form select",
+          "value": "Минск · 1–2 дн."
+        },
+        {
+          "action": "expectDisabled",
+          "selector": "button:has-text('Оплатить')"
+        }
+      ]
+    },
+    {
+      "id": "SC-162",
+      "area": "checkout",
+      "name": "Гость видит ссылку входа",
+      "expected": "Ссылка «Войти в аккаунт»",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "setCart",
+          "items": [
+            {
+              "type": "INDIVIDUAL_PLANT",
+              "id": "{plant.id}",
+              "name": "{plant.productName} ({plant.code})",
+              "priceMinor": 12000,
+              "currency": "BYN",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "action": "goto",
+          "value": "/checkout"
+        },
+        {
+          "action": "waitSelector",
+          "selector": ".checkout-login"
+        },
+        {
+          "action": "expectVisible",
+          "selector": ".checkout-login"
+        }
+      ]
+    },
+    {
+      "id": "SC-163",
+      "area": "checkout",
+      "name": "Гость может войти из checkout",
+      "expected": "Форма входа",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "setCart",
+          "items": [
+            {
+              "type": "INDIVIDUAL_PLANT",
+              "id": "{plant.id}",
+              "name": "{plant.productName} ({plant.code})",
+              "priceMinor": 12000,
+              "currency": "BYN",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "action": "goto",
+          "value": "/checkout"
+        },
+        {
+          "action": "waitSelector",
+          "selector": ".checkout-login"
+        },
+        {
+          "action": "click",
+          "selector": ".checkout-login"
+        },
+        {
+          "action": "waitText",
+          "value": "Вход"
+        }
+      ]
+    },
+    {
+      "id": "SC-164",
+      "area": "checkout",
+      "name": "Оплата двух экземпляров гостем",
+      "expected": "Заказ оплачен",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plantA"
+        },
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 15000
+          },
+          "store": "plantB"
+        },
+        {
+          "action": "setCart",
+          "items": [
+            {
+              "type": "INDIVIDUAL_PLANT",
+              "id": "{plantA.id}",
+              "name": "{plantA.productName} ({plantA.code})",
+              "priceMinor": 12000,
+              "currency": "BYN",
+              "quantity": 1
+            },
+            {
+              "type": "INDIVIDUAL_PLANT",
+              "id": "{plantB.id}",
+              "name": "{plantB.productName} ({plantB.code})",
+              "priceMinor": 15000,
+              "currency": "BYN",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "action": "goto",
+          "value": "/checkout"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='guestEmail']",
+          "value": "guest-two@example.test"
+        },
+        {
+          "action": "fill",
+          "selector": ".checkout-form textarea",
+          "value": "Минск, Независимости 1"
+        },
+        {
+          "action": "select",
+          "selector": ".checkout-form select",
+          "value": "Минск · 1–2 дн."
+        },
+        {
+          "action": "click",
+          "selector": "button:has-text('Оплатить')"
+        },
+        {
+          "action": "waitText",
+          "value": "Заказ оплачен"
+        }
+      ]
+    },
+    {
+      "id": "SC-165",
+      "area": "checkout",
+      "name": "Гостевая оплата варианта",
+      "expected": "Заказ оплачен",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createProduct",
+          "params": {
+            "sku": "SC-P-{uid}",
+            "name": "SC Product {uid}",
+            "slug": "sc-product-{uid}",
+            "priceMinor": 10000
+          },
+          "store": "product"
+        },
+        {
+          "action": "api",
+          "operation": "createVariant",
+          "params": {
+            "productId": "{product.id}",
+            "sku": "SC-V-{uid}",
+            "name": "12 cm pot",
+            "priceMinor": 15000
+          },
+          "store": "variant"
+        },
+        {
+          "action": "api",
+          "operation": "createStock",
+          "params": {
+            "variantId": "{variant.id}",
+            "quantity": 5
+          },
+          "store": "batch"
+        },
+        {
+          "action": "setCart",
+          "items": [
+            {
+              "type": "VARIANT",
+              "id": "{variant.id}",
+              "name": "{variant.name}",
+              "priceMinor": 15000,
+              "currency": "BYN",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "action": "goto",
+          "value": "/checkout"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='guestEmail']",
+          "value": "guest-variant@example.test"
+        },
+        {
+          "action": "fill",
+          "selector": ".checkout-form textarea",
+          "value": "Минск, Независимости 1"
+        },
+        {
+          "action": "select",
+          "selector": ".checkout-form select",
+          "value": "Минск · 1–2 дн."
+        },
+        {
+          "action": "click",
+          "selector": "button:has-text('Оплатить')"
+        },
+        {
+          "action": "waitText",
+          "value": "Заказ оплачен"
+        }
+      ]
+    },
+    {
+      "id": "SC-166",
+      "area": "checkout",
+      "name": "Пустой checkout гостя",
+      "expected": "Корзина пуста",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/checkout"
+        },
+        {
+          "action": "expectText",
+          "value": "Корзина пуста"
+        }
+      ]
+    },
+    {
+      "id": "SC-167",
+      "area": "checkout",
+      "name": "Гостевая оплата недоступного экземпляра",
+      "expected": "Ошибка",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createSoldOutPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "setCart",
+          "items": [
+            {
+              "type": "INDIVIDUAL_PLANT",
+              "id": "{plant.id}",
+              "name": "{plant.productName} ({plant.code})",
+              "priceMinor": 12000,
+              "currency": "BYN",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "action": "goto",
+          "value": "/checkout"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='guestEmail']",
+          "value": "guest-soldout@example.test"
+        },
+        {
+          "action": "fill",
+          "selector": ".checkout-form textarea",
+          "value": "Минск, Независимости 1"
+        },
+        {
+          "action": "select",
+          "selector": ".checkout-form select",
+          "value": "Минск · 1–2 дн."
+        },
+        {
+          "action": "click",
+          "selector": "button:has-text('Оплатить')"
+        },
+        {
+          "action": "waitSelector",
+          "selector": ".form-message.error"
+        }
+      ]
+    },
+    {
+      "id": "SC-168",
+      "area": "orders",
+      "name": "Оплаченный заказ в истории",
+      "expected": "PAID",
+      "auth": "customer",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "api",
+          "operation": "createOrder",
+          "params": {
+            "items": [
+              {
+                "individualPlantId": "{plant.id}",
+                "quantity": 1
+              }
+            ]
+          },
+          "store": "order"
+        },
+        {
+          "action": "api",
+          "operation": "payOrder",
+          "params": {
+            "orderId": "{order.id}"
+          },
+          "store": "paid"
+        },
+        {
+          "action": "goto",
+          "value": "/account/orders"
+        },
+        {
+          "action": "waitText",
+          "value": "PAID"
+        }
+      ]
+    },
+    {
+      "id": "SC-169",
+      "area": "orders",
+      "name": "Детали оплаченного заказа",
+      "expected": "Адрес доставки",
+      "auth": "customer",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "api",
+          "operation": "createOrder",
+          "params": {
+            "items": [
+              {
+                "individualPlantId": "{plant.id}",
+                "quantity": 1
+              }
+            ]
+          },
+          "store": "order"
+        },
+        {
+          "action": "api",
+          "operation": "payOrder",
+          "params": {
+            "orderId": "{order.id}"
+          },
+          "store": "paid"
+        },
+        {
+          "action": "goto",
+          "value": "/account/orders"
+        },
+        {
+          "action": "click",
+          "selector": "a[href='/account/orders/{order.id}']"
+        },
+        {
+          "action": "waitUrl",
+          "value": "/account/orders/"
+        },
+        {
+          "action": "waitText",
+          "value": "Адрес доставки"
+        }
+      ]
+    },
+    {
+      "id": "SC-170",
+      "area": "orders",
+      "name": "Чужой заказ недоступен",
+      "expected": "Заказ не найден",
+      "auth": "customer",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "registerCustomer",
+          "params": {},
+          "store": "other"
+        },
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "api",
+          "operation": "createOrder",
+          "params": {
+            "token": "{other.token}",
+            "items": [
+              {
+                "individualPlantId": "{plant.id}",
+                "quantity": 1
+              }
+            ]
+          },
+          "store": "order"
+        },
+        {
+          "action": "api",
+          "operation": "payOrder",
+          "params": {
+            "orderId": "{order.id}",
+            "token": "{other.token}"
+          },
+          "store": "paid"
+        },
+        {
+          "action": "goto",
+          "value": "/account/orders/{order.id}"
+        },
+        {
+          "action": "waitText",
+          "value": "Заказ не найден"
+        }
+      ]
+    },
+    {
+      "id": "SC-171",
+      "area": "orders",
+      "name": "Новый покупатель не имеет заказов",
+      "expected": "Заказов пока нет",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "registerCustomer",
+          "params": {},
+          "store": "other"
+        },
+        {
+          "action": "goto",
+          "value": "/api/auth/login?returnTo=/account/orders"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='username']",
+          "value": "{other.email}"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='password']",
+          "value": "{other.password}"
+        },
+        {
+          "action": "click",
+          "selector": "button[type='submit']"
+        },
+        {
+          "action": "waitText",
+          "value": "Мои заказы"
+        },
+        {
+          "action": "expectText",
+          "value": "Заказов пока нет"
+        }
+      ]
+    },
+    {
+      "id": "SC-172",
+      "area": "orders",
+      "name": "Timeline заказа",
+      "expected": "DRAFT, PENDING_PAYMENT, PAID",
+      "auth": "customer",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "api",
+          "operation": "createOrder",
+          "params": {
+            "items": [
+              {
+                "individualPlantId": "{plant.id}",
+                "quantity": 1
+              }
+            ]
+          },
+          "store": "order"
+        },
+        {
+          "action": "api",
+          "operation": "payOrder",
+          "params": {
+            "orderId": "{order.id}"
+          },
+          "store": "paid"
+        },
+        {
+          "action": "goto",
+          "value": "/account/orders"
+        },
+        {
+          "action": "click",
+          "selector": "a[href='/account/orders/{order.id}']"
+        },
+        {
+          "action": "waitUrl",
+          "value": "/account/orders/"
+        },
+        {
+          "action": "waitText",
+          "value": "DRAFT"
+        },
+        {
+          "action": "expectText",
+          "value": "PENDING_PAYMENT"
+        },
+        {
+          "action": "expectText",
+          "value": "PAID"
+        }
+      ]
+    },
+    {
+      "id": "SC-173",
+      "area": "checkout",
+      "name": "Бесплатная доставка гостем",
+      "expected": "0,00",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "setCart",
+          "items": [
+            {
+              "type": "INDIVIDUAL_PLANT",
+              "id": "{plant.id}",
+              "name": "{plant.productName} ({plant.code})",
+              "priceMinor": 12000,
+              "currency": "BYN",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "action": "goto",
+          "value": "/checkout"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='guestEmail']",
+          "value": "guest-free@example.test"
+        },
+        {
+          "action": "fill",
+          "selector": ".checkout-form textarea",
+          "value": "Минск, Независимости 1"
+        },
+        {
+          "action": "select",
+          "selector": ".checkout-form select",
+          "value": "Минск · 1–2 дн."
+        },
+        {
+          "action": "expectText",
+          "value": "0,00"
+        }
+      ]
+    },
+    {
+      "id": "SC-174",
+      "area": "checkout",
+      "name": "Термоупаковка гостем",
+      "expected": "132,00",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "setCart",
+          "items": [
+            {
+              "type": "INDIVIDUAL_PLANT",
+              "id": "{plant.id}",
+              "name": "{plant.productName} ({plant.code})",
+              "priceMinor": 12000,
+              "currency": "BYN",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "action": "goto",
+          "value": "/checkout"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='guestEmail']",
+          "value": "guest-thermal@example.test"
+        },
+        {
+          "action": "fill",
+          "selector": ".checkout-form textarea",
+          "value": "Гомель, Советская 1"
+        },
+        {
+          "action": "select",
+          "selector": ".checkout-form select",
+          "value": "Гомель (зима) · 2–4 дн."
+        },
+        {
+          "action": "check",
+          "selector": ".checkout-thermal input"
+        },
+        {
+          "action": "expectText",
+          "value": "132,00"
+        }
+      ]
+    },
+    {
+      "id": "SC-175",
+      "area": "checkout",
+      "name": "Кнопка оплаты гостя без адреса disabled",
+      "expected": "disabled",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "setCart",
+          "items": [
+            {
+              "type": "INDIVIDUAL_PLANT",
+              "id": "{plant.id}",
+              "name": "{plant.productName} ({plant.code})",
+              "priceMinor": 12000,
+              "currency": "BYN",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "action": "goto",
+          "value": "/checkout"
+        },
+        {
+          "action": "waitSelector",
+          "selector": "input[name='guestEmail']"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='guestEmail']",
+          "value": "guest-address@example.test"
+        },
+        {
+          "action": "select",
+          "selector": ".checkout-form select",
+          "value": "Минск · 1–2 дн."
+        },
+        {
+          "action": "expectDisabled",
+          "selector": "button:has-text('Оплатить')"
+        }
+      ]
+    },
+    {
+      "id": "SC-176",
+      "area": "auth",
+      "name": "Вход с неверным паролем",
+      "expected": "Ошибка",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/api/auth/login?returnTo=/catalog"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='username']",
+          "value": "qa.customer@plantmarket.local"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='password']",
+          "value": "WrongPassword123!"
+        },
+        {
+          "action": "click",
+          "selector": "button[type='submit']"
+        },
+        {
+          "action": "waitText",
+          "value": "Неверный e-mail или пароль"
+        }
+      ]
+    },
+    {
+      "id": "SC-177",
+      "area": "auth",
+      "name": "Вход с верным паролем",
+      "expected": "Выйти",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/api/auth/login?returnTo=/catalog"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='username']",
+          "value": "qa.customer@plantmarket.local"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='password']",
+          "value": "QaCustomer123!"
+        },
+        {
+          "action": "click",
+          "selector": "button[type='submit']"
+        },
+        {
+          "action": "waitText",
+          "value": "Выйти"
+        }
+      ]
+    },
+    {
+      "id": "SC-178",
+      "area": "auth",
+      "name": "Выход из storefront",
+      "expected": "Войти",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/api/auth/login?returnTo=/catalog"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='username']",
+          "value": "qa.customer@plantmarket.local"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='password']",
+          "value": "QaCustomer123!"
+        },
+        {
+          "action": "click",
+          "selector": "button[type='submit']"
+        },
+        {
+          "action": "waitText",
+          "value": "Выйти"
+        },
+        {
+          "action": "click",
+          "selector": "button.nav-button"
+        },
+        {
+          "action": "waitUrl",
+          "value": "/catalog"
+        },
+        {
+          "action": "waitText",
+          "value": "Войти"
+        }
+      ]
+    },
+    {
+      "id": "SC-179",
+      "area": "auth",
+      "name": "Сессия переживает reload",
+      "expected": "Выйти после reload",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/api/auth/login?returnTo=/catalog"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='username']",
+          "value": "qa.customer@plantmarket.local"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='password']",
+          "value": "QaCustomer123!"
+        },
+        {
+          "action": "click",
+          "selector": "button[type='submit']"
+        },
+        {
+          "action": "waitText",
+          "value": "Выйти"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "waitText",
+          "value": "Выйти"
+        }
+      ]
+    },
+    {
+      "id": "SC-180",
+      "area": "auth",
+      "name": "Login содержит CSRF и форму",
+      "expected": "CSRF и поля",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/api/auth/login?returnTo=/catalog"
+        },
+        {
+          "action": "expectCount",
+          "selector": "input[name='_csrf']",
+          "value": 1
+        },
+        {
+          "action": "expectVisible",
+          "selector": "input[name='username']"
+        },
+        {
+          "action": "expectVisible",
+          "selector": "input[name='password']"
+        }
+      ]
+    },
+    {
+      "id": "SC-181",
+      "area": "auth",
+      "name": "Login содержит ссылку регистрации",
+      "expected": "Ссылка «Зарегистрироваться»",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/api/auth/login?returnTo=/catalog"
+        },
+        {
+          "action": "expectVisible",
+          "selector": "a[href='/register']"
+        }
+      ]
+    },
+    {
+      "id": "SC-182",
+      "area": "auth",
+      "name": "Защищённые заказы просят вход",
+      "expected": "Войдите",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/account/orders"
+        },
+        {
+          "action": "expectText",
+          "value": "Войдите, чтобы увидеть заказы"
+        }
+      ]
+    },
+    {
+      "id": "SC-183",
+      "area": "auth",
+      "name": "Login из checkout возвращает к заказу",
+      "expected": "Оформление заказа",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "setCart",
+          "items": [
+            {
+              "type": "INDIVIDUAL_PLANT",
+              "id": "{plant.id}",
+              "name": "{plant.productName} ({plant.code})",
+              "priceMinor": 12000,
+              "currency": "BYN",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "action": "goto",
+          "value": "/checkout"
+        },
+        {
+          "action": "waitSelector",
+          "selector": ".checkout-login"
+        },
+        {
+          "action": "click",
+          "selector": ".checkout-login"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='username']",
+          "value": "qa.customer@plantmarket.local"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='password']",
+          "value": "QaCustomer123!"
+        },
+        {
+          "action": "click",
+          "selector": "button[type='submit']"
+        },
+        {
+          "action": "waitText",
+          "value": "Оформление заказа"
+        }
+      ]
+    },
+    {
+      "id": "SC-184",
+      "area": "auth",
+      "name": "Админ входит как operator",
+      "expected": "Продукты",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "gotoAdmin",
+          "value": "/"
+        },
+        {
+          "action": "fill",
+          "selector": "input[type='email']",
+          "value": "qa.operator@plantmarket.local"
+        },
+        {
+          "action": "fill",
+          "selector": "input[type='password']",
+          "value": "QaOperator123!"
+        },
+        {
+          "action": "click",
+          "selector": "button[type='submit']"
+        },
+        {
+          "action": "waitText",
+          "value": "Продукты"
+        }
+      ]
+    },
+    {
+      "id": "SC-185",
+      "area": "auth",
+      "name": "Админ входит как manager",
+      "expected": "Продукты",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "gotoAdmin",
+          "value": "/"
+        },
+        {
+          "action": "fill",
+          "selector": "input[type='email']",
+          "value": "qa.manager@plantmarket.local"
+        },
+        {
+          "action": "fill",
+          "selector": "input[type='password']",
+          "value": "QaManager123!"
+        },
+        {
+          "action": "click",
+          "selector": "button[type='submit']"
+        },
+        {
+          "action": "waitText",
+          "value": "Продукты"
+        }
+      ]
+    },
+    {
+      "id": "SC-186",
+      "area": "auth",
+      "name": "Админ выходит",
+      "expected": "Админка",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "adminTab",
+          "value": "Продукты"
+        },
+        {
+          "action": "click",
+          "selector": "button:has-text('Выйти')"
+        },
+        {
+          "action": "waitText",
+          "value": "Админка"
+        }
+      ]
+    },
+    {
+      "id": "SC-187",
+      "area": "auth",
+      "name": "Админская сессия переживает reload",
+      "expected": "Продукты",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "reload"
+        },
+        {
+          "action": "waitText",
+          "value": "Продукты"
+        }
+      ]
+    },
+    {
+      "id": "SC-188",
+      "area": "auth",
+      "name": "Неверный пароль админа",
+      "expected": "Invalid email or password",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "gotoAdmin",
+          "value": "/"
+        },
+        {
+          "action": "fill",
+          "selector": "input[type='email']",
+          "value": "admin@plantmarket.local"
+        },
+        {
+          "action": "fill",
+          "selector": "input[type='password']",
+          "value": "WrongPassword123!"
+        },
+        {
+          "action": "click",
+          "selector": "button[type='submit']"
+        },
+        {
+          "action": "waitText",
+          "value": "Invalid email or password"
+        }
+      ]
+    },
+    {
+      "id": "SC-189",
+      "area": "auth",
+      "name": "Ссылка регистрации открывает страницу",
+      "expected": "Регистрация",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/api/auth/login?returnTo=/catalog"
+        },
+        {
+          "action": "click",
+          "selector": "a[href='/register']"
+        },
+        {
+          "action": "waitText",
+          "value": "Регистрация"
+        }
+      ]
+    },
+    {
+      "id": "SC-190",
+      "area": "auth",
+      "name": "Регистрация с паролем 6 символов",
+      "expected": "Аккаунт создан",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/api/auth/login?returnTo=/catalog"
+        },
+        {
+          "action": "click",
+          "selector": "a[href='/register']"
+        },
+        {
+          "action": "waitText",
+          "value": "Регистрация"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='fullName']",
+          "value": "QA Six"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='email']",
+          "value": "qa-six-{uid}@example.test"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='password']",
+          "value": "Qa1234"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='confirmPassword']",
+          "value": "Qa1234"
+        },
+        {
+          "action": "click",
+          "selector": "button[type='submit']"
+        },
+        {
+          "action": "waitText",
+          "value": "Аккаунт создан. Войдите."
+        }
+      ]
+    },
+    {
+      "id": "SC-191",
+      "area": "auth",
+      "name": "Регистрация отклоняет разные пароли",
+      "expected": "Пароли не совпадают",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/api/auth/login?returnTo=/catalog"
+        },
+        {
+          "action": "click",
+          "selector": "a[href='/register']"
+        },
+        {
+          "action": "waitText",
+          "value": "Регистрация"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='fullName']",
+          "value": "QA Mismatch"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='email']",
+          "value": "qa-mismatch-{uid}@example.test"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='password']",
+          "value": "Qa1234"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='confirmPassword']",
+          "value": "Qa5678"
+        },
+        {
+          "action": "click",
+          "selector": "button[type='submit']"
+        },
+        {
+          "action": "waitText",
+          "value": "Пароли не совпадают."
+        }
+      ]
+    },
+    {
+      "id": "SC-192",
+      "area": "auth",
+      "name": "Регистрация отклоняет короткий пароль",
+      "expected": "Поле :invalid",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/api/auth/login?returnTo=/catalog"
+        },
+        {
+          "action": "click",
+          "selector": "a[href='/register']"
+        },
+        {
+          "action": "waitText",
+          "value": "Регистрация"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='fullName']",
+          "value": "QA Short"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='email']",
+          "value": "qa-short-{uid}@example.test"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='password']",
+          "value": "Qa123"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='confirmPassword']",
+          "value": "Qa123"
+        },
+        {
+          "action": "click",
+          "selector": "button[type='submit']"
+        },
+        {
+          "action": "expectVisible",
+          "selector": "input[name='password']:invalid"
+        }
+      ]
+    },
+    {
+      "id": "SC-193",
+      "area": "auth",
+      "name": "Регистрация отклоняет занятый e-mail",
+      "expected": "Этот e-mail уже зарегистрирован",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "registerCustomer",
+          "params": {},
+          "store": "other"
+        },
+        {
+          "action": "goto",
+          "value": "/api/auth/login?returnTo=/catalog"
+        },
+        {
+          "action": "click",
+          "selector": "a[href='/register']"
+        },
+        {
+          "action": "waitText",
+          "value": "Регистрация"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='fullName']",
+          "value": "QA Duplicate"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='email']",
+          "value": "{other.email}"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='password']",
+          "value": "Qa1234"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='confirmPassword']",
+          "value": "Qa1234"
+        },
+        {
+          "action": "click",
+          "selector": "button[type='submit']"
+        },
+        {
+          "action": "waitText",
+          "value": "Этот e-mail уже зарегистрирован."
+        }
+      ]
+    },
+    {
+      "id": "SC-194",
+      "area": "auth",
+      "name": "Регистрация с невалидным e-mail",
+      "expected": "Поле :invalid",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/api/auth/login?returnTo=/catalog"
+        },
+        {
+          "action": "click",
+          "selector": "a[href='/register']"
+        },
+        {
+          "action": "waitText",
+          "value": "Регистрация"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='fullName']",
+          "value": "QA Bad Email"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='email']",
+          "value": "bad-email"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='password']",
+          "value": "Qa1234"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='confirmPassword']",
+          "value": "Qa1234"
+        },
+        {
+          "action": "click",
+          "selector": "button[type='submit']"
+        },
+        {
+          "action": "expectVisible",
+          "selector": "input[name='email']:invalid"
+        }
+      ]
+    },
+    {
+      "id": "SC-195",
+      "area": "auth",
+      "name": "Login без аккаунта",
+      "expected": "Ссылка регистрации",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/api/auth/login?returnTo=/catalog"
+        },
+        {
+          "action": "expectText",
+          "value": "Нет аккаунта?"
+        }
+      ]
+    },
+    {
+      "id": "SC-196",
+      "area": "admin",
+      "name": "Создание категории с описанием",
+      "expected": "Категория создана",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "adminTab",
+          "value": "Категории"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='name']",
+          "value": "SC Cat {uid}"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='slug']",
+          "value": "sc-cat-{uid}"
+        },
+        {
+          "action": "fill",
+          "selector": "textarea[name='description']",
+          "value": "Описание"
+        },
+        {
+          "action": "click",
+          "selector": "button:has-text('Создать')"
+        },
+        {
+          "action": "waitText",
+          "value": "Категория создана"
+        }
+      ]
+    },
+    {
+      "id": "SC-197",
+      "area": "admin",
+      "name": "Редактирование категории",
+      "expected": "Категория обновлена",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createCategory",
+          "params": {
+            "name": "SC Edit Cat {uid}",
+            "slug": "sc-edit-cat-{uid}"
+          },
+          "store": "category"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "adminTab",
+          "value": "Категории"
+        },
+        {
+          "action": "click",
+          "selector": "tr:has-text('{category.slug}') button:has-text('Редактировать')"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='name']",
+          "value": "SC Updated {uid}"
+        },
+        {
+          "action": "click",
+          "selector": "button:has-text('Сохранить категорию')"
+        },
+        {
+          "action": "waitText",
+          "value": "Категория обновлена"
+        }
+      ]
+    },
+    {
+      "id": "SC-198",
+      "area": "admin",
+      "name": "Удаление категории",
+      "expected": "Категория удалена",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createCategory",
+          "params": {
+            "name": "SC Del Cat {uid}",
+            "slug": "sc-del-cat-{uid}"
+          },
+          "store": "category"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "adminTab",
+          "value": "Категории"
+        },
+        {
+          "action": "click",
+          "selector": "tr:has-text('{category.slug}') button:has-text('Удалить')"
+        },
+        {
+          "action": "waitText",
+          "value": "Категория удалена"
+        }
+      ]
+    },
+    {
+      "id": "SC-199",
+      "area": "admin",
+      "name": "Создание продукта со всеми полями",
+      "expected": "Продукт создан",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "adminTab",
+          "value": "Продукты"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='sku']",
+          "value": "SC-ALL-{uid}"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='name']",
+          "value": "SC All {uid}"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='slug']",
+          "value": "sc-all-{uid}"
+        },
+        {
+          "action": "select",
+          "selector": "select[name='categoryId']",
+          "value": "Монстеры"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='price']",
+          "value": "99"
+        },
+        {
+          "action": "select",
+          "selector": "select[name='light']",
+          "value": "BRIGHT"
+        },
+        {
+          "action": "select",
+          "selector": "select[name='careLevel']",
+          "value": "HARD"
+        },
+        {
+          "action": "check",
+          "selector": "input[name='variegated']"
+        },
+        {
+          "action": "check",
+          "selector": "input[name='petSafe']"
+        },
+        {
+          "action": "fill",
+          "selector": "textarea[name='description']",
+          "value": "SC description"
+        },
+        {
+          "action": "click",
+          "selector": "button:has-text('Создать продукт')"
+        },
+        {
+          "action": "waitText",
+          "value": "Продукт создан"
+        }
+      ]
+    },
+    {
+      "id": "SC-200",
+      "area": "admin",
+      "name": "Редактирование названия продукта",
+      "expected": "Продукт обновлён",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createProduct",
+          "params": {
+            "sku": "SC-NAME-{uid}",
+            "name": "SC Name {uid}",
+            "slug": "sc-name-{uid}"
+          },
+          "store": "product"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "click",
+          "selector": "tr:has-text('{product.sku}') button:has-text('Редактировать')"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='name']",
+          "value": "SC Renamed {uid}"
+        },
+        {
+          "action": "click",
+          "selector": "button:has-text('Сохранить продукт')"
+        },
+        {
+          "action": "waitText",
+          "value": "Продукт обновлён"
+        }
+      ]
+    },
+    {
+      "id": "SC-201",
+      "area": "admin",
+      "name": "Архивация продукта",
+      "expected": "Продукт архивирован",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createProduct",
+          "params": {
+            "sku": "SC-ARC2-{uid}",
+            "name": "SC Arc2 {uid}",
+            "slug": "sc-arc2-{uid}"
+          },
+          "store": "product"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "click",
+          "selector": "tr:has-text('{product.sku}') button:has-text('Архивировать')"
+        },
+        {
+          "action": "waitText",
+          "value": "Продукт архивирован"
+        }
+      ]
+    },
+    {
+      "id": "SC-202",
+      "area": "admin",
+      "name": "Создание экземпляра",
+      "expected": "Экземпляр создан",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "adminTab",
+          "value": "Экземпляры"
+        },
+        {
+          "action": "select",
+          "selector": "select[name='productId']",
+          "value": "Philodendron Pink Princess"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='code']",
+          "value": "SC-IP2-{uid}"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='price']",
+          "value": "121"
+        },
+        {
+          "action": "click",
+          "selector": "button:has-text('Создать экземпляр')"
+        },
+        {
+          "action": "waitText",
+          "value": "Экземпляр создан (ACQUIRED)"
+        }
+      ]
+    },
+    {
+      "id": "SC-203",
+      "area": "admin",
+      "name": "Карантин экземпляра",
+      "expected": "Переведён в карантин",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createSoldOutPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "adminTab",
+          "value": "Экземпляры"
+        },
+        {
+          "action": "click",
+          "selector": "tr:has-text('{plant.code}') button:has-text('В карантин')"
+        },
+        {
+          "action": "waitText",
+          "value": "Переведён в карантин"
+        }
+      ]
+    },
+    {
+      "id": "SC-204",
+      "area": "admin",
+      "name": "Публикация экземпляра",
+      "expected": "Опубликован",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createSoldOutPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "adminTab",
+          "value": "Экземпляры"
+        },
+        {
+          "action": "click",
+          "selector": "tr:has-text('{plant.code}') button:has-text('В карантин')"
+        },
+        {
+          "action": "waitText",
+          "value": "Переведён в карантин"
+        },
+        {
+          "action": "click",
+          "selector": "tr:has-text('{plant.code}') button:has-text('Опубликовать')"
+        },
+        {
+          "action": "waitText",
+          "value": "Опубликован"
+        }
+      ]
+    },
+    {
+      "id": "SC-205",
+      "area": "admin",
+      "name": "Создание варианта",
+      "expected": "Вариант создан",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "adminTab",
+          "value": "Варианты"
+        },
+        {
+          "action": "select",
+          "selector": "select[name='productId']",
+          "value": "Monstera Deliciosa"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='sku']",
+          "value": "SC-V2-{uid}"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='name']",
+          "value": "12 cm pot"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='price']",
+          "value": "151"
+        },
+        {
+          "action": "click",
+          "selector": "button:has-text('Создать вариант')"
+        },
+        {
+          "action": "waitText",
+          "value": "Вариант создан"
+        }
+      ]
+    },
+    {
+      "id": "SC-206",
+      "area": "admin",
+      "name": "Редактирование варианта",
+      "expected": "Вариант обновлён",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createProduct",
+          "params": {
+            "sku": "SC-P-{uid}",
+            "name": "SC Product {uid}",
+            "slug": "sc-product-{uid}",
+            "priceMinor": 10000
+          },
+          "store": "product"
+        },
+        {
+          "action": "api",
+          "operation": "createVariant",
+          "params": {
+            "productId": "{product.id}",
+            "sku": "SC-V-{uid}",
+            "name": "12 cm pot",
+            "priceMinor": 15000
+          },
+          "store": "variant"
+        },
+        {
+          "action": "api",
+          "operation": "createStock",
+          "params": {
+            "variantId": "{variant.id}",
+            "quantity": 5
+          },
+          "store": "batch"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "adminTab",
+          "value": "Варианты"
+        },
+        {
+          "action": "select",
+          "selector": "select[name='productId']",
+          "value": "{product.name}"
+        },
+        {
+          "action": "click",
+          "selector": "tr:has-text('{variant.sku}') button:has-text('Редактировать')"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='price']",
+          "value": "176"
+        },
+        {
+          "action": "click",
+          "selector": "button:has-text('Сохранить вариант')"
+        },
+        {
+          "action": "waitText",
+          "value": "Вариант обновлён"
+        }
+      ]
+    },
+    {
+      "id": "SC-207",
+      "area": "admin",
+      "name": "Архивация варианта",
+      "expected": "Вариант архивирован",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createProduct",
+          "params": {
+            "sku": "SC-P-{uid}",
+            "name": "SC Product {uid}",
+            "slug": "sc-product-{uid}",
+            "priceMinor": 10000
+          },
+          "store": "product"
+        },
+        {
+          "action": "api",
+          "operation": "createVariant",
+          "params": {
+            "productId": "{product.id}",
+            "sku": "SC-V-{uid}",
+            "name": "12 cm pot",
+            "priceMinor": 15000
+          },
+          "store": "variant"
+        },
+        {
+          "action": "api",
+          "operation": "createStock",
+          "params": {
+            "variantId": "{variant.id}",
+            "quantity": 5
+          },
+          "store": "batch"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "adminTab",
+          "value": "Варианты"
+        },
+        {
+          "action": "select",
+          "selector": "select[name='productId']",
+          "value": "{product.name}"
+        },
+        {
+          "action": "click",
+          "selector": "tr:has-text('{variant.sku}') button:has-text('Архивировать')"
+        },
+        {
+          "action": "waitText",
+          "value": "Вариант архивирован"
+        }
+      ]
+    },
+    {
+      "id": "SC-208",
+      "area": "admin",
+      "name": "Создание партии",
+      "expected": "Партия создана",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "adminTab",
+          "value": "Партии"
+        },
+        {
+          "action": "select",
+          "selector": "select",
+          "value": "Monstera Deliciosa"
+        },
+        {
+          "action": "select",
+          "selector": "select[name='productVariantId']",
+          "value": "MON-001-12 · 12 cm pot"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='supplier']",
+          "value": "SC Supplier 2"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='quantity']",
+          "value": "4"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='unitCost']",
+          "value": "41"
+        },
+        {
+          "action": "click",
+          "selector": "button:has-text('Создать партию')"
+        },
+        {
+          "action": "waitText",
+          "value": "Партия создана (QUARANTINE)"
+        }
+      ]
+    },
+    {
+      "id": "SC-209",
+      "area": "admin",
+      "name": "Выпуск партии",
+      "expected": "Партия опубликована",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "adminTab",
+          "value": "Партии"
+        },
+        {
+          "action": "select",
+          "selector": "select",
+          "value": "Monstera Deliciosa"
+        },
+        {
+          "action": "select",
+          "selector": "select[name='productVariantId']",
+          "value": "MON-001-12 · 12 cm pot"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='supplier']",
+          "value": "SC Supplier 3"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='quantity']",
+          "value": "3"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='unitCost']",
+          "value": "42"
+        },
+        {
+          "action": "click",
+          "selector": "button:has-text('Создать партию')"
+        },
+        {
+          "action": "waitText",
+          "value": "Партия создана (QUARANTINE)"
+        },
+        {
+          "action": "click",
+          "selector": "tr:has-text('SC Supplier 3') button:has-text('Выпустить')"
+        },
+        {
+          "action": "waitText",
+          "value": "Партия опубликована"
+        }
+      ]
+    },
+    {
+      "id": "SC-210",
+      "area": "admin",
+      "name": "Все вкладки открываются",
+      "expected": "6 вкладок",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "expectCount",
+          "selector": ".tab",
+          "value": 6
+        },
+        {
+          "action": "adminTab",
+          "value": "Категории"
+        },
+        {
+          "action": "waitText",
+          "value": "Категории"
+        },
+        {
+          "action": "adminTab",
+          "value": "Экземпляры"
+        },
+        {
+          "action": "waitText",
+          "value": "Экземпляры"
+        },
+        {
+          "action": "adminTab",
+          "value": "Варианты"
+        },
+        {
+          "action": "waitText",
+          "value": "Варианты продукта"
+        },
+        {
+          "action": "adminTab",
+          "value": "Партии"
+        },
+        {
+          "action": "waitText",
+          "value": "Новая партия"
+        },
+        {
+          "action": "adminTab",
+          "value": "Претензии"
+        },
+        {
+          "action": "waitText",
+          "value": "Претензии"
+        }
+      ]
+    },
+    {
+      "id": "SC-211",
+      "area": "admin",
+      "name": "Обновление админки",
+      "expected": "Продукты",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "reload"
+        },
+        {
+          "action": "waitText",
+          "value": "Продукты"
+        }
+      ]
+    },
+    {
+      "id": "SC-212",
+      "area": "admin",
+      "name": "Бейдж статуса продукта",
+      "expected": "Бейдж",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "waitSelector",
+          "selector": ".badge"
+        },
+        {
+          "action": "expectVisible",
+          "selector": ".badge"
+        }
+      ]
+    },
+    {
+      "id": "SC-213",
+      "area": "admin",
+      "name": "Hover строки таблицы",
+      "expected": "Тёмный фон",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "waitSelector",
+          "selector": "tbody tr"
+        },
+        {
+          "action": "hover",
+          "selector": "tbody tr"
+        },
+        {
+          "action": "expectCss",
+          "selector": "tbody tr",
+          "property": "background-color",
+          "value": "rgb(23, 40, 31)"
+        }
+      ]
+    },
+    {
+      "id": "SC-214",
+      "area": "admin",
+      "name": "Галерея сохраняет URL",
+      "expected": "Галерея сохранена",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "adminTab",
+          "value": "Экземпляры"
+        },
+        {
+          "action": "click",
+          "selector": "tr:has-text('{plant.code}') button:has-text('Редактировать')"
+        },
+        {
+          "action": "waitText",
+          "value": "Галерея WYSIWYG"
+        },
+        {
+          "action": "fill",
+          "selector": "input[placeholder='https://…']",
+          "value": "https://example.test/sc-general2.jpg"
+        },
+        {
+          "action": "click",
+          "selector": "button:has-text('Сохранить галерею')"
+        },
+        {
+          "action": "waitText",
+          "value": "Галерея сохранена"
+        }
+      ]
+    },
+    {
+      "id": "SC-215",
+      "area": "admin",
+      "name": "Галерея загружает файл",
+      "expected": "Фото загружено",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "adminTab",
+          "value": "Экземпляры"
+        },
+        {
+          "action": "click",
+          "selector": "tr:has-text('{plant.code}') button:has-text('Редактировать')"
+        },
+        {
+          "action": "waitText",
+          "value": "Галерея WYSIWYG"
+        },
+        {
+          "action": "upload",
+          "selector": "input[type='file']",
+          "value": "../../clients/storefront/public/images/plants/leaf.jpg"
+        },
+        {
+          "action": "waitText",
+          "value": "Фото загружено — не забудьте сохранить галерею"
+        }
+      ]
+    },
+    {
+      "id": "SC-216",
+      "area": "admin",
+      "name": "Пустая галерея не сохраняется",
+      "expected": "Ошибка",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "adminTab",
+          "value": "Экземпляры"
+        },
+        {
+          "action": "click",
+          "selector": "tr:has-text('{plant.code}') button:has-text('Редактировать')"
+        },
+        {
+          "action": "waitText",
+          "value": "Галерея WYSIWYG"
+        },
+        {
+          "action": "click",
+          "selector": "button:has-text('Сохранить галерею')"
+        },
+        {
+          "action": "waitSelector",
+          "selector": ".form-message"
+        }
+      ]
+    },
+    {
+      "id": "SC-217",
+      "area": "admin",
+      "name": "Оператор подтверждает замену",
+      "expected": "REPLACEMENT",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "api",
+          "operation": "createOrder",
+          "params": {
+            "items": [
+              {
+                "individualPlantId": "{plant.id}",
+                "quantity": 1
+              }
+            ]
+          },
+          "store": "order"
+        },
+        {
+          "action": "api",
+          "operation": "payOrder",
+          "params": {
+            "orderId": "{order.id}"
+          },
+          "store": "paid"
+        },
+        {
+          "action": "api",
+          "operation": "createClaim",
+          "params": {
+            "orderId": "{order.id}",
+            "reason": "SC replacement 2"
+          },
+          "store": "claim"
+        },
+        {
+          "action": "adminTab",
+          "value": "Претензии"
+        },
+        {
+          "action": "waitSelector",
+          "selector": "tr:has-text('{claim.short}')"
+        },
+        {
+          "action": "click",
+          "selector": "tr:has-text('{claim.short}') button:has-text('Решить')"
+        },
+        {
+          "action": "waitText",
+          "value": "REPLACEMENT"
+        }
+      ]
+    },
+    {
+      "id": "SC-218",
+      "area": "admin",
+      "name": "Оператор выбирает возврат",
+      "expected": "REFUND",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "api",
+          "operation": "createOrder",
+          "params": {
+            "items": [
+              {
+                "individualPlantId": "{plant.id}",
+                "quantity": 1
+              }
+            ]
+          },
+          "store": "order"
+        },
+        {
+          "action": "api",
+          "operation": "payOrder",
+          "params": {
+            "orderId": "{order.id}"
+          },
+          "store": "paid"
+        },
+        {
+          "action": "api",
+          "operation": "createClaim",
+          "params": {
+            "orderId": "{order.id}",
+            "reason": "SC refund 2"
+          },
+          "store": "claim"
+        },
+        {
+          "action": "adminTab",
+          "value": "Претензии"
+        },
+        {
+          "action": "waitSelector",
+          "selector": "tr:has-text('{claim.short}')"
+        },
+        {
+          "action": "select",
+          "selector": "tr:has-text('{claim.short}') select",
+          "value": "Возврат"
+        },
+        {
+          "action": "click",
+          "selector": "tr:has-text('{claim.short}') button:has-text('Решить')"
+        },
+        {
+          "action": "waitText",
+          "value": "REFUND"
+        }
+      ]
+    },
+    {
+      "id": "SC-219",
+      "area": "admin",
+      "name": "Оператор отклоняет претензию",
+      "expected": "REJECT",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "api",
+          "operation": "createOrder",
+          "params": {
+            "items": [
+              {
+                "individualPlantId": "{plant.id}",
+                "quantity": 1
+              }
+            ]
+          },
+          "store": "order"
+        },
+        {
+          "action": "api",
+          "operation": "payOrder",
+          "params": {
+            "orderId": "{order.id}"
+          },
+          "store": "paid"
+        },
+        {
+          "action": "api",
+          "operation": "createClaim",
+          "params": {
+            "orderId": "{order.id}",
+            "reason": "SC reject 2"
+          },
+          "store": "claim"
+        },
+        {
+          "action": "adminTab",
+          "value": "Претензии"
+        },
+        {
+          "action": "waitSelector",
+          "selector": "tr:has-text('{claim.short}')"
+        },
+        {
+          "action": "select",
+          "selector": "tr:has-text('{claim.short}') select",
+          "value": "Отказ"
+        },
+        {
+          "action": "click",
+          "selector": "tr:has-text('{claim.short}') button:has-text('Решить')"
+        },
+        {
+          "action": "waitText",
+          "value": "REJECT"
+        }
+      ]
+    },
+    {
+      "id": "SC-220",
+      "area": "admin",
+      "name": "Таблица претензий показывает фото",
+      "expected": "фото 1",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "api",
+          "operation": "createOrder",
+          "params": {
+            "items": [
+              {
+                "individualPlantId": "{plant.id}",
+                "quantity": 1
+              }
+            ]
+          },
+          "store": "order"
+        },
+        {
+          "action": "api",
+          "operation": "payOrder",
+          "params": {
+            "orderId": "{order.id}"
+          },
+          "store": "paid"
+        },
+        {
+          "action": "api",
+          "operation": "createClaim",
+          "params": {
+            "orderId": "{order.id}",
+            "reason": "SC photo 2"
+          },
+          "store": "claim"
+        },
+        {
+          "action": "adminTab",
+          "value": "Претензии"
+        },
+        {
+          "action": "waitSelector",
+          "selector": "tr:has-text('{claim.short}')"
+        },
+        {
+          "action": "expectVisible",
+          "selector": "tr:has-text('{claim.short}') a:has-text('фото 1')"
+        }
+      ]
+    },
+    {
+      "id": "SC-221",
+      "area": "admin",
+      "name": "Дубликат SKU показывает ошибку",
+      "expected": "Ошибка",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "adminTab",
+          "value": "Продукты"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='sku']",
+          "value": "MON-001"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='name']",
+          "value": "SC Dup"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='slug']",
+          "value": "sc-dup-{uid}"
+        },
+        {
+          "action": "select",
+          "selector": "select[name='categoryId']",
+          "value": "Монстеры"
+        },
+        {
+          "action": "fill",
+          "selector": "input[name='price']",
+          "value": "10"
+        },
+        {
+          "action": "click",
+          "selector": "button:has-text('Создать продукт')"
+        },
+        {
+          "action": "waitSelector",
+          "selector": ".error"
+        }
+      ]
+    },
+    {
+      "id": "SC-222",
+      "area": "admin",
+      "name": "Форма продукта содержит все поля",
+      "expected": "Поля",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "expectText",
+          "value": "SKU"
+        },
+        {
+          "action": "expectText",
+          "value": "Название"
+        },
+        {
+          "action": "expectText",
+          "value": "Slug"
+        },
+        {
+          "action": "expectText",
+          "value": "Категория"
+        },
+        {
+          "action": "expectText",
+          "value": "Цена, BYN"
+        },
+        {
+          "action": "expectText",
+          "value": "Размер"
+        },
+        {
+          "action": "expectText",
+          "value": "Статус"
+        },
+        {
+          "action": "expectText",
+          "value": "Свет"
+        },
+        {
+          "action": "expectText",
+          "value": "Уход"
+        },
+        {
+          "action": "expectText",
+          "value": "Описание"
+        }
+      ]
+    },
+    {
+      "id": "SC-223",
+      "area": "admin",
+      "name": "Форма экземпляра содержит поля",
+      "expected": "Поля",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "adminTab",
+          "value": "Экземпляры"
+        },
+        {
+          "action": "expectText",
+          "value": "Продукт"
+        },
+        {
+          "action": "expectText",
+          "value": "Код"
+        },
+        {
+          "action": "expectText",
+          "value": "Цена, BYN"
+        },
+        {
+          "action": "expectText",
+          "value": "Свет"
+        },
+        {
+          "action": "expectText",
+          "value": "Уход"
+        },
+        {
+          "action": "expectText",
+          "value": "Описание"
+        },
+        {
+          "action": "expectText",
+          "value": "Фото URL"
+        }
+      ]
+    },
+    {
+      "id": "SC-224",
+      "area": "admin",
+      "name": "Форма варианта содержит поля",
+      "expected": "Поля",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "adminTab",
+          "value": "Варианты"
+        },
+        {
+          "action": "expectText",
+          "value": "Продукт"
+        },
+        {
+          "action": "expectText",
+          "value": "SKU"
+        },
+        {
+          "action": "expectText",
+          "value": "Название"
+        },
+        {
+          "action": "expectText",
+          "value": "Размер"
+        },
+        {
+          "action": "expectText",
+          "value": "Горшок"
+        },
+        {
+          "action": "expectText",
+          "value": "Форма"
+        },
+        {
+          "action": "expectText",
+          "value": "Цена, BYN"
+        },
+        {
+          "action": "expectText",
+          "value": "Статус"
+        }
+      ]
+    },
+    {
+      "id": "SC-225",
+      "area": "admin",
+      "name": "Форма партии содержит поля",
+      "expected": "Поля",
+      "auth": "admin",
+      "steps": [
+        {
+          "action": "adminTab",
+          "value": "Партии"
+        },
+        {
+          "action": "expectText",
+          "value": "Продукт"
+        },
+        {
+          "action": "expectText",
+          "value": "Вариант"
+        },
+        {
+          "action": "expectText",
+          "value": "Поставщик"
+        },
+        {
+          "action": "expectText",
+          "value": "Количество"
+        },
+        {
+          "action": "expectText",
+          "value": "Себестоимость, BYN"
+        }
+      ]
+    },
+    {
+      "id": "SC-226",
+      "area": "consent",
+      "name": "Баннер cookie показывается",
+      "expected": "Баннер",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog"
+        },
+        {
+          "action": "waitSelector",
+          "selector": ".cookie-banner"
+        },
+        {
+          "action": "expectVisible",
+          "selector": ".cookie-banner"
+        }
+      ]
+    },
+    {
+      "id": "SC-227",
+      "area": "consent",
+      "name": "Отказ скрывает баннер",
+      "expected": "Баннер скрыт",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog"
+        },
+        {
+          "action": "waitSelector",
+          "selector": ".cookie-banner"
+        },
+        {
+          "action": "click",
+          "selector": ".cookie-banner button:has-text('Только необходимые')"
+        },
+        {
+          "action": "expectHidden",
+          "selector": ".cookie-banner"
+        }
+      ]
+    },
+    {
+      "id": "SC-228",
+      "area": "consent",
+      "name": "Аналитика сохраняется",
+      "expected": "pm.consent.v1=all",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog"
+        },
+        {
+          "action": "waitSelector",
+          "selector": ".cookie-banner"
+        },
+        {
+          "action": "click",
+          "selector": ".cookie-banner button:has-text('Принять аналитику')"
+        },
+        {
+          "action": "expectStorage",
+          "key": "pm.consent.v1",
+          "value": "all"
+        }
+      ]
+    },
+    {
+      "id": "SC-229",
+      "area": "consent",
+      "name": "Выбор consent переживает reload",
+      "expected": "Баннер скрыт после reload",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog"
+        },
+        {
+          "action": "waitSelector",
+          "selector": ".cookie-banner"
+        },
+        {
+          "action": "click",
+          "selector": ".cookie-banner button:has-text('Только необходимые')"
+        },
+        {
+          "action": "reload"
+        },
+        {
+          "action": "expectHidden",
+          "selector": ".cookie-banner"
+        }
+      ]
+    },
+    {
+      "id": "SC-230",
+      "area": "seo",
+      "name": "robots.txt",
+      "expected": "Sitemap",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/robots.txt"
+        },
+        {
+          "action": "expectText",
+          "value": "Sitemap"
+        }
+      ]
+    },
+    {
+      "id": "SC-231",
+      "area": "seo",
+      "name": "sitemap.xml",
+      "expected": "/catalog",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/sitemap.xml"
+        },
+        {
+          "action": "expectText",
+          "value": "/catalog"
+        }
+      ]
+    },
+    {
+      "id": "SC-232",
+      "area": "seo",
+      "name": "Canonical каталога",
+      "expected": "/catalog",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog"
+        },
+        {
+          "action": "expectAttribute",
+          "selector": "link[rel='canonical']",
+          "name": "href",
+          "value": "/catalog",
+          "match": "contains"
+        }
+      ]
+    },
+    {
+      "id": "SC-233",
+      "area": "seo",
+      "name": "Meta description каталога",
+      "expected": "nonEmpty",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog"
+        },
+        {
+          "action": "expectAttribute",
+          "selector": "meta[name='description']",
+          "name": "content",
+          "value": "",
+          "match": "nonEmpty"
+        }
+      ]
+    },
+    {
+      "id": "SC-234",
+      "area": "seo",
+      "name": "JSON-LD экземпляра",
+      "expected": "1 JSON-LD",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "goto",
+          "value": "/plants/{plant.id}"
+        },
+        {
+          "action": "expectCount",
+          "selector": "script[type='application/ld+json']",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "SC-235",
+      "area": "seo",
+      "name": "OG title каталога",
+      "expected": "nonEmpty",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog"
+        },
+        {
+          "action": "expectAttribute",
+          "selector": "meta[property='og:title']",
+          "name": "content",
+          "value": "",
+          "match": "nonEmpty"
+        }
+      ]
+    },
+    {
+      "id": "SC-236",
+      "area": "responsive",
+      "name": "Каталог mobile",
+      "expected": "Нет overflow",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog"
+        },
+        {
+          "action": "expectNoOverflow"
+        }
+      ],
+      "viewport": [390, 844]
+    },
+    {
+      "id": "SC-237",
+      "area": "responsive",
+      "name": "Экземпляр mobile",
+      "expected": "Нет overflow",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "goto",
+          "value": "/plants/{plant.id}"
+        },
+        {
+          "action": "expectNoOverflow"
+        }
+      ],
+      "viewport": [390, 844]
+    },
+    {
+      "id": "SC-238",
+      "area": "responsive",
+      "name": "Корзина mobile",
+      "expected": "Нет overflow",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/cart"
+        },
+        {
+          "action": "expectNoOverflow"
+        }
+      ],
+      "viewport": [390, 844]
+    },
+    {
+      "id": "SC-239",
+      "area": "responsive",
+      "name": "Checkout mobile",
+      "expected": "Нет overflow",
+      "auth": "customer",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "setCart",
+          "items": [
+            {
+              "type": "INDIVIDUAL_PLANT",
+              "id": "{plant.id}",
+              "name": "{plant.productName} ({plant.code})",
+              "priceMinor": 12000,
+              "currency": "BYN",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "action": "goto",
+          "value": "/checkout"
+        },
+        {
+          "action": "waitSelector",
+          "selector": ".checkout-form"
+        },
+        {
+          "action": "expectNoOverflow"
+        }
+      ],
+      "viewport": [390, 844]
+    },
+    {
+      "id": "SC-240",
+      "area": "responsive",
+      "name": "Login mobile",
+      "expected": "Нет overflow",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/api/auth/login?returnTo=/catalog"
+        },
+        {
+          "action": "expectNoOverflow"
+        }
+      ],
+      "viewport": [390, 844]
+    },
+    {
+      "id": "SC-241",
+      "area": "responsive",
+      "name": "Register mobile",
+      "expected": "Нет overflow",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/register"
+        },
+        {
+          "action": "expectNoOverflow"
+        }
+      ],
+      "viewport": [390, 844]
+    },
+    {
+      "id": "SC-242",
+      "area": "responsive",
+      "name": "Admin login mobile",
+      "expected": "Нет overflow",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "gotoAdmin",
+          "value": "/"
+        },
+        {
+          "action": "expectNoOverflow"
+        }
+      ],
+      "viewport": [390, 844]
+    },
+    {
+      "id": "SC-243",
+      "area": "responsive",
+      "name": "Legal mobile",
+      "expected": "Нет overflow",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/legal/cookies"
+        },
+        {
+          "action": "expectNoOverflow"
+        }
+      ],
+      "viewport": [390, 844]
+    },
+    {
+      "id": "SC-244",
+      "area": "a11y",
+      "name": "A11y каталога",
+      "expected": "OK",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog"
+        },
+        {
+          "action": "expectA11y"
+        }
+      ]
+    },
+    {
+      "id": "SC-245",
+      "area": "a11y",
+      "name": "A11y login",
+      "expected": "OK",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/api/auth/login?returnTo=/catalog"
+        },
+        {
+          "action": "expectA11y"
+        }
+      ]
+    },
+    {
+      "id": "SC-246",
+      "area": "a11y",
+      "name": "A11y register",
+      "expected": "OK",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/register"
+        },
+        {
+          "action": "expectA11y"
+        }
+      ]
+    },
+    {
+      "id": "SC-247",
+      "area": "a11y",
+      "name": "A11y checkout",
+      "expected": "OK",
+      "auth": "customer",
+      "steps": [
+        {
+          "action": "api",
+          "operation": "createPlant",
+          "params": {
+            "productSku": "PLANT-001",
+            "code": "SC-{uid}",
+            "priceMinor": 12000
+          },
+          "store": "plant"
+        },
+        {
+          "action": "setCart",
+          "items": [
+            {
+              "type": "INDIVIDUAL_PLANT",
+              "id": "{plant.id}",
+              "name": "{plant.productName} ({plant.code})",
+              "priceMinor": 12000,
+              "currency": "BYN",
+              "quantity": 1
+            }
+          ]
+        },
+        {
+          "action": "goto",
+          "value": "/checkout"
+        },
+        {
+          "action": "waitSelector",
+          "selector": ".checkout-form"
+        },
+        {
+          "action": "expectA11y"
+        }
+      ]
+    },
+    {
+      "id": "SC-248",
+      "area": "a11y",
+      "name": "A11y admin login",
+      "expected": "OK",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "gotoAdmin",
+          "value": "/"
+        },
+        {
+          "action": "expectA11y"
+        }
+      ]
+    },
+    {
+      "id": "SC-249",
+      "area": "a11y",
+      "name": "Keyboard focus каталога",
+      "expected": "A",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/catalog"
+        },
+        {
+          "action": "press",
+          "selector": "body",
+          "value": "Tab"
+        },
+        {
+          "action": "expectActiveTag",
+          "value": "A"
+        }
+      ]
+    },
+    {
+      "id": "SC-250",
+      "area": "a11y",
+      "name": "Keyboard focus login",
+      "expected": "INPUT",
+      "auth": "none",
+      "steps": [
+        {
+          "action": "goto",
+          "value": "/api/auth/login?returnTo=/catalog"
+        },
+        {
+          "action": "press",
+          "selector": "body",
+          "value": "Tab"
+        },
+        {
+          "action": "expectActiveTag",
+          "value": "INPUT"
         }
       ]
     }

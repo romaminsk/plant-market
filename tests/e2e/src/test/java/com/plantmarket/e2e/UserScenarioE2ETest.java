@@ -447,7 +447,8 @@ class UserScenarioE2ETest {
   private JsonNode findPlant(JsonNode params) throws Exception {
     String code = params.path("code").asString("IP-001");
     JsonNode items =
-        getJson("/api/v1/individual-plants?status=AVAILABLE&size=100", null).path("items");
+        getJson("/api/v1/individual-plants?status=AVAILABLE&search=" + code + "&size=10", null)
+            .path("items");
     for (JsonNode item : items) {
       if (code.equals(item.path("code").asString())) {
         return item;

@@ -97,16 +97,6 @@ export interface StockBatch {
   status: 'QUARANTINE' | 'AVAILABLE' | 'DEPLETED';
 }
 
-interface ProductPage {
-  items: Product[];
-  totalElements: number;
-}
-
-interface IndividualPlantPage {
-  items: IndividualPlant[];
-  totalElements: number;
-}
-
 interface TokenResponse {
   accessToken: string;
   refreshToken: string;
@@ -153,8 +143,23 @@ async function request<T>(path: string, accessToken: string, init: RequestInit =
 }
 
 export async function fetchProducts(accessToken: string): Promise<Product[]> {
-  const page = await request<ProductPage>('/api/v1/products?page=0&size=100', accessToken);
-  return page.items;
+  return fetchAllPages<Product>('/api/v1/products', accessToken);
+}
+
+async function fetchAllPages<T>(path: string, accessToken: string): Promise<T[]> {
+  const items: T[] = [];
+  let page = 0;
+  for (;;) {
+    const response = await request<{ items: T[]; totalElements: number }>(
+      `${path}?page=${page}&size=100`,
+      accessToken,
+    );
+    items.push(...response.items);
+    if (items.length >= response.totalElements || response.items.length === 0) {
+      return items;
+    }
+    page += 1;
+  }
 }
 
 export async function fetchCategories(accessToken: string): Promise<Category[]> {
@@ -236,11 +241,7 @@ export async function archiveVariant(accessToken: string, variantId: string): Pr
 }
 
 export async function fetchIndividualPlants(accessToken: string): Promise<IndividualPlant[]> {
-  const page = await request<IndividualPlantPage>(
-    '/api/v1/individual-plants?page=0&size=100',
-    accessToken,
-  );
-  return page.items;
+  return fetchAllPages<IndividualPlant>('/api/v1/individual-plants', accessToken);
 }
 
 export async function createIndividualPlant(
@@ -337,6 +338,7 @@ export async function releaseStockBatch(accessToken: string, batchId: string): P
 
 export function formatPrice(priceMinor: number, currency: string): string {
   // Keep admin prices identical to the storefront regardless of browser ICU data.
-  const amount = (priceMinor / 100).toFixed(2).replace('.', ',');
-  return `${amount} ${currency === 'BYN' ? 'Br' : currency}`;
+  const [whole, cents] = (priceMinor / 100).toFixed(2).split('.');
+  const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  return `${grouped},${cents} ${currency === 'BYN' ? 'Br' : currency}`;
 }

@@ -67,10 +67,11 @@ public class LoginPageController {
       @RequestParam String fullName,
       @RequestParam String email,
       @RequestParam String password,
+      @RequestParam String confirmPassword,
       HttpServletRequest request) {
     String name = fullName == null ? "" : fullName.trim();
     String normalizedEmail = email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
-    String error = validate(name, normalizedEmail, password);
+    String error = validate(name, normalizedEmail, password, confirmPassword);
     if (error == null) {
       try {
         authService.register(new RegisterRequest(normalizedEmail, password, name));
@@ -101,7 +102,8 @@ public class LoginPageController {
         .replace("{{email}}", HtmlUtils.htmlEscape(email));
   }
 
-  private static String validate(String name, String email, String password) {
+  private static String validate(
+      String name, String email, String password, String confirmPassword) {
     if (name.isBlank() || name.length() > 200) {
       return "Укажите имя (до 200 символов).";
     }
@@ -110,8 +112,11 @@ public class LoginPageController {
         || !email.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")) {
       return "Укажите корректный e-mail.";
     }
-    if (password == null || password.length() < 12 || password.length() > 128) {
-      return "Пароль должен быть от 12 до 128 символов.";
+    if (password == null || password.length() < 6 || password.length() > 128) {
+      return "Пароль должен быть от 6 до 128 символов.";
+    }
+    if (!password.equals(confirmPassword)) {
+      return "Пароли не совпадают.";
     }
     return null;
   }

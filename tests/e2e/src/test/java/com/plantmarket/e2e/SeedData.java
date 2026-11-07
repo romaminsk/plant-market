@@ -26,13 +26,20 @@ final class SeedData {
     if (cached != null) {
       return cached;
     }
-    JsonNode products = get(apiUrl, "/api/v1/products?size=100");
-    for (JsonNode item : products.path("items")) {
-      if (sku.equals(item.path("sku").asString())) {
-        String id = item.path("id").asString();
-        PRODUCT_IDS.put(sku, id);
-        return id;
+    int page = 0;
+    while (true) {
+      JsonNode products = get(apiUrl, "/api/v1/products?page=" + page + "&size=100");
+      for (JsonNode item : products.path("items")) {
+        if (sku.equals(item.path("sku").asString())) {
+          String id = item.path("id").asString();
+          PRODUCT_IDS.put(sku, id);
+          return id;
+        }
       }
+      if ((page + 1) * 100 >= products.path("totalElements").asInt()) {
+        break;
+      }
+      page++;
     }
     throw new IllegalStateException("Seed product " + sku + " is missing");
   }

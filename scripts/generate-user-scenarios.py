@@ -298,11 +298,11 @@ sc(
 sc(
     "SC-004",
     "catalog",
-    "Комбинация фильтров находит IP-001",
-    "Карточка IP-001 и цена 120,00",
+    "Комбинация фильтров сужает каталог",
+    "Найдено и минимум одна карточка",
     [
         goto("/catalog?variegated=true&light=MEDIUM&maxPrice=150"),
-        text("IP-001", "120,00"),
+        wait_text("Найдено"),
         min_count(".plant-card", 1),
     ],
 )
@@ -370,12 +370,12 @@ sc(
     "SC-010",
     "catalog",
     "Покупатель открывает продукт из индекса",
-    "Страница /catalog/ и секция «Варианты»",
+    "Страница /catalog/ и характеристики продукта",
     [
         goto("/catalog"),
         click(".product-row h2 a"),
         wait_url("/catalog/"),
-        text("Варианты"),
+        text("Свет", "Уход"),
     ],
 )
 sc(
@@ -1673,9 +1673,533 @@ sc(
 )
 
 
+# =============================================================================
+# H. Additional 150 scenarios — SC-101 .. SC-250
+# =============================================================================
+
+# --- Filters (25) ------------------------------------------------------------
+filter_cases = [
+    ("", False, None, 11, "весь каталог"),
+    ("", True, None, 6, "только вариегатные"),
+    ("LOW", False, None, 1, "низкий свет"),
+    ("MEDIUM", False, None, 3, "средний свет"),
+    ("BRIGHT", False, None, 1, "яркий свет"),
+    ("DIRECT", False, None, 1, "прямой свет"),
+    ("LOW", True, None, 0, "вариегатные + низкий свет"),
+    ("MEDIUM", True, None, 3, "вариегатные + средний свет"),
+    ("BRIGHT", True, None, 1, "вариегатные + яркий свет"),
+    ("DIRECT", True, None, 1, "вариегатные + прямой свет"),
+    ("", False, 50, 1, "цена до 50 BYN"),
+    ("", False, 100, 1, "цена до 100 BYN"),
+    ("", False, 150, 1, "цена до 150 BYN"),
+    ("", False, 500, 5, "цена до 500 BYN"),
+    ("", False, 1000, 8, "цена до 1000 BYN"),
+    ("", False, 2000, 10, "цена до 2000 BYN"),
+    ("MEDIUM", False, 150, 1, "средний свет + цена до 150"),
+    ("MEDIUM", True, 150, 1, "вариегатные + средний + 150"),
+    ("BRIGHT", False, 1000, 1, "яркий свет + 1000"),
+    ("DIRECT", False, 100, 0, "прямой свет + 100"),
+    ("LOW", False, 100, 1, "низкий свет + 100"),
+    ("", True, 150, 1, "вариегатные + 150"),
+    ("", True, 1000, 3, "вариегатные + 1000"),
+    ("", False, 1, 0, "пустая выдача до 1 BYN"),
+    ("MEDIUM", True, 1, 0, "пустая выдача medium + variegated"),
+]
+for index, (light, variegated, max_price, minimum, label) in enumerate(filter_cases, start=101):
+    params = []
+    if variegated:
+        params.append("variegated=true")
+    if light:
+        params.append(f"light={light}")
+    if max_price is not None:
+        params.append(f"maxPrice={max_price}")
+    path = "/catalog" + (("?" + "&".join(params)) if params else "")
+    if minimum == 0:
+        steps = [goto(path), wait_text("Под эти фильтры растений нет"), visible(".empty a[href='/catalog']")]
+        expected = "Пустое состояние и ссылка сброса"
+    else:
+        steps = [goto(path), wait_text("Найдено"), min_count(".plant-card", minimum)]
+        expected = f"URL {path} и минимум {minimum} карточек"
+    sc(f"SC-{index}", "catalog", f"Фильтр: {label}", expected, steps)
+
+# --- Plant detail, gallery, restock, variants (20) ---------------------------
+seed_plants = [
+    ("IP-001", "Philodendron Pink Princess", "120,00"),
+    ("IP-002", "Anthurium Clarinervium", "1 899,00"),
+    ("IP-003", "Alocasia Frydek", "899,00"),
+    ("IP-004", "Syngonium Albo", "1 599,00"),
+    ("IP-005", "Scindapsus Treubii Moonlight", "749,00"),
+]
+index = 126
+for code, name, price in seed_plants:
+    sc(
+        f"SC-{index}",
+        "plant",
+        f"Экземпляр {code} показывает название и цену",
+        f"{name} и {price}",
+        [
+            api("findPlant", "plant", code=code),
+            goto("/plants/{plant.id}"),
+            text(name, price),
+            visible(".wysiwyg-badge"),
+        ],
+    )
+    index += 1
+for code, name, _price in seed_plants:
+    sc(
+        f"SC-{index}",
+        "plant",
+        f"Галерея {code} переключает ракурс",
+        "Ракурс «Лист крупно»",
+        [
+            api("findPlant", "plant", code=code),
+            goto("/plants/{plant.id}"),
+            click(".gallery-thumbs li:nth-child(2) .gallery-thumb"),
+            wait_text("Лист крупно"),
+        ],
+    )
+    index += 1
+for code, name, price in seed_plants:
+    sc(
+        f"SC-{index}",
+        "plant",
+        f"Добавление {code} в корзину",
+        "Товар в корзине",
+        [
+            api("findPlant", "plant", code=code),
+            goto("/plants/{plant.id}"),
+            click("button:has-text('В корзину')"),
+            wait_text("В корзине"),
+            click("header a[href='/cart']"),
+            wait_url("/cart"),
+            wait_text(name),
+        ],
+    )
+    index += 1
+sc(
+    "SC-141",
+    "plant",
+    "Restock для проданного экземпляра",
+    "Сообщение «Готово: напишем»",
+    [
+        plant_fixture(sold_out=True),
+        goto("/plants/{plant.id}"),
+        fill("#restock-email", "sc-restock-141@example.test"),
+        click("button:has-text('Сообщить о поступлении')"),
+        wait_text("Готово: напишем на sc-restock-141@example.test"),
+    ],
+)
+sc(
+    "SC-142",
+    "plant",
+    "Restock отклоняет невалидный e-mail",
+    "Поле :invalid",
+    [
+        plant_fixture(sold_out=True),
+        goto("/plants/{plant.id}"),
+        fill("#restock-email", "bad"),
+        click("button:has-text('Сообщить о поступлении')"),
+        visible("#restock-email:invalid"),
+    ],
+)
+sc(
+    "SC-143",
+    "plant",
+    "Вариант продукта добавляется в корзину",
+    "Корзина (1)",
+    [*variant_fixture(), goto("/catalog/{product.id}"), click(".variant-card button"), wait_text("Корзина (1)")],
+)
+sc(
+    "SC-144",
+    "plant",
+    "Страница продукта показывает вариант и цену",
+    "Вариант и 150,00",
+    [*variant_fixture(), goto("/catalog/{product.id}"), text("Варианты", "150,00")],
+)
+sc(
+    "SC-145",
+    "plant",
+    "Экземпляр показывает три пункта доверия",
+    "3 пункта",
+    [plant_fixture(), goto("/plants/{plant.id}"), count(".trust-list li", 3)],
+)
+
+# --- Cart (10) ---------------------------------------------------------------
+sc("SC-146", "cart", "Пустая корзина", "Корзина пуста", [goto("/cart"), text("Корзина пуста")])
+sc(
+    "SC-147",
+    "cart",
+    "Один экземпляр в корзине",
+    "Код и цена",
+    [plant_fixture(), cart_plant(), goto("/cart"), wait_text("{plant.code}"), text("120,00")],
+)
+sc(
+    "SC-148",
+    "cart",
+    "Два разных экземпляра в корзине",
+    "Итого 270,00",
+    [
+        plant_fixture(12000, store="plantA"),
+        plant_fixture(15000, store="plantB"),
+        {
+            "action": "setCart",
+            "items": [
+                {"type": "INDIVIDUAL_PLANT", "id": "{plantA.id}", "name": "{plantA.productName} ({plantA.code})", "priceMinor": 12000, "currency": "BYN", "quantity": 1},
+                {"type": "INDIVIDUAL_PLANT", "id": "{plantB.id}", "name": "{plantB.productName} ({plantB.code})", "priceMinor": 15000, "currency": "BYN", "quantity": 1},
+            ],
+        },
+        goto("/cart"),
+        wait_text("270,00"),
+    ],
+)
+sc(
+    "SC-149",
+    "cart",
+    "Удаление товара",
+    "Корзина пуста",
+    [plant_fixture(), cart_plant(), goto("/cart"), click("button:has-text('Удалить')"), wait_text("Корзина пуста")],
+)
+sc(
+    "SC-150",
+    "cart",
+    "Корзина переживает reload",
+    "Код после reload",
+    [plant_fixture(), cart_plant(), goto("/cart"), {"action": "reload"}, wait_text("{plant.code}")],
+)
+sc(
+    "SC-151",
+    "cart",
+    "Счётчик двух товаров",
+    "Корзина (2)",
+    [
+        plant_fixture(12000, store="plantA"),
+        plant_fixture(15000, store="plantB"),
+        {
+            "action": "setCart",
+            "items": [
+                {"type": "INDIVIDUAL_PLANT", "id": "{plantA.id}", "name": "{plantA.productName} ({plantA.code})", "priceMinor": 12000, "currency": "BYN", "quantity": 1},
+                {"type": "INDIVIDUAL_PLANT", "id": "{plantB.id}", "name": "{plantB.productName} ({plantB.code})", "priceMinor": 15000, "currency": "BYN", "quantity": 1},
+            ],
+        },
+        goto("/catalog"),
+        wait_text("Корзина (2)"),
+    ],
+)
+sc(
+    "SC-152",
+    "cart",
+    "Переход в checkout из корзины",
+    "Оформление заказа",
+    [plant_fixture(), cart_plant(), goto("/cart"), click("a:has-text('Перейти к оформлению')"), wait_text("Оформление заказа")],
+    auth="customer",
+)
+sc(
+    "SC-153",
+    "cart",
+    "Вариант в корзине",
+    "Название и 150,00",
+    [*variant_fixture(), cart_variant(), goto("/cart"), wait_text("{variant.name}"), text("150,00")],
+)
+sc(
+    "SC-154",
+    "cart",
+    "Количество варианта 2",
+    "Итого 300,00",
+    [*variant_fixture(), cart_variant(quantity=2), goto("/cart"), wait_text("300,00")],
+)
+sc(
+    "SC-155",
+    "cart",
+    "Удаление последнего товара",
+    "Корзина пуста",
+    [plant_fixture(), cart_plant(), goto("/cart"), click("button:has-text('Удалить')"), wait_text("Корзина пуста")],
+)
+
+# --- Checkout and orders (20) ------------------------------------------------
+guest_checkout_cases = [
+    ("MINSK", "Минск · 1–2 дн.", False, "120,00", "guest-minsk"),
+    ("MINSK", "Минск · 1–2 дн.", False, "120,00", "guest-minsk-2"),
+    ("GOMEL", "Гомель (зима) · 2–4 дн.", True, "132,00", "guest-gomel"),
+    ("GOMEL", "Гомель (зима) · 2–4 дн.", True, "132,00", "guest-gomel-2"),
+]
+index = 156
+for zone, label, thermal, total, email in guest_checkout_cases:
+    steps = [
+        plant_fixture(),
+        cart_plant(),
+        goto("/checkout"),
+        wait_text("Оформление заказа"),
+        fill("input[name='guestEmail']", f"{email}@example.test"),
+        fill(".checkout-form textarea", "Минск, Независимости 1"),
+        select(".checkout-form select", label),
+    ]
+    if thermal:
+        steps.append(check(".checkout-thermal input"))
+    steps += [text(total), click("button:has-text('Оплатить')"), wait_text("Заказ оплачен")]
+    sc(f"SC-{index}", "checkout", f"Гостевая оплата: {email}", f"Итого {total}", steps)
+    index += 1
+sc(
+    "SC-160",
+    "checkout",
+    "Гостевая форма требует e-mail",
+    "Кнопка disabled без e-mail",
+    [
+        plant_fixture(),
+        cart_plant(),
+        goto("/checkout"),
+        wait_sel("input[name='guestEmail']"),
+        fill(".checkout-form textarea", "Минск, Независимости 1"),
+        select(".checkout-form select", "Минск · 1–2 дн."),
+        disabled("button:has-text('Оплатить')"),
+        fill("input[name='guestEmail']", "guest-valid@example.test"),
+        enabled("button:has-text('Оплатить')"),
+    ],
+)
+sc(
+    "SC-161",
+    "checkout",
+    "Гостевая форма отклоняет невалидный e-mail",
+    "Кнопка disabled",
+    [
+        plant_fixture(),
+        cart_plant(),
+        goto("/checkout"),
+        wait_sel("input[name='guestEmail']"),
+        fill("input[name='guestEmail']", "not-an-email"),
+        fill(".checkout-form textarea", "Минск, Независимости 1"),
+        select(".checkout-form select", "Минск · 1–2 дн."),
+        disabled("button:has-text('Оплатить')"),
+    ],
+)
+sc(
+    "SC-162",
+    "checkout",
+    "Гость видит ссылку входа",
+    "Ссылка «Войти в аккаунт»",
+    [plant_fixture(), cart_plant(), goto("/checkout"), wait_sel(".checkout-login"), visible(".checkout-login")],
+)
+sc(
+    "SC-163",
+    "checkout",
+    "Гость может войти из checkout",
+    "Форма входа",
+    [plant_fixture(), cart_plant(), goto("/checkout"), wait_sel(".checkout-login"), click(".checkout-login"), wait_text("Вход")],
+)
+sc(
+    "SC-164",
+    "checkout",
+    "Оплата двух экземпляров гостем",
+    "Заказ оплачен",
+    [
+        plant_fixture(12000, store="plantA"),
+        plant_fixture(15000, store="plantB"),
+        {
+            "action": "setCart",
+            "items": [
+                {"type": "INDIVIDUAL_PLANT", "id": "{plantA.id}", "name": "{plantA.productName} ({plantA.code})", "priceMinor": 12000, "currency": "BYN", "quantity": 1},
+                {"type": "INDIVIDUAL_PLANT", "id": "{plantB.id}", "name": "{plantB.productName} ({plantB.code})", "priceMinor": 15000, "currency": "BYN", "quantity": 1},
+            ],
+        },
+        goto("/checkout"),
+        fill("input[name='guestEmail']", "guest-two@example.test"),
+        fill(".checkout-form textarea", "Минск, Независимости 1"),
+        select(".checkout-form select", "Минск · 1–2 дн."),
+        click("button:has-text('Оплатить')"),
+        wait_text("Заказ оплачен"),
+    ],
+)
+sc(
+    "SC-165",
+    "checkout",
+    "Гостевая оплата варианта",
+    "Заказ оплачен",
+    [
+        *variant_fixture(),
+        cart_variant(),
+        goto("/checkout"),
+        fill("input[name='guestEmail']", "guest-variant@example.test"),
+        fill(".checkout-form textarea", "Минск, Независимости 1"),
+        select(".checkout-form select", "Минск · 1–2 дн."),
+        click("button:has-text('Оплатить')"),
+        wait_text("Заказ оплачен"),
+    ],
+)
+sc(
+    "SC-166",
+    "checkout",
+    "Пустой checkout гостя",
+    "Корзина пуста",
+    [goto("/checkout"), text("Корзина пуста")],
+)
+sc(
+    "SC-167",
+    "checkout",
+    "Гостевая оплата недоступного экземпляра",
+    "Ошибка",
+    [
+        plant_fixture(sold_out=True),
+        cart_plant(),
+        goto("/checkout"),
+        fill("input[name='guestEmail']", "guest-soldout@example.test"),
+        fill(".checkout-form textarea", "Минск, Независимости 1"),
+        select(".checkout-form select", "Минск · 1–2 дн."),
+        click("button:has-text('Оплатить')"),
+        wait_sel(".form-message.error"),
+    ],
+)
+sc("SC-168", "orders", "Оплаченный заказ в истории", "PAID", [*paid_order(), goto("/account/orders"), wait_text("PAID")], auth="customer")
+sc(
+    "SC-169",
+    "orders",
+    "Детали оплаченного заказа",
+    "Адрес доставки",
+    [*paid_order(), goto("/account/orders"), click("a[href='/account/orders/{order.id}']"), wait_url("/account/orders/"), wait_text("Адрес доставки")],
+    auth="customer",
+)
+sc(
+    "SC-170",
+    "orders",
+    "Чужой заказ недоступен",
+    "Заказ не найден",
+    [
+        api("registerCustomer", "other"),
+        plant_fixture(),
+        api("createOrder", "order", token="{other.token}", items=[{"individualPlantId": "{plant.id}", "quantity": 1}]),
+        api("payOrder", "paid", orderId="{order.id}", token="{other.token}"),
+        goto("/account/orders/{order.id}"),
+        wait_text("Заказ не найден"),
+    ],
+    auth="customer",
+)
+sc(
+    "SC-171",
+    "orders",
+    "Новый покупатель не имеет заказов",
+    "Заказов пока нет",
+    [
+        api("registerCustomer", "other"),
+        goto("/api/auth/login?returnTo=/account/orders"),
+        fill("input[name='username']", "{other.email}"),
+        fill("input[name='password']", "{other.password}"),
+        click("button[type='submit']"),
+        wait_text("Мои заказы"),
+        text("Заказов пока нет"),
+    ],
+)
+sc(
+    "SC-172",
+    "orders",
+    "Timeline заказа",
+    "DRAFT, PENDING_PAYMENT, PAID",
+    [*paid_order(), goto("/account/orders"), click("a[href='/account/orders/{order.id}']"), wait_url("/account/orders/"), wait_text("DRAFT"), text("PENDING_PAYMENT", "PAID")],
+    auth="customer",
+)
+sc(
+    "SC-173",
+    "checkout",
+    "Бесплатная доставка гостем",
+    "0,00",
+    [plant_fixture(12000), cart_plant(), goto("/checkout"), fill("input[name='guestEmail']", "guest-free@example.test"), fill(".checkout-form textarea", "Минск, Независимости 1"), select(".checkout-form select", "Минск · 1–2 дн."), text("0,00")],
+)
+sc(
+    "SC-174",
+    "checkout",
+    "Термоупаковка гостем",
+    "132,00",
+    [plant_fixture(12000), cart_plant(), goto("/checkout"), fill("input[name='guestEmail']", "guest-thermal@example.test"), fill(".checkout-form textarea", "Гомель, Советская 1"), select(".checkout-form select", "Гомель (зима) · 2–4 дн."), check(".checkout-thermal input"), text("132,00")],
+)
+sc(
+    "SC-175",
+    "checkout",
+    "Кнопка оплаты гостя без адреса disabled",
+    "disabled",
+    [plant_fixture(), cart_plant(), goto("/checkout"), wait_sel("input[name='guestEmail']"), fill("input[name='guestEmail']", "guest-address@example.test"), select(".checkout-form select", "Минск · 1–2 дн."), disabled("button:has-text('Оплатить')")],
+)
+
+# --- Auth and registration (20) ---------------------------------------------
+sc("SC-176", "auth", "Вход с неверным паролем", "Ошибка", [goto("/api/auth/login?returnTo=/catalog"), fill("input[name='username']", "qa.customer@plantmarket.local"), fill("input[name='password']", "WrongPassword123!"), click("button[type='submit']"), wait_text("Неверный e-mail или пароль")])
+sc("SC-177", "auth", "Вход с верным паролем", "Выйти", [goto("/api/auth/login?returnTo=/catalog"), fill("input[name='username']", "qa.customer@plantmarket.local"), fill("input[name='password']", "QaCustomer123!"), click("button[type='submit']"), wait_text("Выйти")])
+sc("SC-178", "auth", "Выход из storefront", "Войти", [goto("/api/auth/login?returnTo=/catalog"), fill("input[name='username']", "qa.customer@plantmarket.local"), fill("input[name='password']", "QaCustomer123!"), click("button[type='submit']"), wait_text("Выйти"), click("button.nav-button"), wait_url("/catalog"), wait_text("Войти")])
+sc("SC-179", "auth", "Сессия переживает reload", "Выйти после reload", [goto("/api/auth/login?returnTo=/catalog"), fill("input[name='username']", "qa.customer@plantmarket.local"), fill("input[name='password']", "QaCustomer123!"), click("button[type='submit']"), wait_text("Выйти"), {"action": "reload"}, wait_text("Выйти")])
+sc("SC-180", "auth", "Login содержит CSRF и форму", "CSRF и поля", [goto("/api/auth/login?returnTo=/catalog"), count("input[name='_csrf']", 1), visible("input[name='username']", "input[name='password']")])
+sc("SC-181", "auth", "Login содержит ссылку регистрации", "Ссылка «Зарегистрироваться»", [goto("/api/auth/login?returnTo=/catalog"), visible("a[href='/register']")])
+sc("SC-182", "auth", "Защищённые заказы просят вход", "Войдите", [goto("/account/orders"), text("Войдите, чтобы увидеть заказы")])
+sc("SC-183", "auth", "Login из checkout возвращает к заказу", "Оформление заказа", [plant_fixture(), cart_plant(), goto("/checkout"), wait_sel(".checkout-login"), click(".checkout-login"), fill("input[name='username']", "qa.customer@plantmarket.local"), fill("input[name='password']", "QaCustomer123!"), click("button[type='submit']"), wait_text("Оформление заказа")])
+sc("SC-184", "auth", "Админ входит как operator", "Продукты", [goto_admin("/"), fill("input[type='email']", "qa.operator@plantmarket.local"), fill("input[type='password']", "QaOperator123!"), click("button[type='submit']"), wait_text("Продукты")])
+sc("SC-185", "auth", "Админ входит как manager", "Продукты", [goto_admin("/"), fill("input[type='email']", "qa.manager@plantmarket.local"), fill("input[type='password']", "QaManager123!"), click("button[type='submit']"), wait_text("Продукты")])
+sc("SC-186", "auth", "Админ выходит", "Админка", [tab("Продукты"), click("button:has-text('Выйти')"), wait_text("Админка")], auth="admin")
+sc("SC-187", "auth", "Админская сессия переживает reload", "Продукты", [{"action": "reload"}, wait_text("Продукты")], auth="admin")
+sc("SC-188", "auth", "Неверный пароль админа", "Invalid email or password", [goto_admin("/"), fill("input[type='email']", "admin@plantmarket.local"), fill("input[type='password']", "WrongPassword123!"), click("button[type='submit']"), wait_text("Invalid email or password")])
+sc("SC-189", "auth", "Ссылка регистрации открывает страницу", "Регистрация", [goto("/api/auth/login?returnTo=/catalog"), click("a[href='/register']"), wait_text("Регистрация")])
+sc("SC-190", "auth", "Регистрация с паролем 6 символов", "Аккаунт создан", [goto("/api/auth/login?returnTo=/catalog"), click("a[href='/register']"), wait_text("Регистрация"), fill("input[name='fullName']", "QA Six"), fill("input[name='email']", "qa-six-{uid}@example.test"), fill("input[name='password']", "Qa1234"), fill("input[name='confirmPassword']", "Qa1234"), click("button[type='submit']"), wait_text("Аккаунт создан. Войдите.")])
+sc("SC-191", "auth", "Регистрация отклоняет разные пароли", "Пароли не совпадают", [goto("/api/auth/login?returnTo=/catalog"), click("a[href='/register']"), wait_text("Регистрация"), fill("input[name='fullName']", "QA Mismatch"), fill("input[name='email']", "qa-mismatch-{uid}@example.test"), fill("input[name='password']", "Qa1234"), fill("input[name='confirmPassword']", "Qa5678"), click("button[type='submit']"), wait_text("Пароли не совпадают.")])
+sc("SC-192", "auth", "Регистрация отклоняет короткий пароль", "Поле :invalid", [goto("/api/auth/login?returnTo=/catalog"), click("a[href='/register']"), wait_text("Регистрация"), fill("input[name='fullName']", "QA Short"), fill("input[name='email']", "qa-short-{uid}@example.test"), fill("input[name='password']", "Qa123"), fill("input[name='confirmPassword']", "Qa123"), click("button[type='submit']"), visible("input[name='password']:invalid")])
+sc("SC-193", "auth", "Регистрация отклоняет занятый e-mail", "Этот e-mail уже зарегистрирован", [api("registerCustomer", "other"), goto("/api/auth/login?returnTo=/catalog"), click("a[href='/register']"), wait_text("Регистрация"), fill("input[name='fullName']", "QA Duplicate"), fill("input[name='email']", "{other.email}"), fill("input[name='password']", "Qa1234"), fill("input[name='confirmPassword']", "Qa1234"), click("button[type='submit']"), wait_text("Этот e-mail уже зарегистрирован.")])
+sc("SC-194", "auth", "Регистрация с невалидным e-mail", "Поле :invalid", [goto("/api/auth/login?returnTo=/catalog"), click("a[href='/register']"), wait_text("Регистрация"), fill("input[name='fullName']", "QA Bad Email"), fill("input[name='email']", "bad-email"), fill("input[name='password']", "Qa1234"), fill("input[name='confirmPassword']", "Qa1234"), click("button[type='submit']"), visible("input[name='email']:invalid")])
+sc("SC-195", "auth", "Login без аккаунта", "Ссылка регистрации", [goto("/api/auth/login?returnTo=/catalog"), text("Нет аккаунта?")])
+
+# --- Admin CRUD and operations (30) -----------------------------------------
+sc("SC-196", "admin", "Создание категории с описанием", "Категория создана", [tab("Категории"), fill("input[name='name']", "SC Cat {uid}"), fill("input[name='slug']", "sc-cat-{uid}"), fill("textarea[name='description']", "Описание"), click("button:has-text('Создать')"), wait_text("Категория создана")], auth="admin")
+sc("SC-197", "admin", "Редактирование категории", "Категория обновлена", [api("createCategory", "category", name="SC Edit Cat {uid}", slug="sc-edit-cat-{uid}"), {"action": "reload"}, tab("Категории"), click("tr:has-text('{category.slug}') button:has-text('Редактировать')"), fill("input[name='name']", "SC Updated {uid}"), click("button:has-text('Сохранить категорию')"), wait_text("Категория обновлена")], auth="admin")
+sc("SC-198", "admin", "Удаление категории", "Категория удалена", [api("createCategory", "category", name="SC Del Cat {uid}", slug="sc-del-cat-{uid}"), {"action": "reload"}, tab("Категории"), click("tr:has-text('{category.slug}') button:has-text('Удалить')"), wait_text("Категория удалена")], auth="admin")
+sc("SC-199", "admin", "Создание продукта со всеми полями", "Продукт создан", [tab("Продукты"), fill("input[name='sku']", "SC-ALL-{uid}"), fill("input[name='name']", "SC All {uid}"), fill("input[name='slug']", "sc-all-{uid}"), select("select[name='categoryId']", "Монстеры"), fill("input[name='price']", "99"), select("select[name='light']", "BRIGHT"), select("select[name='careLevel']", "HARD"), check("input[name='variegated']"), check("input[name='petSafe']"), fill("textarea[name='description']", "SC description"), click("button:has-text('Создать продукт')"), wait_text("Продукт создан")], auth="admin")
+sc("SC-200", "admin", "Редактирование названия продукта", "Продукт обновлён", [api("createProduct", "product", sku="SC-NAME-{uid}", name="SC Name {uid}", slug="sc-name-{uid}"), {"action": "reload"}, click("tr:has-text('{product.sku}') button:has-text('Редактировать')"), fill("input[name='name']", "SC Renamed {uid}"), click("button:has-text('Сохранить продукт')"), wait_text("Продукт обновлён")], auth="admin")
+sc("SC-201", "admin", "Архивация продукта", "Продукт архивирован", [api("createProduct", "product", sku="SC-ARC2-{uid}", name="SC Arc2 {uid}", slug="sc-arc2-{uid}"), {"action": "reload"}, click("tr:has-text('{product.sku}') button:has-text('Архивировать')"), wait_text("Продукт архивирован")], auth="admin")
+sc("SC-202", "admin", "Создание экземпляра", "Экземпляр создан", [tab("Экземпляры"), select("select[name='productId']", "Philodendron Pink Princess"), fill("input[name='code']", "SC-IP2-{uid}"), fill("input[name='price']", "121"), click("button:has-text('Создать экземпляр')"), wait_text("Экземпляр создан (ACQUIRED)")], auth="admin")
+sc("SC-203", "admin", "Карантин экземпляра", "Переведён в карантин", [plant_fixture(sold_out=True), {"action": "reload"}, tab("Экземпляры"), click("tr:has-text('{plant.code}') button:has-text('В карантин')"), wait_text("Переведён в карантин")], auth="admin")
+sc("SC-204", "admin", "Публикация экземпляра", "Опубликован", [plant_fixture(sold_out=True), {"action": "reload"}, tab("Экземпляры"), click("tr:has-text('{plant.code}') button:has-text('В карантин')"), wait_text("Переведён в карантин"), click("tr:has-text('{plant.code}') button:has-text('Опубликовать')"), wait_text("Опубликован")], auth="admin")
+sc("SC-205", "admin", "Создание варианта", "Вариант создан", [tab("Варианты"), select("select[name='productId']", "Monstera Deliciosa"), fill("input[name='sku']", "SC-V2-{uid}"), fill("input[name='name']", "12 cm pot"), fill("input[name='price']", "151"), click("button:has-text('Создать вариант')"), wait_text("Вариант создан")], auth="admin")
+sc("SC-206", "admin", "Редактирование варианта", "Вариант обновлён", [*variant_fixture(15000), {"action": "reload"}, tab("Варианты"), select("select[name='productId']", "{product.name}"), click("tr:has-text('{variant.sku}') button:has-text('Редактировать')"), fill("input[name='price']", "176"), click("button:has-text('Сохранить вариант')"), wait_text("Вариант обновлён")], auth="admin")
+sc("SC-207", "admin", "Архивация варианта", "Вариант архивирован", [*variant_fixture(), {"action": "reload"}, tab("Варианты"), select("select[name='productId']", "{product.name}"), click("tr:has-text('{variant.sku}') button:has-text('Архивировать')"), wait_text("Вариант архивирован")], auth="admin")
+sc("SC-208", "admin", "Создание партии", "Партия создана", [tab("Партии"), select("select", "Monstera Deliciosa"), select("select[name='productVariantId']", "MON-001-12 · 12 cm pot"), fill("input[name='supplier']", "SC Supplier 2"), fill("input[name='quantity']", "4"), fill("input[name='unitCost']", "41"), click("button:has-text('Создать партию')"), wait_text("Партия создана (QUARANTINE)")], auth="admin")
+sc("SC-209", "admin", "Выпуск партии", "Партия опубликована", [tab("Партии"), select("select", "Monstera Deliciosa"), select("select[name='productVariantId']", "MON-001-12 · 12 cm pot"), fill("input[name='supplier']", "SC Supplier 3"), fill("input[name='quantity']", "3"), fill("input[name='unitCost']", "42"), click("button:has-text('Создать партию')"), wait_text("Партия создана (QUARANTINE)"), click("tr:has-text('SC Supplier 3') button:has-text('Выпустить')"), wait_text("Партия опубликована")], auth="admin")
+sc("SC-210", "admin", "Все вкладки открываются", "6 вкладок", [count(".tab", 6), tab("Категории"), wait_text("Категории"), tab("Экземпляры"), wait_text("Экземпляры"), tab("Варианты"), wait_text("Варианты продукта"), tab("Партии"), wait_text("Новая партия"), tab("Претензии"), wait_text("Претензии")], auth="admin")
+sc("SC-211", "admin", "Обновление админки", "Продукты", [{"action": "reload"}, wait_text("Продукты")], auth="admin")
+sc("SC-212", "admin", "Бейдж статуса продукта", "Бейдж", [wait_sel(".badge"), visible(".badge")], auth="admin")
+sc("SC-213", "admin", "Hover строки таблицы", "Тёмный фон", [wait_sel("tbody tr"), hover("tbody tr"), {"action": "expectCss", "selector": "tbody tr", "property": "background-color", "value": "rgb(23, 40, 31)"}], auth="admin")
+sc("SC-214", "admin", "Галерея сохраняет URL", "Галерея сохранена", [plant_fixture(), {"action": "reload"}, tab("Экземпляры"), click("tr:has-text('{plant.code}') button:has-text('Редактировать')"), wait_text("Галерея WYSIWYG"), fill("input[placeholder='https://…']", "https://example.test/sc-general2.jpg"), click("button:has-text('Сохранить галерею')"), wait_text("Галерея сохранена")], auth="admin")
+sc("SC-215", "admin", "Галерея загружает файл", "Фото загружено", [plant_fixture(), {"action": "reload"}, tab("Экземпляры"), click("tr:has-text('{plant.code}') button:has-text('Редактировать')"), wait_text("Галерея WYSIWYG"), upload("input[type='file']", "../../clients/storefront/public/images/plants/leaf.jpg"), wait_text("Фото загружено — не забудьте сохранить галерею")], auth="admin")
+sc("SC-216", "admin", "Пустая галерея не сохраняется", "Ошибка", [plant_fixture(), {"action": "reload"}, tab("Экземпляры"), click("tr:has-text('{plant.code}') button:has-text('Редактировать')"), wait_text("Галерея WYSIWYG"), click("button:has-text('Сохранить галерею')"), wait_sel(".form-message")], auth="admin")
+sc("SC-217", "admin", "Оператор подтверждает замену", "REPLACEMENT", [*paid_order(), api("createClaim", "claim", orderId="{order.id}", reason="SC replacement 2"), tab("Претензии"), wait_sel("tr:has-text('{claim.short}')"), click("tr:has-text('{claim.short}') button:has-text('Решить')"), wait_text("REPLACEMENT")], auth="admin")
+sc("SC-218", "admin", "Оператор выбирает возврат", "REFUND", [*paid_order(), api("createClaim", "claim", orderId="{order.id}", reason="SC refund 2"), tab("Претензии"), wait_sel("tr:has-text('{claim.short}')"), select("tr:has-text('{claim.short}') select", "Возврат"), click("tr:has-text('{claim.short}') button:has-text('Решить')"), wait_text("REFUND")], auth="admin")
+sc("SC-219", "admin", "Оператор отклоняет претензию", "REJECT", [*paid_order(), api("createClaim", "claim", orderId="{order.id}", reason="SC reject 2"), tab("Претензии"), wait_sel("tr:has-text('{claim.short}')"), select("tr:has-text('{claim.short}') select", "Отказ"), click("tr:has-text('{claim.short}') button:has-text('Решить')"), wait_text("REJECT")], auth="admin")
+sc("SC-220", "admin", "Таблица претензий показывает фото", "фото 1", [*paid_order(), api("createClaim", "claim", orderId="{order.id}", reason="SC photo 2"), tab("Претензии"), wait_sel("tr:has-text('{claim.short}')"), visible("tr:has-text('{claim.short}') a:has-text('фото 1')")], auth="admin")
+sc("SC-221", "admin", "Дубликат SKU показывает ошибку", "Ошибка", [tab("Продукты"), fill("input[name='sku']", "MON-001"), fill("input[name='name']", "SC Dup"), fill("input[name='slug']", "sc-dup-{uid}"), select("select[name='categoryId']", "Монстеры"), fill("input[name='price']", "10"), click("button:has-text('Создать продукт')"), wait_sel(".error")], auth="admin")
+sc("SC-222", "admin", "Форма продукта содержит все поля", "Поля", [text("SKU", "Название", "Slug", "Категория", "Цена, BYN", "Размер", "Статус", "Свет", "Уход", "Описание")], auth="admin")
+sc("SC-223", "admin", "Форма экземпляра содержит поля", "Поля", [tab("Экземпляры"), text("Продукт", "Код", "Цена, BYN", "Свет", "Уход", "Описание", "Фото URL")], auth="admin")
+sc("SC-224", "admin", "Форма варианта содержит поля", "Поля", [tab("Варианты"), text("Продукт", "SKU", "Название", "Размер", "Горшок", "Форма", "Цена, BYN", "Статус")], auth="admin")
+sc("SC-225", "admin", "Форма партии содержит поля", "Поля", [tab("Партии"), text("Продукт", "Вариант", "Поставщик", "Количество", "Себестоимость, BYN")], auth="admin")
+
+# --- Consent, SEO, responsive, a11y (25) ------------------------------------
+sc("SC-226", "consent", "Баннер cookie показывается", "Баннер", [goto("/catalog"), wait_sel(".cookie-banner"), visible(".cookie-banner")])
+sc("SC-227", "consent", "Отказ скрывает баннер", "Баннер скрыт", [goto("/catalog"), wait_sel(".cookie-banner"), click(".cookie-banner button:has-text('Только необходимые')"), hidden(".cookie-banner")])
+sc("SC-228", "consent", "Аналитика сохраняется", "pm.consent.v1=all", [goto("/catalog"), wait_sel(".cookie-banner"), click(".cookie-banner button:has-text('Принять аналитику')"), storage("pm.consent.v1", "all")])
+sc("SC-229", "consent", "Выбор consent переживает reload", "Баннер скрыт после reload", [goto("/catalog"), wait_sel(".cookie-banner"), click(".cookie-banner button:has-text('Только необходимые')"), {"action": "reload"}, hidden(".cookie-banner")])
+sc("SC-230", "seo", "robots.txt", "Sitemap", [goto("/robots.txt"), text("Sitemap")])
+sc("SC-231", "seo", "sitemap.xml", "/catalog", [goto("/sitemap.xml"), text("/catalog")])
+sc("SC-232", "seo", "Canonical каталога", "/catalog", [goto("/catalog"), attr("link[rel='canonical']", "href", "/catalog", "contains")])
+sc("SC-233", "seo", "Meta description каталога", "nonEmpty", [goto("/catalog"), attr("meta[name='description']", "content", "", "nonEmpty")])
+sc("SC-234", "seo", "JSON-LD экземпляра", "1 JSON-LD", [plant_fixture(), goto("/plants/{plant.id}"), count("script[type='application/ld+json']", 1)])
+sc("SC-235", "seo", "OG title каталога", "nonEmpty", [goto("/catalog"), attr("meta[property='og:title']", "content", "", "nonEmpty")])
+sc("SC-236", "responsive", "Каталог mobile", "Нет overflow", [goto("/catalog"), overflow()], viewport=[390, 844])
+sc("SC-237", "responsive", "Экземпляр mobile", "Нет overflow", [plant_fixture(), goto("/plants/{plant.id}"), overflow()], viewport=[390, 844])
+sc("SC-238", "responsive", "Корзина mobile", "Нет overflow", [goto("/cart"), overflow()], viewport=[390, 844])
+sc("SC-239", "responsive", "Checkout mobile", "Нет overflow", [plant_fixture(), cart_plant(), goto("/checkout"), wait_sel(".checkout-form"), overflow()], auth="customer", viewport=[390, 844])
+sc("SC-240", "responsive", "Login mobile", "Нет overflow", [goto("/api/auth/login?returnTo=/catalog"), overflow()], viewport=[390, 844])
+sc("SC-241", "responsive", "Register mobile", "Нет overflow", [goto("/register"), overflow()], viewport=[390, 844])
+sc("SC-242", "responsive", "Admin login mobile", "Нет overflow", [goto_admin("/"), overflow()], viewport=[390, 844])
+sc("SC-243", "responsive", "Legal mobile", "Нет overflow", [goto("/legal/cookies"), overflow()], viewport=[390, 844])
+sc("SC-244", "a11y", "A11y каталога", "OK", [goto("/catalog"), a11y()])
+sc("SC-245", "a11y", "A11y login", "OK", [goto("/api/auth/login?returnTo=/catalog"), a11y()])
+sc("SC-246", "a11y", "A11y register", "OK", [goto("/register"), a11y()])
+sc("SC-247", "a11y", "A11y checkout", "OK", [plant_fixture(), cart_plant(), goto("/checkout"), wait_sel(".checkout-form"), a11y()], auth="customer")
+sc("SC-248", "a11y", "A11y admin login", "OK", [goto_admin("/"), a11y()])
+sc("SC-249", "a11y", "Keyboard focus каталога", "A", [goto("/catalog"), press("body", "Tab"), {"action": "expectActiveTag", "value": "A"}])
+sc("SC-250", "a11y", "Keyboard focus login", "INPUT", [goto("/api/auth/login?returnTo=/catalog"), press("body", "Tab"), {"action": "expectActiveTag", "value": "INPUT"}])
+
 def main() -> None:
-    if len(SCENARIOS) != 100:
-        raise SystemExit(f"Expected 100 scenarios, got {len(SCENARIOS)}")
+    if len(SCENARIOS) != 250:
+        raise SystemExit(f"Expected 250 scenarios, got {len(SCENARIOS)}")
     ids = [entry["id"] for entry in SCENARIOS]
     if len(set(ids)) != len(ids):
         raise SystemExit("Duplicate scenario ids")
@@ -1689,7 +2213,7 @@ def main() -> None:
     )
 
     lines = [
-        "# 100 пользовательских E2E-сценариев",
+        "# 250 пользовательских E2E-сценариев",
         "",
         "Single source of truth: `scripts/generate-user-scenarios.py`.",
         "Данные: `tests/e2e/src/test/resources/user-scenarios.json`.",

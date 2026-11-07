@@ -241,7 +241,7 @@ export default function App() {
                 type="password"
                 value={password}
                 autoComplete="current-password"
-                minLength={12}
+                minLength={6}
                 onChange={(event) => setPassword(event.target.value)}
                 required
               />

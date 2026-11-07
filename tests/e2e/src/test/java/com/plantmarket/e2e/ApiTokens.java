@@ -16,22 +16,27 @@ final class ApiTokens {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private static final HttpClient CLIENT = HttpClient.newHttpClient();
   private static String customerToken;
+  private static long customerAt;
   private static String adminToken;
+  private static long adminAt;
   private static String qaCustomerToken;
+  private static long qaCustomerAt;
 
   private ApiTokens() {}
 
   static synchronized String customer(String apiUrl) throws Exception {
-    if (customerToken == null) {
+    if (customerToken == null || System.currentTimeMillis() - customerAt > 8 * 60_000L) {
       customerToken =
           login(apiUrl, "customer@plantmarket.local", "CustomerPassword123!", "customer");
+      customerAt = System.currentTimeMillis();
     }
     return customerToken;
   }
 
   static synchronized String admin(String apiUrl) throws Exception {
-    if (adminToken == null) {
+    if (adminToken == null || System.currentTimeMillis() - adminAt > 8 * 60_000L) {
       adminToken = login(apiUrl, "admin@plantmarket.local", "AdminPassword123!", "admin");
+      adminAt = System.currentTimeMillis();
     }
     return adminToken;
   }
@@ -45,9 +50,10 @@ final class ApiTokens {
   }
 
   static synchronized String qaCustomer(String apiUrl) throws Exception {
-    if (qaCustomerToken == null) {
+    if (qaCustomerToken == null || System.currentTimeMillis() - qaCustomerAt > 8 * 60_000L) {
       qaCustomerToken =
           login(apiUrl, "qa.customer@plantmarket.local", "QaCustomer123!", "qa-customer");
+      qaCustomerAt = System.currentTimeMillis();
     }
     return qaCustomerToken;
   }

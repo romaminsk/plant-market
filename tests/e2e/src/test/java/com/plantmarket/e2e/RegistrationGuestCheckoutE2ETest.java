@@ -43,16 +43,38 @@ class RegistrationGuestCheckoutE2ETest extends PlaywrightTestBase {
         .waitFor();
     page.locator("input[name='fullName']").fill("QA Registered Customer");
     page.locator("input[name='email']").fill(email);
-    page.locator("input[name='password']").fill("QaRegister123!");
+    page.locator("input[name='password']").fill("Qa1234");
+    page.locator("input[name='confirmPassword']").fill("Qa1234");
     page.locator("button[type='submit']").click();
     page.getByText("Аккаунт создан. Войдите.").waitFor();
     assertThat(page.locator("input[name='username']").inputValue()).isEqualTo(email);
-    page.locator("input[name='password']").fill("QaRegister123!");
+    page.locator("input[name='password']").fill("Qa1234");
     page.locator("button[type='submit']").click();
     page.getByRole(
             AriaRole.BUTTON, new com.microsoft.playwright.Page.GetByRoleOptions().setName("Выйти"))
         .waitFor();
     assertThat(page.url()).contains("/catalog");
+  }
+
+  @Test
+  void registrationRejectsMismatchedPasswords() {
+    String email = "qa-mismatch-" + UUID.randomUUID().toString().substring(0, 8) + "@example.test";
+    page.navigate(baseUrl + "/api/auth/login?returnTo=/catalog");
+    page.getByRole(
+            AriaRole.LINK,
+            new com.microsoft.playwright.Page.GetByRoleOptions().setName("Зарегистрироваться"))
+        .click();
+    page.getByRole(
+            AriaRole.HEADING,
+            new com.microsoft.playwright.Page.GetByRoleOptions().setName("Регистрация"))
+        .waitFor();
+    page.locator("input[name='fullName']").fill("QA Mismatch");
+    page.locator("input[name='email']").fill(email);
+    page.locator("input[name='password']").fill("Qa1234");
+    page.locator("input[name='confirmPassword']").fill("Qa5678");
+    page.locator("button[type='submit']").click();
+    page.getByText("Пароли не совпадают.").waitFor();
+    assertThat(page.url()).contains("/register");
   }
 
   @Test
