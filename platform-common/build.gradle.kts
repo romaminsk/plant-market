@@ -10,6 +10,7 @@ dependencies {
     api(libs.spring.web)
     api(libs.spring.boot.starter.jackson)
     api(libs.jakarta.validation.api)
+    api("org.springframework:spring-orm")
     compileOnly(libs.jakarta.servlet.api)
 
     testImplementation(libs.spring.boot.starter.test)

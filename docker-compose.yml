@@ -6,7 +6,7 @@ services:
     image: postgres:18.6
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-plantmarket}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-plantmarket}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       POSTGRES_DB: postgres
     ports:
       - '127.0.0.1:${POSTGRES_PORT:-5432}:5432'
@@ -50,13 +50,14 @@ services:
       context: .
       dockerfile: services/auth-service/Dockerfile
     environment:
+      APP_ENV: ${APP_ENV:-dev}
       DB_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_USER: ${POSTGRES_USER:-plantmarket}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-plantmarket}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       AUTH_SERVICE_PORT: 8090
       JWT_ISSUER: ${JWT_ISSUER:-http://localhost:8090}
-      JWT_SECRET: ${JWT_SECRET:-dev-only-plant-market-jwt-secret-change-me-0123456789}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-PT10M}
       JWT_REFRESH_TTL: ${JWT_REFRESH_TTL:-P7D}
       SESSION_COOKIE_NAME: ${SESSION_COOKIE_NAME:-PM-SESSION}
@@ -78,17 +79,17 @@ services:
       context: .
       dockerfile: services/catalog-service/Dockerfile
     environment:
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      APP_ENV: ${APP_ENV:-dev}
       DB_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_USER: ${POSTGRES_USER:-plantmarket}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-plantmarket}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       CATALOG_SERVICE_PORT: 8081
       MAIL_HOST: mailhog
       MAIL_PORT: 1025
       MEDIA_ROOT: /app/data/media
-      MEDIA_PUBLIC_BASE_URL: http://localhost:8081/media
-    ports:
-      - '127.0.0.1:${CATALOG_SERVICE_PORT:-8081}:8081'
+      MEDIA_PUBLIC_BASE_URL: http://localhost:8080/media
     volumes:
       - media-data:/app/data/media
     depends_on:
@@ -106,16 +107,17 @@ services:
       context: .
       dockerfile: services/order-service/Dockerfile
     environment:
+      APP_ENV: ${APP_ENV:-dev}
       DB_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_USER: ${POSTGRES_USER:-plantmarket}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-plantmarket}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       ORDER_SERVICE_PORT: 8083
       CATALOG_SERVICE_URI: http://catalog-service:8081
       PAYMENT_SERVICE_URI: http://payment-service:8084
       MAIL_HOST: mailhog
       MAIL_PORT: 1025
-      JWT_SECRET: ${JWT_SECRET:-dev-only-plant-market-jwt-secret-change-me-0123456789}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
     depends_on:
       postgres:
         condition: service_healthy
@@ -135,13 +137,15 @@ services:
       context: .
       dockerfile: services/payment-service/Dockerfile
     environment:
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      APP_ENV: ${APP_ENV:-dev}
       DB_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_USER: ${POSTGRES_USER:-plantmarket}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-plantmarket}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       PAYMENT_SERVICE_PORT: 8084
       PAYMENT_PROVIDER_URI: http://wiremock:8080
-      PAYMENT_WEBHOOK_SECRET: ${PAYMENT_WEBHOOK_SECRET:-dev-payment-webhook-secret}
+      PAYMENT_WEBHOOK_SECRET: ${PAYMENT_WEBHOOK_SECRET:?PAYMENT_WEBHOOK_SECRET is required}
     depends_on:
       postgres:
         condition: service_healthy
@@ -159,11 +163,12 @@ services:
       context: .
       dockerfile: services/api-gateway/Dockerfile
     environment:
+      APP_ENV: ${APP_ENV:-dev}
       API_GATEWAY_PORT: 8080
       AUTH_SERVICE_URI: http://auth-service:8090
       CATALOG_SERVICE_URI: http://catalog-service:8081
       ORDER_SERVICE_URI: http://order-service:8083
-      JWT_SECRET: ${JWT_SECRET:-dev-only-plant-market-jwt-secret-change-me-0123456789}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       CORS_ALLOWED_ORIGINS: '${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:3100,http://localhost:5173}'
       RATE_LIMIT_PUBLIC_RPM: ${RATE_LIMIT_PUBLIC_RPM:-60}
       RATE_LIMIT_AUTH_RPM: ${RATE_LIMIT_AUTH_RPM:-10}

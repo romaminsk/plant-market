@@ -1,5 +1,7 @@
 package com.plantmarket.e2e;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.options.AriaRole;
 import com.plantmarket.e2e.pages.AdminPage;
@@ -44,5 +46,41 @@ class AdminGalleryUiTest extends PlaywrightTestBase {
             new com.microsoft.playwright.Page.GetByRoleOptions().setName("Сохранить галерею"))
         .click();
     page.getByText("Галерея сохранена").waitFor();
+  }
+
+  @Test
+  void switchingPlantsDoesNotKeepPreviousGalleryUrls() throws Exception {
+    AdminPage admin = new AdminPage(page);
+    admin.openWithToken(adminUrl, ApiTokens.admin(apiUrl));
+    admin.waitForProducts();
+
+    page.getByRole(
+            AriaRole.BUTTON,
+            new com.microsoft.playwright.Page.GetByRoleOptions().setName("Экземпляры"))
+        .click();
+
+    editPlant("IP-012");
+    String firstGeneral = generalPhotoInput().inputValue();
+    assertThat(firstGeneral).contains("philodendron");
+
+    editPlant("IP-011");
+    String secondGeneral = generalPhotoInput().inputValue();
+    assertThat(secondGeneral).contains("anthurium");
+  }
+
+  private void editPlant(String code) {
+    page.locator("tr")
+        .filter(new Locator.FilterOptions().setHasText(code))
+        .first()
+        .getByRole(AriaRole.BUTTON, new Locator.GetByRoleOptions().setName("Редактировать"))
+        .click();
+    page.getByRole(
+            AriaRole.HEADING,
+            new com.microsoft.playwright.Page.GetByRoleOptions().setName("Галерея WYSIWYG"))
+        .waitFor();
+  }
+
+  private Locator generalPhotoInput() {
+    return page.locator(".gallery-editor-row input").first();
   }
 }

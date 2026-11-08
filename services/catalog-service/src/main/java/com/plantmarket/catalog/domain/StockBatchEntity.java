@@ -12,6 +12,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -50,6 +51,10 @@ public class StockBatchEntity {
   @Enumerated(EnumType.STRING)
   @Column(name = "status", length = 20, nullable = false)
   private StockBatchStatus status;
+
+  @Version
+  @Column(name = "version", nullable = false)
+  private long version;
 
   @Column(name = "created_at", nullable = false)
   private Instant createdAt;

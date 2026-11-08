@@ -97,11 +97,11 @@ export interface StockBatch {
   status: 'QUARANTINE' | 'AVAILABLE' | 'DEPLETED';
 }
 
-interface TokenResponse {
-  accessToken: string;
-  refreshToken: string;
-  tokenType: string;
-  expiresIn: number;
+interface AdminUser {
+  id: string;
+  email: string;
+  fullName: string;
+  roles: string[];
 }
 
 interface Problem {
@@ -112,26 +112,71 @@ interface Problem {
 type JsonBody = Record<string, unknown>;
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
+const AUTH_URL = API_URL;
 
-export async function login(email: string, password: string): Promise<TokenResponse> {
-  const response = await fetch(`${API_URL}/api/v1/auth/login`, {
+export async function login(email: string, password: string): Promise<AdminUser> {
+  const response = await fetch(`${AUTH_URL}/api/v1/auth/session`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', 'X-Admin-Request': '1' },
     body: JSON.stringify({ email, password }),
   });
   if (!response.ok) {
     const problem = (await response.json().catch(() => ({}))) as Problem;
     throw new Error(problem.detail ?? problem.title ?? `Login failed (${response.status})`);
   }
-  return (await response.json()) as TokenResponse;
+  return (await response.json()) as AdminUser;
 }
 
-async function request<T>(path: string, accessToken: string, init: RequestInit = {}): Promise<T> {
-  const headers: Record<string, string> = { Authorization: `Bearer ${accessToken}` };
-  if (init.body) {
+export async function checkSession(): Promise<boolean> {
+  const response = await fetch(`${API_URL}/api/v1/auth/me`, {
+    credentials: 'include',
+    headers: { 'X-Admin-Request': '1' },
+  });
+  if (response.ok) {
+    return true;
+  }
+  if (response.status !== 401) {
+    return false;
+  }
+  return refreshSession();
+}
+
+export async function refreshSession(): Promise<boolean> {
+  const response = await fetch(`${AUTH_URL}/api/v1/auth/session/refresh`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'X-Admin-Request': '1' },
+  });
+  return response.ok;
+}
+
+export async function logout(): Promise<void> {
+  await fetch(`${AUTH_URL}/api/v1/auth/session/logout`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'X-Admin-Request': '1' },
+  });
+}
+
+async function request<T>(
+  path: string,
+  _accessToken: string,
+  init: RequestInit = {},
+  retry = true,
+): Promise<T> {
+  const headers: Record<string, string> = { 'X-Admin-Request': '1' };
+  if (init.body && !(init.body instanceof FormData)) {
     headers['Content-Type'] = 'application/json';
   }
-  const response = await fetch(`${API_URL}${path}`, { ...init, headers });
+  const response = await fetch(`${API_URL}${path}`, {
+    ...init,
+    credentials: 'include',
+    headers: { ...headers, ...(init.headers as Record<string, string> | undefined) },
+  });
+  if (response.status === 401 && retry && (await refreshSession())) {
+    return request<T>(path, _accessToken, init, false);
+  }
   if (!response.ok) {
     const problem = (await response.json().catch(() => ({}))) as Problem;
     throw new Error(problem.detail ?? problem.title ?? `Request failed (${response.status})`);
@@ -277,12 +322,13 @@ export async function updatePlantPhotos(
   });
 }
 
-export async function uploadMedia(accessToken: string, file: File): Promise<string> {
+export async function uploadMedia(_accessToken: string, file: File): Promise<string> {
   const form = new FormData();
   form.append('file', file);
   const response = await fetch(`${API_URL}/api/v1/media`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${accessToken}` },
+    credentials: 'include',
+    headers: { 'X-Admin-Request': '1' },
     body: form,
   });
   if (!response.ok) {

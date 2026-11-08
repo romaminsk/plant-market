@@ -1,6 +1,7 @@
 package com.plantmarket.payment.service;
 
 import com.plantmarket.common.error.ApiException;
+import com.plantmarket.common.security.SecretPolicy;
 import com.plantmarket.payment.client.PaymentProviderClient;
 import com.plantmarket.payment.client.ProviderPayment;
 import com.plantmarket.payment.domain.PaymentEntity;
@@ -11,6 +12,7 @@ import com.plantmarket.payment.web.dto.PaymentResponse;
 import com.plantmarket.payment.web.dto.PaymentWebhookRequest;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,25 +26,63 @@ public class PaymentService {
   public PaymentService(
       PaymentRepository paymentRepository,
       PaymentProviderClient providerClient,
-      @Value("${app.payment.webhook-secret}") String webhookSecret) {
+      @Value("${app.payment.webhook-secret}") String webhookSecret,
+      @Value("${app.environment:dev}") String environment) {
     this.paymentRepository = paymentRepository;
     this.providerClient = providerClient;
     this.webhookSecret = webhookSecret;
+    SecretPolicy.validateWebhookSecret(webhookSecret, environment);
   }
 
   @Transactional
   public PaymentResponse create(CreatePaymentRequest request) {
-    ProviderPayment providerPayment =
-        providerClient.create(request.orderId(), request.amountMinor(), request.currency());
+    return paymentRepository
+        .findByOrderId(request.orderId())
+        .map(existing -> {
+          if (existing.getAmountMinor() != request.amountMinor()
+              || !existing.getCurrency().equals(request.currency())) {
+            throw ApiException.conflict(
+                "Payment for order " + request.orderId() + " has different amount or currency");
+          }
+          return toResponse(existing);
+        })
+        .orElseGet(() -> {
+          ProviderPayment providerPayment =
+              providerClient.create(request.orderId(), request.amountMinor(), request.currency());
+          PaymentEntity payment =
+              new PaymentEntity(
+                  request.orderId(),
+                  request.amountMinor(),
+                  request.currency(),
+                  mapStatus(providerPayment.status()),
+                  providerPayment.id(),
+                  providerPayment.redirectUrl());
+          try {
+            return toResponse(paymentRepository.saveAndFlush(payment));
+          } catch (DataIntegrityViolationException exception) {
+            return paymentRepository
+                .findByOrderId(request.orderId())
+                .map(this::toResponse)
+                .orElseThrow(() -> exception);
+          }
+        });
+  }
+
+  @Transactional
+  public PaymentResponse refund(UUID paymentId) {
     PaymentEntity payment =
-        new PaymentEntity(
-            request.orderId(),
-            request.amountMinor(),
-            request.currency(),
-            mapStatus(providerPayment.status()),
-            providerPayment.id(),
-            providerPayment.redirectUrl());
-    return toResponse(paymentRepository.save(payment));
+        paymentRepository
+            .findById(paymentId)
+            .orElseThrow(() -> ApiException.notFound("Payment not found: " + paymentId));
+    if (payment.getStatus() == PaymentStatus.REFUNDED) {
+      return toResponse(payment);
+    }
+    if (payment.getStatus() != PaymentStatus.CONFIRMED) {
+      throw ApiException.conflict("Only CONFIRMED payments can be refunded");
+    }
+    providerClient.refund(payment.getProviderRef());
+    payment.updateStatus(PaymentStatus.REFUNDED);
+    return toResponse(payment);
   }
 
   @Transactional(readOnly = true)

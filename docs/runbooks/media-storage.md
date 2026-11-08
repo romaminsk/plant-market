@@ -17,7 +17,7 @@ docker compose ps catalog-service
 docker compose exec -T catalog-service ls -la /app/data/media | tail
 docker compose exec -T catalog-service df -h /app/data
 docker volume inspect plant-market_media-data
-curl -sI http://localhost:8081/media/<file>.png
+curl -sI http://localhost:8080/media/<file>.png
 ```
 
 Проверить, что volume `media-data` смонтирован и не заполнен. В логах искать

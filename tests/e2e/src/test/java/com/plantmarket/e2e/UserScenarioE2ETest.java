@@ -201,7 +201,13 @@ class UserScenarioE2ETest {
       if ("admin".equals(auth)) {
         String token = adminToken();
         page.navigate(adminUrl);
-        page.evaluate("t => localStorage.setItem('pm.admin.accessToken', t)", token);
+        context.addCookies(
+            java.util.List.of(
+                new com.microsoft.playwright.options.Cookie("pm.admin.access", token)
+                    .setDomain("localhost")
+                    .setPath("/")
+                    .setHttpOnly(true)
+                    .setSameSite(com.microsoft.playwright.options.SameSiteAttribute.STRICT)));
         page.reload();
         page.getByRole(AriaRole.HEADING, new Page.GetByRoleOptions().setName("Продукты")).waitFor();
       }

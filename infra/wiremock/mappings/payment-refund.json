@@ -1,0 +1,18 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/provider/refunds"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "id": "{{jsonPath request.body '$.providerRef'}}",
+      "status": "REFUNDED",
+      "redirectUrl": null
+    },
+    "transformers": ["response-template"]
+  }
+}

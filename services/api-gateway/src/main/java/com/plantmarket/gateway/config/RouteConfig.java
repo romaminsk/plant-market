@@ -18,6 +18,7 @@ public class RouteConfig {
     return builder
         .routes()
         .route("auth-service", route -> route.path("/api/v1/auth/**").uri(authUri))
+        .route("media", route -> route.path("/media/**").uri(catalogUri))
         .route(
             "catalog-service",
             route ->

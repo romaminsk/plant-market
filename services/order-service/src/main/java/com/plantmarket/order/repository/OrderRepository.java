@@ -14,6 +14,8 @@ public interface OrderRepository extends JpaRepository<OrderEntity, UUID> {
 
   List<OrderEntity> findByCustomerIdOrderByCreatedAtDesc(UUID customerId);
 
+  Optional<OrderEntity> findByIdempotencyKey(String idempotencyKey);
+
   @Lock(LockModeType.PESSIMISTIC_WRITE)
   @Query("select orders from OrderEntity orders where orders.id = :id")
   Optional<OrderEntity> findByIdForUpdate(@Param("id") UUID id);

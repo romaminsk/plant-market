@@ -7,7 +7,10 @@
   `{items, page, size, totalElements, totalPages}`.
 - Ошибки — RFC 7807, `application/problem+json`:
   `type, title, status, detail, instance, traceId, errors[]`.
-- Все `POST`, создающие деньги или заказы, требуют `Idempotency-Key`.
+- `POST /orders` и `POST /orders/guest` поддерживают `Idempotency-Key`: повтор с тем же
+  ключом возвращает тот же заказ. Storefront BFF отправляет ключ автоматически.
+- `POST /orders/{id}/pay` идемпотентен по состоянию заказа; `payments.order_id` уникален,
+  повторный `POST /payments` возвращает существующий платёж.
 - `X-Request-Id` прокидывается сквозь все сервисы и попадает в логи.
 - Публичные API возвращают `Optional` вместо `null` там, где это возможно.
 

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { COOKIE_SECURE, authServiceUrl } from '@/lib/auth';
 import { createChallenge, createVerifier } from '@/lib/pkce';
+import { safeReturnTo } from '@/lib/safe-redirect';
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
@@ -15,9 +16,7 @@ export function GET(request: NextRequest) {
   const origin = request.nextUrl.origin;
   const verifier = createVerifier();
   const state = createVerifier();
-  const requested = request.nextUrl.searchParams.get('returnTo') ?? '/checkout';
-  const returnTo =
-    requested.startsWith('/') && !requested.startsWith('//') ? requested : '/checkout';
+  const returnTo = safeReturnTo(request.nextUrl.searchParams.get('returnTo'));
 
   const authorize = new URL('/oauth2/authorize', authServiceUrl());
   authorize.searchParams.set('response_type', 'code');

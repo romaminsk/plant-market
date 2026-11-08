@@ -3,6 +3,9 @@ package com.plantmarket.e2e.pages;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
+import com.microsoft.playwright.options.Cookie;
+import com.microsoft.playwright.options.SameSiteAttribute;
+import java.util.List;
 
 public final class AdminPage {
 
@@ -19,7 +22,14 @@ public final class AdminPage {
 
   public void openWithToken(String baseUrl, String accessToken) {
     page.navigate(baseUrl);
-    page.evaluate("token => localStorage.setItem('pm.admin.accessToken', token)", accessToken);
+    page.context()
+        .addCookies(
+            List.of(
+                new Cookie("pm.admin.access", accessToken)
+                    .setDomain("localhost")
+                    .setPath("/")
+                    .setHttpOnly(true)
+                    .setSameSite(SameSiteAttribute.STRICT)));
     page.reload();
   }
 

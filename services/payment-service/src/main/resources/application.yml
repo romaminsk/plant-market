@@ -31,6 +31,12 @@ management:
         enabled: true
 
 app:
+  security:
+    enabled: ${SECURITY_ENABLED:true}
+  jwt:
+    secret: ${JWT_SECRET}
+    environment: ${APP_ENV:prod}
+  environment: ${APP_ENV:prod}
   payment:
     provider-uri: ${PAYMENT_PROVIDER_URI:http://localhost:8089}
-    webhook-secret: ${PAYMENT_WEBHOOK_SECRET:dev-payment-webhook-secret}
+    webhook-secret: ${PAYMENT_WEBHOOK_SECRET}

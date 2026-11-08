@@ -30,12 +30,17 @@ import com.plantmarket.order.web.dto.OrderResponse;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class OrderService {
+
+  private static final Logger log = LoggerFactory.getLogger(OrderService.class);
 
   private final OrderRepository orderRepository;
   private final OrderStatusHistoryRepository historyRepository;
@@ -63,8 +68,20 @@ public class OrderService {
   }
 
   @Transactional
-  public OrderResponse create(UUID customerId, String customerEmail, CreateOrderRequest request) {
-    OrderEntity order = new OrderEntity(customerId, customerEmail, "BYN");
+  public OrderResponse create(
+      UUID customerId, String customerEmail, CreateOrderRequest request, String idempotencyKey) {
+    if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+      return orderRepository
+          .findByIdempotencyKey(idempotencyKey)
+          .map(this::toResponse)
+          .orElseGet(() -> createNew(customerId, customerEmail, request, idempotencyKey));
+    }
+    return createNew(customerId, customerEmail, request, null);
+  }
+
+  private OrderResponse createNew(
+      UUID customerId, String customerEmail, CreateOrderRequest request, String idempotencyKey) {
+    OrderEntity order = new OrderEntity(customerId, customerEmail, "BYN", idempotencyKey);
     for (CreateOrderItemRequest item : request.items()) {
       boolean hasVariant = item.variantId() != null;
       boolean hasPlant = item.individualPlantId() != null;
@@ -99,7 +116,17 @@ public class OrderService {
                 item.quantity()));
       }
     }
-    orderRepository.save(order);
+    try {
+      orderRepository.saveAndFlush(order);
+    } catch (DataIntegrityViolationException exception) {
+      if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+        return orderRepository
+            .findByIdempotencyKey(idempotencyKey)
+            .map(this::toResponse)
+            .orElseThrow(() -> exception);
+      }
+      throw exception;
+    }
     record(order, OrderStatus.DRAFT, "order.created");
     return toResponse(order);
   }
@@ -112,18 +139,22 @@ public class OrderService {
   }
 
   @Transactional
-  public OrderResponse guestCheckout(GuestCheckoutRequest request) {
+  public OrderResponse guestCheckout(GuestCheckoutRequest request, String idempotencyKey) {
     OrderResponse created =
-        create(null, request.guestEmail(), new CreateOrderRequest(request.items()));
+        create(null, request.guestEmail(), new CreateOrderRequest(request.items()), idempotencyKey);
     OrderEntity order =
         orderRepository
             .findByIdForUpdate(created.id())
             .orElseThrow(() -> ApiException.notFound("Order not found: " + created.id()));
-    checkoutOrder(
-        order,
-        new CheckoutRequest(
-            request.shippingZoneId(), request.thermalPack(), request.deliveryAddress()));
-    payOrder(order);
+    if (order.getStatus() == OrderStatus.DRAFT) {
+      checkoutOrder(
+          order,
+          new CheckoutRequest(
+              request.shippingZoneId(), request.thermalPack(), request.deliveryAddress()));
+    }
+    if (order.getStatus() == OrderStatus.PENDING_PAYMENT) {
+      payOrder(order);
+    }
     return toResponse(order);
   }
 
@@ -175,6 +206,9 @@ public class OrderService {
   }
 
   private void payOrder(OrderEntity order) {
+    if (order.getStatus() == OrderStatus.PAID) {
+      return;
+    }
     if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
       throw ApiException.conflict("Only PENDING_PAYMENT orders can be paid");
     }
@@ -183,7 +217,22 @@ public class OrderService {
     if (!"CONFIRMED".equals(payment.status())) {
       throw ApiException.conflict("Payment is not confirmed: " + payment.status());
     }
-    catalogClient.confirm(order.getId());
+    try {
+      catalogClient.confirm(order.getId());
+    } catch (RuntimeException exception) {
+      log.error("Stock confirmation failed for order {}; compensating", order.getId(), exception);
+      try {
+        paymentClient.refund(payment.id());
+      } catch (RuntimeException refundFailure) {
+        log.error("Payment refund failed for payment {}", payment.id(), refundFailure);
+      }
+      try {
+        catalogClient.release(order.getId());
+      } catch (RuntimeException releaseFailure) {
+        log.warn("Reservation release failed for order {}", order.getId(), releaseFailure);
+      }
+      throw ApiException.conflict("Could not confirm stock; payment was refunded");
+    }
     order.markPaid();
     record(order, OrderStatus.PAID, "order.paid");
   }

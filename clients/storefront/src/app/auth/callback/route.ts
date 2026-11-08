@@ -1,15 +1,14 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { ACCESS_COOKIE, COOKIE_SECURE, REFRESH_COOKIE, authServiceUrl } from '@/lib/auth';
+import { safeReturnTo } from '@/lib/safe-redirect';
 
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get('code');
   const state = request.nextUrl.searchParams.get('state');
   const verifier = request.cookies.get('pm.pkce')?.value;
   const expectedState = request.cookies.get('pm.state')?.value;
-  const requested = request.cookies.get('pm.return')?.value ?? '/checkout';
-  const returnTo =
-    requested.startsWith('/') && !requested.startsWith('//') ? requested : '/checkout';
+  const returnTo = safeReturnTo(request.cookies.get('pm.return')?.value);
   const origin = request.nextUrl.origin;
 
   if (!code || !verifier || !state || state !== expectedState) {

@@ -14,8 +14,10 @@ import {
   fetchProducts,
   fetchStockBatches,
   fetchVariants,
+  checkSession,
   formatPrice,
   login,
+  logout as logoutSession,
   releaseStockBatch,
   transitionPlant,
   updateCategory,
@@ -27,7 +29,6 @@ import type { Category, IndividualPlant, Product, StockBatch, Variant } from './
 import { PlantGalleryEditor } from './PlantGalleryEditor';
 import { ClaimsPanel } from './ClaimsPanel';
 
-const TOKEN_KEY = 'pm.admin.accessToken';
 const CURRENCY = 'BYN';
 
 type Tab = 'products' | 'categories' | 'plants' | 'variants' | 'stock' | 'claims';
@@ -43,9 +44,7 @@ function formNumber(form: FormData, key: string): number {
 export default function App() {
   const [email, setEmail] = useState('admin@plantmarket.local');
   const [password, setPassword] = useState('');
-  const [accessToken, setAccessToken] = useState<string | null>(() =>
-    localStorage.getItem(TOKEN_KEY),
-  );
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('products');
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -65,12 +64,18 @@ export default function App() {
   const [loggingIn, setLoggingIn] = useState(false);
 
   useEffect(() => {
-    if (accessToken) {
-      localStorage.setItem(TOKEN_KEY, accessToken);
-    } else {
-      localStorage.removeItem(TOKEN_KEY);
-    }
-  }, [accessToken]);
+    let cancelled = false;
+    checkSession()
+      .then((valid) => {
+        if (valid && !cancelled) {
+          setAccessToken('cookie');
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!accessToken) {
@@ -188,8 +193,8 @@ export default function App() {
     setLoggingIn(true);
     setError(null);
     try {
-      const tokens = await login(email, password);
-      setAccessToken(tokens.accessToken);
+      await login(email, password);
+      setAccessToken('cookie');
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Неизвестная ошибка');
     } finally {
@@ -210,7 +215,8 @@ export default function App() {
     }
   }
 
-  function logout() {
+  async function logout() {
+    await logoutSession().catch(() => undefined);
     setAccessToken(null);
     setPassword('');
     setError(null);
@@ -223,7 +229,7 @@ export default function App() {
         <section className="card login-card">
           <p className="eyebrow">Plant Market · Operations</p>
           <h1>Админка</h1>
-          <p className="muted">Вход через auth-service. JWT хранится в localStorage для E2E.</p>
+          <p className="muted">Вход через auth-service. Токен хранится в httpOnly cookie.</p>
           <form onSubmit={handleLogin}>
             <label>
               Email
@@ -727,6 +733,7 @@ export default function App() {
           </div>
           {editingPlant && accessToken ? (
             <PlantGalleryEditor
+              key={editingPlant.id}
               accessToken={accessToken}
               plant={editingPlant}
               onSaved={(updated) => {

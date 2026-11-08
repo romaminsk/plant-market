@@ -24,6 +24,27 @@ public class HttpPaymentProviderClient implements PaymentProviderClient {
   }
 
   @Override
+  public ProviderPayment refund(String providerRef) {
+    try {
+      ProviderPayment payment =
+          restClient
+              .post()
+              .uri("/provider/refunds")
+              .contentType(MediaType.APPLICATION_JSON)
+              .body(Map.of("providerRef", providerRef))
+              .retrieve()
+              .body(ProviderPayment.class);
+      if (payment == null) {
+        throw ApiException.conflict("Payment provider returned an empty refund response");
+      }
+      return payment;
+    } catch (RestClientResponseException exception) {
+      throw ApiException.conflict(
+          "Payment provider rejected the refund: " + exception.getStatusCode());
+    }
+  }
+
+  @Override
   public ProviderPayment create(UUID orderId, long amountMinor, String currency) {
     try {
       ProviderPayment payment =

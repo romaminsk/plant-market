@@ -267,9 +267,9 @@
 | `order-service`   |     7 |           82% |
 | `payment-service` |     1 |           78% |
 | `api-gateway`     |    10 |           97% |
-| `tests:e2e`       |   475 |             — |
+| `tests:e2e`       |   478 |             — |
 
-Итого **38 backend-тестов + 475 E2E = 513 тестов, 0 падений**. JaCoCo-порог 70% проходит.
+Итого **38 backend-тестов + 478 E2E = 516 тестов, 0 падений**. JaCoCo-порог 70% проходит.
 
 ### UI-матрица (100 кейсов)
 
@@ -336,9 +336,30 @@
   покупка по шагам, данные, безопасность, фронтенд, тесты, инфраструктура, полное ревью
   с находками P0–P3 и словарь простыми словами.
 
+### P0-фиксы безопасности и денег (2026-11-08)
+
+- **P0-1:** catalog/payment закрыты Spring Security; reservation API требует `ROLE_SYSTEM`,
+  staff-мутации — staff-роль; catalog/payment больше не публикуют порты на хост; media идёт через
+  gateway `/media/**`; order-service выпускает короткоживущий SYSTEM-JWT для внутренних вызовов.
+- **P0-2:** `Idempotency-Key` для `POST /orders` и `/orders/guest`; повтор возвращает тот же заказ;
+  `payments.order_id` уникален, повторный `POST /payments` возвращает существующий платёж; при
+  сбое `catalog.confirm` order-service делает refund и release, а не оставляет оплату без товара.
+- **P0-3:** `JWT_SECRET`/`PAYMENT_WEBHOOK_SECRET`/`POSTGRES_PASSWORD` обязательны; `SecretPolicy`
+  не даёт стартовать с dev-секретом при `APP_ENV=prod`; dev-значения остаются только для demo.
+- **P0-4:** admin-сессия в httpOnly cookie, gateway cookie→bearer, refresh/logout, CSRF-барьер
+  `X-Admin-Request` для не-GET; localStorage-токен удалён.
+- **P0-5:** `safeReturnTo` отклоняет `//`, `\`, encoded-backslash и внешние origin; покрыт
+  unit-тестами Node.
+- **P0-6:** `@Version` на products/variants/plants/batches + миграция V6; конфликт обновления — 409.
+- **P0-7:** `PlantGalleryEditor` ключуется по `plant.id`; переключение растения больше не тащит
+  фото предыдущего.
+- Проверено: backend integration-тесты, admin login/gallery E2E, guest checkout с SYSTEM-токенами,
+  повтор guest checkout с тем же `Idempotency-Key`, media upload/download через gateway.
+
 ## Следующие 3 шага
 
-1. Admin BFF (httpOnly cookies) + Idempotency-Key для checkout/pay — закрыть pre-prod блокеры.
+1. P1: отмена заказа по истечении резерва, outbox `SKIP LOCKED`, HMAC/replay для webhook,
+   распределённый rate limit и таймауты HTTP/SMTP.
 2. Storefront: слоты доставки, отзывы, consent-версионирование; slug-URL и sitemap.
 3. Staging A1/A15, MinIO/S3, юридический A11 L1–L8; до подписи prod запрещён.
 
@@ -348,8 +369,8 @@
 - A11 T2: double-submit CSRF реализован; `__Host-`/Secure cookie включаются prod-конфигом, проверить в staging.
 - In-memory SAS authorizations теряются при рестарте auth-service; для одного экземпляра Phase 1 допустимо (ADR-0006).
 - In-memory rate limit не разделяется между экземплярами gateway (ADR-0005).
-- Прямые порты auth/catalog открыты на localhost (OAuth и media); order/payment больше не
-  публикуются. Перед prod закрыть auth/catalog за reverse proxy.
+- Прямой порт auth открыт на localhost (нужен для OAuth-редиректов); catalog/payment/order
+  больше не публикуются на хост. Перед prod закрыть auth за reverse proxy.
 - MailHog `v1.0.1` — только `linux/amd64`.
 - A11 L1–L8 (торговый реестр, СКНО/ЕРИП, ПДн, CITES, оферта, налоги) не закрыты: нужен
   владелец/юрист. Phase 2/3 закрыты по коду, но это не разрешение на prod.
@@ -362,9 +383,10 @@
 - `docker-compose.test.yml` остаётся опциональным override для ручного прогона тестового стека.
 - Storefront checkout: адрес есть; слоты доставки и отзывы — следующая итерация. Refresh в BFF
   реализован только в checkout, history-страницы при истёкшем токене просят войти снова.
-- **Pre-prod блокеры из ревью:** admin JWT в localStorage (нужен admin BFF), Idempotency-Key для
-  create/pay, J6/B2B (Phase 4), slug-URL, tenant_id, revocation refresh при logout.
-- Фото принимаются как URL; API загрузки есть, UI загрузки в админке — следующий шаг.
+- **Pre-prod блокеры из ревью:** J6/B2B (Phase 4), slug-URL, tenant_id, revocation refresh при
+  logout. P0-блокеры безопасности/денег закрыты 2026-11-08 (см. ниже).
+- Фото принимаются как URL и через загрузку в админке; media отдаётся через gateway
+  (`/media/**`), CSP storefront разрешает этот origin.
 - Media volume не реплицируется и не бэкапится; публичные файлы без content sniffing (ADR-0011).
 - Галерея в seed использует placehold.co; фотостандарт (нейтральный фон, линейка, 4 ракурса)
   должен соблюдаться оператором при загрузке реальных фото.
@@ -402,5 +424,5 @@
   показывается покупателю в деталях заказа.
 - **Ruling:** все мутации каталога/stock/shipping/media требуют staff-роль на gateway; reservation
   API не публикуется наружу.
-- **Ruling:** admin JWT в localStorage — известный pre-prod блокер; до admin BFF A11 T1/T2 не
-  считать полностью закрытыми.
+- **Ruling:** admin-сессия переведена на httpOnly cookies (`pm.admin.access`/`pm.admin.refresh`),
+  gateway превращает cookie в bearer; localStorage больше не используется.

@@ -90,6 +90,11 @@ public class AuthService {
 
   @Transactional
   public TokenResponse login(LoginRequest request) {
+    return loginWithUser(request).tokens();
+  }
+
+  @Transactional
+  public LoginResult loginWithUser(LoginRequest request) {
     UserEntity user =
         userRepository
             .findByEmailIgnoreCase(normalizeEmail(request.email()))
@@ -100,8 +105,10 @@ public class AuthService {
     if (user.getStatus() != UserStatus.ACTIVE) {
       throw ApiException.forbidden("Account is disabled");
     }
-    return issueTokens(user);
+    return new LoginResult(issueTokens(user), toResponse(user));
   }
+
+  public record LoginResult(TokenResponse tokens, UserResponse user) {}
 
   @Transactional(noRollbackFor = TokenReuseException.class)
   public TokenResponse refresh(RefreshRequest request) {

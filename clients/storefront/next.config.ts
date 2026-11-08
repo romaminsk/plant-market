@@ -6,7 +6,7 @@ const contentSecurityPolicy = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' https: data:",
+  `img-src 'self' https: data: ${apiUrl}`,
   `connect-src 'self' ${apiUrl} ${authUrl}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",

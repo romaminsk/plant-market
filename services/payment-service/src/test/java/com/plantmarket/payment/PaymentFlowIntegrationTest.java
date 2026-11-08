@@ -4,6 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.plantmarket.payment.client.PaymentProviderClient;
 import com.plantmarket.payment.client.ProviderPayment;
+import com.plantmarket.payment.domain.PaymentEntity;
+import com.plantmarket.payment.domain.PaymentStatus;
+import com.plantmarket.payment.repository.PaymentRepository;
 import com.plantmarket.payment.web.dto.CreatePaymentRequest;
 import com.plantmarket.payment.web.dto.PaymentResponse;
 import com.plantmarket.payment.web.dto.PaymentWebhookRequest;
@@ -50,6 +53,72 @@ class PaymentFlowIntegrationTest {
   }
 
   @Autowired private TestRestTemplate restTemplate;
+  @Autowired private PaymentRepository paymentRepository;
+
+  @Test
+  void refundsConfirmedPaymentIdempotently() {
+    UUID orderId = UUID.randomUUID();
+    PaymentResponse created =
+        restTemplate
+            .postForEntity(
+                "/api/v1/payments",
+                new CreatePaymentRequest(orderId, 5000L, "BYN"),
+                PaymentResponse.class)
+            .getBody();
+    assertThat(created).isNotNull();
+
+    ResponseEntity<PaymentResponse> first =
+        restTemplate.postForEntity(
+            "/api/v1/payments/" + created.id() + "/refund", null, PaymentResponse.class);
+    ResponseEntity<PaymentResponse> second =
+        restTemplate.postForEntity(
+            "/api/v1/payments/" + created.id() + "/refund", null, PaymentResponse.class);
+
+    assertThat(first.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(first.getBody()).isNotNull();
+    assertThat(first.getBody().status()).isEqualTo(PaymentStatus.REFUNDED);
+    assertThat(second.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(second.getBody()).isNotNull();
+    assertThat(second.getBody().status()).isEqualTo(PaymentStatus.REFUNDED);
+  }
+
+  @Test
+  void rejectsRefundForNonConfirmedPayment() {
+    PaymentEntity failed =
+        paymentRepository.saveAndFlush(
+            new PaymentEntity(
+                UUID.randomUUID(),
+                1000L,
+                "BYN",
+                PaymentStatus.FAILED,
+                "failed-" + UUID.randomUUID(),
+                null));
+
+    ResponseEntity<String> response =
+        restTemplate.postForEntity(
+            "/api/v1/payments/" + failed.getId() + "/refund", null, String.class);
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+  }
+
+  @Test
+  void creatingPaymentTwiceForSameOrderReturnsSamePayment() {
+    UUID orderId = UUID.randomUUID();
+    ResponseEntity<PaymentResponse> first =
+        restTemplate.postForEntity(
+            "/api/v1/payments",
+            new CreatePaymentRequest(orderId, 129900L, "BYN"),
+            PaymentResponse.class);
+    ResponseEntity<PaymentResponse> second =
+        restTemplate.postForEntity(
+            "/api/v1/payments",
+            new CreatePaymentRequest(orderId, 129900L, "BYN"),
+            PaymentResponse.class);
+
+    assertThat(first.getBody()).isNotNull();
+    assertThat(second.getBody()).isNotNull();
+    assertThat(second.getBody().id()).isEqualTo(first.getBody().id());
+  }
 
   @Test
   void createsPaymentAndAcceptsSignedWebhook() {
@@ -62,14 +131,15 @@ class PaymentFlowIntegrationTest {
     assertThat(created.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     assertThat(created.getBody()).isNotNull();
     assertThat(created.getBody().status().name()).isEqualTo("CONFIRMED");
-    assertThat(created.getBody().providerRef()).isEqualTo("provider-test-1");
+    String providerRef = created.getBody().providerRef();
+    assertThat(providerRef).isNotBlank();
 
     HttpHeaders headers = new HttpHeaders();
     headers.set("X-Provider-Secret", "dev-payment-webhook-secret");
     ResponseEntity<PaymentResponse> webhook =
         restTemplate.postForEntity(
             "/api/v1/payments/webhook",
-            new HttpEntity<>(new PaymentWebhookRequest("provider-test-1", "REFUNDED"), headers),
+            new HttpEntity<>(new PaymentWebhookRequest(providerRef, "REFUNDED"), headers),
             PaymentResponse.class);
     assertThat(webhook.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(webhook.getBody()).isNotNull();
@@ -80,8 +150,7 @@ class PaymentFlowIntegrationTest {
     ResponseEntity<String> badSecret =
         restTemplate.postForEntity(
             "/api/v1/payments/webhook",
-            new HttpEntity<>(
-                new PaymentWebhookRequest("provider-test-1", "CONFIRMED"), wrongHeaders),
+            new HttpEntity<>(new PaymentWebhookRequest(providerRef, "CONFIRMED"), wrongHeaders),
             String.class);
     assertThat(badSecret.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
 
@@ -90,7 +159,7 @@ class PaymentFlowIntegrationTest {
     ResponseEntity<String> regression =
         restTemplate.postForEntity(
             "/api/v1/payments/webhook",
-            new HttpEntity<>(new PaymentWebhookRequest("provider-test-1", "FAILED"), validHeaders),
+            new HttpEntity<>(new PaymentWebhookRequest(providerRef, "FAILED"), validHeaders),
             String.class);
     assertThat(regression.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
   }
@@ -102,7 +171,8 @@ class PaymentFlowIntegrationTest {
     @Primary
     PaymentProviderClient paymentProviderClient() {
       return (orderId, amountMinor, currency) ->
-          new ProviderPayment("provider-test-1", "AUTHORIZED", "http://localhost:8089/pay/mock");
+          new ProviderPayment(
+              "provider-" + UUID.randomUUID(), "AUTHORIZED", "http://localhost:8089/pay/mock");
     }
   }
 }

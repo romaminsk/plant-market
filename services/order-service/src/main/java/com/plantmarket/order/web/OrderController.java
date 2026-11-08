@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -33,14 +34,19 @@ public class OrderController {
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   public OrderResponse create(
-      @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody CreateOrderRequest request) {
-    return orderService.create(customerId(jwt), jwt.getClaimAsString("email"), request);
+      @AuthenticationPrincipal Jwt jwt,
+      @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
+      @Valid @RequestBody CreateOrderRequest request) {
+    return orderService.create(
+        customerId(jwt), jwt.getClaimAsString("email"), request, idempotencyKey);
   }
 
   @PostMapping("/guest")
   @ResponseStatus(HttpStatus.CREATED)
-  public OrderResponse guestCheckout(@Valid @RequestBody GuestCheckoutRequest request) {
-    return orderService.guestCheckout(request);
+  public OrderResponse guestCheckout(
+      @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
+      @Valid @RequestBody GuestCheckoutRequest request) {
+    return orderService.guestCheckout(request, idempotencyKey);
   }
 
   @GetMapping

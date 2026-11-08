@@ -55,6 +55,7 @@ export async function POST(request: NextRequest) {
   }
 
   const base = apiUrl();
+  const idempotencyKey = crypto.randomUUID();
   let token = request.cookies.get(ACCESS_COOKIE)?.value;
   if (!token) {
     const guestEmail = payload.guestEmail?.trim();
@@ -66,7 +67,10 @@ export async function POST(request: NextRequest) {
     }
     const guestResponse = await fetch(`${base}/api/v1/orders/guest`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Idempotency-Key': idempotencyKey,
+      },
       body: JSON.stringify({
         items: orderItems,
         guestEmail,
@@ -140,6 +144,7 @@ export async function POST(request: NextRequest) {
 
   const orderResponse = await apiFetch('/api/v1/orders', {
     method: 'POST',
+    headers: { 'Idempotency-Key': idempotencyKey },
     body: JSON.stringify({ items: orderItems }),
   });
   if (!orderResponse.ok) {

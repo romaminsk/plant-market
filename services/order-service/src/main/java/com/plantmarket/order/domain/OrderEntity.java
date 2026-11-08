@@ -61,6 +61,9 @@ public class OrderEntity {
   @Column(name = "currency", length = 3, nullable = false)
   private String currency;
 
+  @Column(name = "idempotency_key", length = 128)
+  private String idempotencyKey;
+
   @Column(name = "reservation_expires_at")
   private Instant reservationExpiresAt;
 
@@ -84,9 +87,15 @@ public class OrderEntity {
   protected OrderEntity() {}
 
   public OrderEntity(UUID customerId, String customerEmail, String currency) {
+    this(customerId, customerEmail, currency, null);
+  }
+
+  public OrderEntity(
+      UUID customerId, String customerEmail, String currency, String idempotencyKey) {
     this.customerId = customerId;
     this.customerEmail = customerEmail;
     this.currency = currency;
+    this.idempotencyKey = idempotencyKey;
     this.status = OrderStatus.DRAFT;
   }
 
@@ -208,6 +217,10 @@ public class OrderEntity {
 
   public String getCurrency() {
     return currency;
+  }
+
+  public String getIdempotencyKey() {
+    return idempotencyKey;
   }
 
   public Instant getReservationExpiresAt() {

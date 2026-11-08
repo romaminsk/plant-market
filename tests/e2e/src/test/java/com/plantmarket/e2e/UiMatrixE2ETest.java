@@ -9,7 +9,10 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
 import com.microsoft.playwright.Response;
 import com.microsoft.playwright.options.AriaRole;
+import com.microsoft.playwright.options.Cookie;
+import com.microsoft.playwright.options.SameSiteAttribute;
 import com.microsoft.playwright.options.SelectOption;
+import com.microsoft.playwright.options.WaitForSelectorState;
 import io.qameta.allure.Feature;
 import java.io.InputStream;
 import java.net.URI;
@@ -182,7 +185,13 @@ class UiMatrixE2ETest {
     page.evaluate("() => { localStorage.clear(); sessionStorage.clear(); }");
 
     if (entry.path("admin").asBoolean(false)) {
-      page.evaluate("token => localStorage.setItem('pm.admin.accessToken', token)", adminToken);
+      context.addCookies(
+          List.of(
+              new Cookie("pm.admin.access", adminToken)
+                  .setDomain("localhost")
+                  .setPath("/")
+                  .setHttpOnly(true)
+                  .setSameSite(SameSiteAttribute.STRICT)));
       page.reload();
       page.getByRole(AriaRole.HEADING, new Page.GetByRoleOptions().setName("Продукты")).waitFor();
       lastStatus = 200;
@@ -219,8 +228,18 @@ class UiMatrixE2ETest {
       case "expectMinCount" ->
           assertThat(page.locator(selector).count())
               .isGreaterThanOrEqualTo(step.path("value").asInt());
-      case "expectVisible" -> assertThat(page.locator(selector).first().isVisible()).isTrue();
-      case "expectHidden" -> assertThat(page.locator(selector).first().isVisible()).isFalse();
+      case "expectVisible" ->
+          page.locator(selector)
+              .first()
+              .waitFor(
+                  new com.microsoft.playwright.Locator.WaitForOptions()
+                      .setState(WaitForSelectorState.VISIBLE));
+      case "expectHidden" ->
+          page.locator(selector)
+              .first()
+              .waitFor(
+                  new com.microsoft.playwright.Locator.WaitForOptions()
+                      .setState(WaitForSelectorState.HIDDEN));
       case "expectAttribute" -> expectAttribute(step, selector);
       case "expectUrl" -> assertThat(page.url()).contains(value);
       case "waitUrl" -> page.waitForURL("**" + value);

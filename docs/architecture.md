@@ -9,7 +9,7 @@
 ```
 storefront (Next.js) ─┐
                       ├─→ api-gateway :8080 ─→ auth-service :8090  → pm_auth
-admin (React + Vite) ─┘                     ─→ catalog-service :8081 → pm_catalog
+admin (React + Vite) ─┘                     ─→ catalog-service :8081 → pm_catalog (internal)
                                              ─→ order-service :8083   → pm_orders   (Phase 2)
                                              ─→ payment-service :8084 → pm_payments (Phase 2)
 ```

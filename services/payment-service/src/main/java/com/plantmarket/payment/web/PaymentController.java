@@ -32,6 +32,11 @@ public class PaymentController {
     return paymentService.create(request);
   }
 
+  @PostMapping("/{id}/refund")
+  public PaymentResponse refund(@PathVariable UUID id) {
+    return paymentService.refund(id);
+  }
+
   @GetMapping("/{id}")
   public PaymentResponse get(@PathVariable UUID id) {
     return paymentService.get(id);

@@ -1,6 +1,7 @@
 package com.plantmarket.order.client;
 
 import com.plantmarket.common.error.ApiException;
+import com.plantmarket.order.security.ServiceTokenProvider;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,8 +15,16 @@ public class HttpCatalogClient implements CatalogClient {
 
   private final RestClient restClient;
 
-  public HttpCatalogClient(@Value("${app.catalog.base-uri}") String baseUri) {
-    this.restClient = RestClient.builder().baseUrl(baseUri).build();
+  public HttpCatalogClient(
+      @Value("${app.catalog.base-uri}") String baseUri, ServiceTokenProvider serviceTokens) {
+    this.restClient =
+        RestClient.builder()
+            .baseUrl(baseUri)
+            .requestInterceptor((request, body, execution) -> {
+              request.getHeaders().setBearerAuth(serviceTokens.token());
+              return execution.execute(request, body);
+            })
+            .build();
   }
 
   @Override

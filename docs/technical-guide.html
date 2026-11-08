@@ -1141,7 +1141,7 @@
             <span class="badge">Java 25 · Spring Boot 4.1</span>
             <span class="badge">Next.js 16 · React 19</span>
             <span class="badge">PostgreSQL 18</span>
-            <span class="badge ok">477 E2E · 0 падений</span>
+            <span class="badge ok">478 E2E · 0 падений</span>
           </div>
           <h1>Plant Market:<br /><em>как всё устроено</em></h1>
           <p class="lead">
@@ -1152,7 +1152,7 @@
           <div class="stats">
             <div class="stat"><b>5</b><span>сервисов</span></div>
             <div class="stat"><b>4</b><span>отдельные БД</span></div>
-            <div class="stat"><b>477</b><span>E2E-тестов</span></div>
+            <div class="stat"><b>478</b><span>E2E-тестов</span></div>
             <div class="stat"><b>350</b><span>сценариев</span></div>
             <div class="stat"><b>20/20</b><span>мутантов убито</span></div>
             <div class="stat"><b>1.0</b><span>Lighthouse a11y</span></div>
@@ -1271,7 +1271,7 @@
               <span class="tag">Качество</span>
               <h4>Тесты</h4>
               <p>
-                38 backend-тестов, 477 E2E, 350 пользовательских сценариев, layout-аудит,
+                38 backend-тестов, 478 E2E, 350 пользовательских сценариев, layout-аудит,
                 мутационное тестирование.
               </p>
             </div>
@@ -3818,13 +3818,13 @@ const EVENT = 'pm-cart-changed';</code></pre>
           </h2>
 
           <p class="lead-in">
-            В проекте 515 тестов: 38 backend и 477 E2E. Это много для демо и мало для продакшена —
+            В проекте 516 тестов: 38 backend и 478 E2E. Это много для демо и мало для продакшена —
             важно не количество, а то, что именно каждый слой доказывает.
           </p>
 
           <div class="stats">
             <div class="stat"><b>38</b><span>backend-тестов</span></div>
-            <div class="stat"><b>477</b><span>E2E-тестов</span></div>
+            <div class="stat"><b>478</b><span>E2E-тестов</span></div>
             <div class="stat"><b>350</b><span>пользовательских сценариев</span></div>
             <div class="stat"><b>100</b><span>UI-матрица</span></div>
             <div class="stat"><b>2</b><span>layout-аудита</span></div>
@@ -3861,7 +3861,7 @@ const EVENT = 'pm-cart-changed';</code></pre>
                 <tr>
                   <td>E2E</td>
                   <td>Реальная витрина и админка против Compose + seed.</td>
-                  <td>477</td>
+                  <td>478</td>
                   <td>Playwright Java, Allure</td>
                 </tr>
                 <tr>
@@ -4055,7 +4055,7 @@ for (let i = 0; i &lt; rects.length; i++) {
             </li>
             <li><code>./gradlew build</code> — backend-тесты и JaCoCo.</li>
             <li><code>docker compose build</code> и <code>up -d --wait</code>, seed.</li>
-            <li>Запуск storefront и админки, <code>:tests:e2e:test</code> — 477 тестов.</li>
+            <li>Запуск storefront и админки, <code>:tests:e2e:test</code> — 478 тестов.</li>
             <li>
               Allure-отчёт и артефакты, логи Compose при падении, <code>compose down -v</code>.
             </li>
@@ -4442,6 +4442,24 @@ SCENARIO_IDS=SC-028,SC-159 ./gradlew :tests:e2e:test --tests 'com.plantmarket.e2
             </p>
           </div>
 
+          <div class="callout ok">
+            <span class="title">Обновление 8 ноября 2026: P0 закрыты</span>
+            <p>
+              После ревью исправлены все семь P0: catalog/payment закрыты Spring Security и
+              service-to-service токенами, порты catalog/payment убраны с хоста, media идёт через
+              gateway; добавлены <code>Idempotency-Key</code>, уникальность платежа на заказ и
+              компенсация refund + release; секреты обязательны и проверяются на старте; админка
+              переведена на httpOnly cookies; open redirect закрыт; catalog-сущности получили
+              <code>@Version</code>; галерея ключуется по <code>plant.id</code>.
+            </p>
+            <p>
+              Актуальная оценка безопасности — <strong>7/10</strong>, готовности к проду —
+              <strong>5/10</strong>: P1 (отмена по TTL, HMAC webhook, распределённый rate limit,
+              outbox <code>SKIP LOCKED</code>, таймауты, SAS persistence) ещё впереди. Ниже сохранён
+              исходный срез ревью, чтобы была видна история.
+            </p>
+          </div>
+
           <h3>Оценки по областям</h3>
           <div class="score-grid">
             <div class="score">
@@ -4552,7 +4570,7 @@ SCENARIO_IDS=SC-028,SC-159 ./gradlew :tests:e2e:test --tests 'com.plantmarket.e2
               <span class="tag">CI</span>
               <h4>Реальный прогон</h4>
               <p>
-                CI поднимает Compose, сеет данные, запускает 477 E2E и публикует Allure/скриншоты.
+                CI поднимает Compose, сеет данные, запускает 478 E2E и публикует Allure/скриншоты.
                 Плюс Trivy, pnpm audit, TruffleHog.
               </p>
             </div>
@@ -4734,6 +4752,10 @@ SCENARIO_IDS=SC-028,SC-159 ./gradlew :tests:e2e:test --tests 'com.plantmarket.e2
           </p>
 
           <h3>P0 — блокеры</h3>
+          <p class="small muted">
+            Статус на 8 ноября 2026: P0-1…P0-7 исправлены. Таблица ниже — исходный срез ревью,
+            полезный как чек-лист того, что уже не должно вернуться.
+          </p>
           <div class="table-wrap">
             <table>
               <thead>
@@ -5285,7 +5307,7 @@ SCENARIO_IDS=SC-028,SC-159 ./gradlew :tests:e2e:test --tests 'com.plantmarket.e2
             <p>
               Ревью сделано по коду и конфигам на коммите <code>8d4e5b1</code> (плюс текущие
               незакоммиченные правки этой сессии). До этого полный E2E-прогон на чистой базе дал
-              <strong>477/477</strong>, layout-аудит — <strong>2/2</strong>, мутация —
+              <strong>478/478</strong>, layout-аудит — <strong>2/2</strong>, мутация —
               <strong>20/20</strong>. Находки не отменяют зелёные тесты: они показывают, что тесты
               не покрывают.
             </p>
@@ -5928,7 +5950,7 @@ pnpm lint &amp;&amp; pnpm format:check
           </details>
 
           <details>
-            <summary>Почему 477 E2E — это не слишком много?</summary>
+            <summary>Почему 478 E2E — это не слишком много?</summary>
             <div class="body">
               <p>
                 Для демо — много, но полезно: 350 сценариев покрывают комбинации, 100 матрица —
@@ -6037,7 +6059,7 @@ pnpm lint &amp;&amp; pnpm format:check
             офертой.
           </p>
           <p>
-            Проверки: полный E2E — 477/477, layout — 2/2, мутация — 20/20, <code>pnpm lint</code>,
+            Проверки: полный E2E — 478/478, layout — 2/2, мутация — 20/20, <code>pnpm lint</code>,
             <code>pnpm format:check</code> и <code>./gradlew build</code> — зелёные. CI:
             <a
               href="https://github.com/romaminsk/plant-market/actions/runs/42395924654"

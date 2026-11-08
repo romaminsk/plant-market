@@ -58,7 +58,13 @@ import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 public class SecurityConfig {
 
   private static final List<String> PUBLIC_POST_ENDPOINTS =
-      List.of("/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/refresh");
+      List.of(
+          "/api/v1/auth/register",
+          "/api/v1/auth/login",
+          "/api/v1/auth/refresh",
+          "/api/v1/auth/session",
+          "/api/v1/auth/session/refresh",
+          "/api/v1/auth/session/logout");
 
   @Bean
   public PasswordEncoder passwordEncoder() {

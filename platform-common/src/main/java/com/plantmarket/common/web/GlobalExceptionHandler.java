@@ -15,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.ErrorResponseException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
@@ -88,6 +89,21 @@ public class GlobalExceptionHandler {
     problem.setInstance(URI.create(request.getRequestURI()));
     problem.setProperty("traceId", RequestIdFilter.current(request));
     return ResponseEntity.status(exception.getStatusCode())
+        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .body(problem);
+  }
+
+  @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+  public ResponseEntity<ProblemDetail> handleOptimisticLock(
+      ObjectOptimisticLockingFailureException exception, HttpServletRequest request) {
+    ProblemDetail problem =
+        problem(
+            HttpStatus.CONFLICT,
+            ApiException.PROBLEM_BASE + "conflict",
+            "Resource was modified by another request; reload and retry",
+            request,
+            List.of());
+    return ResponseEntity.status(HttpStatus.CONFLICT)
         .contentType(MediaType.APPLICATION_PROBLEM_JSON)
         .body(problem);
   }

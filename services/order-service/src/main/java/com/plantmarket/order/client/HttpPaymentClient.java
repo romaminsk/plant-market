@@ -1,6 +1,7 @@
 package com.plantmarket.order.client;
 
 import com.plantmarket.common.error.ApiException;
+import com.plantmarket.order.security.ServiceTokenProvider;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,8 +15,16 @@ public class HttpPaymentClient implements PaymentClient {
 
   private final RestClient restClient;
 
-  public HttpPaymentClient(@Value("${app.payment.base-uri}") String baseUri) {
-    this.restClient = RestClient.builder().baseUrl(baseUri).build();
+  public HttpPaymentClient(
+      @Value("${app.payment.base-uri}") String baseUri, ServiceTokenProvider serviceTokens) {
+    this.restClient =
+        RestClient.builder()
+            .baseUrl(baseUri)
+            .requestInterceptor((request, body, execution) -> {
+              request.getHeaders().setBearerAuth(serviceTokens.token());
+              return execution.execute(request, body);
+            })
+            .build();
   }
 
   @Override
@@ -41,5 +50,10 @@ public class HttpPaymentClient implements PaymentClient {
       throw ApiException.conflict(
           "Payment service rejected the payment: " + exception.getStatusCode());
     }
+  }
+
+  @Override
+  public void refund(UUID paymentId) {
+    restClient.post().uri("/api/v1/payments/{id}/refund", paymentId).retrieve().toBodilessEntity();
   }
 }

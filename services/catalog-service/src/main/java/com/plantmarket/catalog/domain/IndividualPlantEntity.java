@@ -15,6 +15,7 @@ import jakarta.persistence.OrderColumn;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -89,6 +90,10 @@ public class IndividualPlantEntity {
 
   @Column(name = "pet_safe", nullable = false)
   private boolean petSafe;
+
+  @Version
+  @Column(name = "version", nullable = false)
+  private long version;
 
   @Column(name = "created_at", nullable = false)
   private Instant createdAt;

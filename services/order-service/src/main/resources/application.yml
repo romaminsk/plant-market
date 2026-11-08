@@ -38,7 +38,8 @@ management:
 
 app:
   jwt:
-    secret: ${JWT_SECRET:dev-only-plant-market-jwt-secret-change-me-0123456789}
+    secret: ${JWT_SECRET}
+    environment: ${APP_ENV:prod}
   catalog:
     base-uri: ${CATALOG_SERVICE_URI:http://localhost:8081}
   payment:

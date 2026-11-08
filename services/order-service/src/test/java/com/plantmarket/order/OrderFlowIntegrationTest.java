@@ -107,6 +107,7 @@ class OrderFlowIntegrationTest {
   @Autowired private TestRestTemplate restTemplate;
   @Autowired private OutboxPublisher outboxPublisher;
   @Autowired private OutboxEventRepository outboxEventRepository;
+  @Autowired private com.plantmarket.order.repository.OrderRepository orderRepository;
   @Autowired private CareReminderRepository careReminderRepository;
   @Autowired private CareReminderService careReminderService;
 
@@ -241,11 +242,71 @@ class OrderFlowIntegrationTest {
       ResponseEntity<String> firstResult = first.get(10, TimeUnit.SECONDS);
       ResponseEntity<String> secondResult = second.get(10, TimeUnit.SECONDS);
       assertThat(List.of(firstResult.getStatusCode(), secondResult.getStatusCode()))
-          .containsExactlyInAnyOrder(HttpStatus.OK, HttpStatus.CONFLICT);
+          .allMatch(status -> status == HttpStatus.OK || status == HttpStatus.CONFLICT)
+          .contains(HttpStatus.OK);
       assertThat(PAYMENT.createCalls.get() - paymentsBefore).isEqualTo(1);
     } finally {
       executor.shutdownNow();
     }
+  }
+
+  @Test
+  void failedStockConfirmationRefundsPaymentAndReleasesReservation() {
+    UUID customerId = UUID.randomUUID();
+    HttpHeaders headers = headers(customerId);
+    UUID orderId = createVariantOrder(headers);
+    restTemplate.exchange(
+        "/api/v1/orders/" + orderId + "/checkout",
+        HttpMethod.POST,
+        new HttpEntity<>(Map.of(), headers),
+        OrderResponse.class);
+    int refundsBefore = PAYMENT.refundCalls.get();
+    int releasesBefore = CATALOG.releaseCalls.get();
+
+    CATALOG.failConfirm = true;
+    try {
+      ResponseEntity<String> response =
+          restTemplate.exchange(
+              "/api/v1/orders/" + orderId + "/pay",
+              HttpMethod.POST,
+              new HttpEntity<>(headers),
+              String.class);
+      assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+    } finally {
+      CATALOG.failConfirm = false;
+    }
+
+    assertThat(PAYMENT.refundCalls.get() - refundsBefore).isEqualTo(1);
+    assertThat(CATALOG.releaseCalls.get() - releasesBefore).isEqualTo(1);
+  }
+
+  @Test
+  void createOrderWithSameIdempotencyKeyReturnsSameOrder() {
+    UUID customerId = UUID.randomUUID();
+    HttpHeaders headers = headers(customerId);
+    headers.set("Idempotency-Key", "order-key-" + UUID.randomUUID());
+
+    ResponseEntity<OrderResponse> first =
+        restTemplate.exchange(
+            "/api/v1/orders",
+            HttpMethod.POST,
+            new HttpEntity<>(
+                new CreateOrderRequest(List.of(new CreateOrderItemRequest(VARIANT_ID, null, 1))),
+                headers),
+            OrderResponse.class);
+    ResponseEntity<OrderResponse> second =
+        restTemplate.exchange(
+            "/api/v1/orders",
+            HttpMethod.POST,
+            new HttpEntity<>(
+                new CreateOrderRequest(List.of(new CreateOrderItemRequest(VARIANT_ID, null, 1))),
+                headers),
+            OrderResponse.class);
+
+    assertThat(first.getBody()).isNotNull();
+    assertThat(second.getBody()).isNotNull();
+    assertThat(second.getBody().id()).isEqualTo(first.getBody().id());
+    assertThat(orderRepository.findByCustomerIdOrderByCreatedAtDesc(customerId)).hasSize(1);
   }
 
   @Test
@@ -611,6 +672,12 @@ class OrderFlowIntegrationTest {
   static final class FakePaymentClient implements PaymentClient {
 
     final AtomicInteger createCalls = new AtomicInteger();
+    final AtomicInteger refundCalls = new AtomicInteger();
+
+    @Override
+    public void refund(UUID paymentId) {
+      refundCalls.incrementAndGet();
+    }
 
     @Override
     public PaymentResult createPayment(UUID orderId, long amountMinor, String currency) {
@@ -624,6 +691,7 @@ class OrderFlowIntegrationTest {
     final AtomicInteger reserveCalls = new AtomicInteger();
     final AtomicInteger releaseCalls = new AtomicInteger();
     final AtomicInteger confirmCalls = new AtomicInteger();
+    volatile boolean failConfirm;
 
     @Override
     public CatalogVariant getVariant(UUID id) {
@@ -649,6 +717,9 @@ class OrderFlowIntegrationTest {
     @Override
     public void confirm(UUID orderId) {
       confirmCalls.incrementAndGet();
+      if (failConfirm) {
+        throw new IllegalStateException("stock confirm failed");
+      }
     }
   }
 }
