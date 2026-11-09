@@ -146,6 +146,7 @@ services:
       PAYMENT_SERVICE_PORT: 8084
       PAYMENT_PROVIDER_URI: http://wiremock:8080
       PAYMENT_WEBHOOK_SECRET: ${PAYMENT_WEBHOOK_SECRET:?PAYMENT_WEBHOOK_SECRET is required}
+      PAYMENT_WEBHOOK_TOLERANCE_SECONDS: ${PAYMENT_WEBHOOK_TOLERANCE_SECONDS:-300}
     depends_on:
       postgres:
         condition: service_healthy

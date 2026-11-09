@@ -40,3 +40,4 @@ app:
   payment:
     provider-uri: ${PAYMENT_PROVIDER_URI:http://localhost:8089}
     webhook-secret: ${PAYMENT_WEBHOOK_SECRET}
+    webhook-tolerance-seconds: ${PAYMENT_WEBHOOK_TOLERANCE_SECONDS:300}

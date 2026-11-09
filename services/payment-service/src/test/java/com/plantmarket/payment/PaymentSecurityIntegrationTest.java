@@ -9,9 +9,9 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.plantmarket.payment.client.PaymentProviderClient;
 import com.plantmarket.payment.client.ProviderPayment;
+import com.plantmarket.payment.service.WebhookSignature;
 import com.plantmarket.payment.web.dto.CreatePaymentRequest;
 import com.plantmarket.payment.web.dto.PaymentResponse;
-import com.plantmarket.payment.web.dto.PaymentWebhookRequest;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
@@ -90,7 +90,7 @@ class PaymentSecurityIntegrationTest {
   }
 
   @Test
-  void webhookStaysPublicButChecksSecret() {
+  void webhookStaysPublicButVerifiesSignature() {
     UUID orderId = UUID.randomUUID();
     ResponseEntity<PaymentResponse> created =
         restTemplate.postForEntity(
@@ -100,23 +100,30 @@ class PaymentSecurityIntegrationTest {
             PaymentResponse.class);
     assertThat(created.getBody()).isNotNull();
     String providerRef = created.getBody().providerRef();
+    String body = "{\"providerRef\":\"" + providerRef + "\",\"status\":\"REFUNDED\"}";
+    String timestamp = String.valueOf(Instant.now().getEpochSecond());
+    String eventId = "evt-" + UUID.randomUUID();
 
     HttpHeaders wrong = new HttpHeaders();
-    wrong.set("X-Provider-Secret", "wrong");
+    wrong.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+    wrong.set("X-Provider-Timestamp", timestamp);
+    wrong.set("X-Provider-Event-Id", eventId);
+    wrong.set("X-Provider-Signature", "00".repeat(32));
     ResponseEntity<String> rejected =
         restTemplate.postForEntity(
-            "/api/v1/payments/webhook",
-            new HttpEntity<>(new PaymentWebhookRequest(providerRef, "REFUNDED"), wrong),
-            String.class);
+            "/api/v1/payments/webhook", new HttpEntity<>(body, wrong), String.class);
     assertThat(rejected.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
 
     HttpHeaders correct = new HttpHeaders();
-    correct.set("X-Provider-Secret", "dev-payment-webhook-secret");
+    correct.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+    correct.set("X-Provider-Timestamp", timestamp);
+    correct.set("X-Provider-Event-Id", eventId);
+    correct.set(
+        "X-Provider-Signature",
+        WebhookSignature.compute("dev-payment-webhook-secret", timestamp, eventId, body));
     ResponseEntity<PaymentResponse> accepted =
         restTemplate.postForEntity(
-            "/api/v1/payments/webhook",
-            new HttpEntity<>(new PaymentWebhookRequest(providerRef, "REFUNDED"), correct),
-            PaymentResponse.class);
+            "/api/v1/payments/webhook", new HttpEntity<>(body, correct), PaymentResponse.class);
     assertThat(accepted.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(accepted.getBody()).isNotNull();
     assertThat(accepted.getBody().status().name()).isEqualTo("REFUNDED");

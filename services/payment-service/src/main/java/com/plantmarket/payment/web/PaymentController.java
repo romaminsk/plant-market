@@ -3,7 +3,6 @@ package com.plantmarket.payment.web;
 import com.plantmarket.payment.service.PaymentService;
 import com.plantmarket.payment.web.dto.CreatePaymentRequest;
 import com.plantmarket.payment.web.dto.PaymentResponse;
-import com.plantmarket.payment.web.dto.PaymentWebhookRequest;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
@@ -44,8 +43,10 @@ public class PaymentController {
 
   @PostMapping("/webhook")
   public PaymentResponse webhook(
-      @RequestHeader("X-Provider-Secret") String secret,
-      @Valid @RequestBody PaymentWebhookRequest request) {
-    return paymentService.webhook(secret, request);
+      @RequestHeader(value = "X-Provider-Timestamp", required = false) String timestamp,
+      @RequestHeader(value = "X-Provider-Event-Id", required = false) String eventId,
+      @RequestHeader(value = "X-Provider-Signature", required = false) String signature,
+      @RequestBody String body) {
+    return paymentService.webhook(timestamp, eventId, signature, body);
   }
 }

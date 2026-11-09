@@ -46,5 +46,6 @@ app:
     base-uri: ${PAYMENT_SERVICE_URI:http://localhost:8084}
   orders:
     reservation-ttl: ${RESERVATION_TTL:PT15M}
+    expiry-scan-ms: ${ORDER_EXPIRY_SCAN_MS:60000}
   outbox:
     publish-ms: ${OUTBOX_PUBLISH_MS:5000}

@@ -1271,7 +1271,7 @@
               <span class="tag">Качество</span>
               <h4>Тесты</h4>
               <p>
-                38 backend-тестов, 478 E2E, 350 пользовательских сценариев, layout-аудит,
+                66 backend-тестов, 478 E2E, 350 пользовательских сценариев, layout-аудит,
                 мутационное тестирование.
               </p>
             </div>
@@ -2560,7 +2560,11 @@ variant.reserve(item.quantity());</code></pre>
                 </tr>
                 <tr>
                   <td><code>POST /api/v1/payments/webhook</code></td>
-                  <td>Принимает callback провайдера с <code>X-Provider-Secret</code>.</td>
+                  <td>
+                    Принимает callback провайдера: HMAC-SHA256 по
+                    <code>timestamp + eventId + rawBody</code>, окно timestamp 300 с, replay-защита
+                    по <code>X-Provider-Event-Id</code>.
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -2586,8 +2590,8 @@ variant.reserve(item.quantity());</code></pre>
             <span class="title">Находки по payment</span>
             <ul>
               <li>
-                Webhook проверяет статический секрет сравнением строк, без HMAC, timestamp и
-                replay-защиты.
+                <strong>Исправлено:</strong> webhook проверяет HMAC-SHA256, timestamp (окно 300 с) и
+                replay по event id; повторный event id идемпотентен.
               </li>
               <li>Нет проверки суммы: webhook не сверяет <code>amountMinor</code> с заказом.</li>
               <li>Нет refund-эндпоинта, хотя статус <code>REFUNDED</code> есть.</li>
@@ -3391,8 +3395,8 @@ variant.reserve(item.quantity());</code></pre>
                 </tr>
                 <tr>
                   <td>Подделка платёжного webhook</td>
-                  <td>Статический <code>X-Provider-Secret</code>.</td>
-                  <td>Нет HMAC, timestamp, replay-защиты, сверки суммы.</td>
+                  <td>HMAC-SHA256 + timestamp + replay-защита.</td>
+                  <td>Осталась сверка суммы <code>amountMinor</code> с заказом.</td>
                 </tr>
                 <tr>
                   <td>Покупка без оплаты</td>
@@ -3818,12 +3822,12 @@ const EVENT = 'pm-cart-changed';</code></pre>
           </h2>
 
           <p class="lead-in">
-            В проекте 516 тестов: 38 backend и 478 E2E. Это много для демо и мало для продакшена —
+            В проекте 544 теста: 66 backend и 478 E2E. Это много для демо и мало для продакшена —
             важно не количество, а то, что именно каждый слой доказывает.
           </p>
 
           <div class="stats">
-            <div class="stat"><b>38</b><span>backend-тестов</span></div>
+            <div class="stat"><b>66</b><span>backend-тестов</span></div>
             <div class="stat"><b>478</b><span>E2E-тестов</span></div>
             <div class="stat"><b>350</b><span>пользовательских сценариев</span></div>
             <div class="stat"><b>100</b><span>UI-матрица</span></div>
@@ -3845,17 +3849,17 @@ const EVENT = 'pm-cart-changed';</code></pre>
               <tbody>
                 <tr>
                   <td>Unit / slice</td>
-                  <td>UUIDv7, пагинация, RFC 7807, request-id, rate limit.</td>
-                  <td>12</td>
+                  <td>UUIDv7, пагинация, RFC 7807, request-id, rate limit, webhook HMAC.</td>
+                  <td>22</td>
                   <td>JUnit 6, MockMvc</td>
                 </tr>
                 <tr>
                   <td>Integration</td>
                   <td>
                     Spring + Flyway + реальный PostgreSQL: auth, каталог, резервы, заказы, оплата,
-                    gateway authz.
+                    TTL-отмена, webhook replay, gateway authz.
                   </td>
-                  <td>26</td>
+                  <td>44</td>
                   <td>Testcontainers <code>postgres:18.6</code>, WebTestClient</td>
                 </tr>
                 <tr>
@@ -4454,9 +4458,9 @@ SCENARIO_IDS=SC-028,SC-159 ./gradlew :tests:e2e:test --tests 'com.plantmarket.e2
             </p>
             <p>
               Актуальная оценка безопасности — <strong>7/10</strong>, готовности к проду —
-              <strong>5/10</strong>: P1 (отмена по TTL, HMAC webhook, распределённый rate limit,
-              outbox <code>SKIP LOCKED</code>, таймауты, SAS persistence) ещё впереди. Ниже сохранён
-              исходный срез ревью, чтобы была видна история.
+              <strong>5/10</strong>: из P1 закрыты отмена по TTL и HMAC/replay webhook; впереди
+              распределённый rate limit, outbox <code>SKIP LOCKED</code>, таймауты и SAS
+              persistence. Ниже сохранён исходный срез ревью, чтобы была видна история.
             </p>
           </div>
 
@@ -4651,9 +4655,12 @@ SCENARIO_IDS=SC-028,SC-159 ./gradlew :tests:e2e:test --tests 'com.plantmarket.e2
               <span class="tag">Потом · P1</span>
               <h4>Надёжность и UX</h4>
               <ol>
-                <li>Отмена заказа по истечении резерва.</li>
+                <li><s>Отмена заказа по истечении резерва.</s> Готово.</li>
                 <li>Версионирование catalog-сущностей.</li>
-                <li>HMAC/replay/amount check для webhook.</li>
+                <li>
+                  <s>HMAC/replay/amount check для webhook.</s> HMAC/replay готовы; осталась сверка
+                  суммы.
+                </li>
                 <li>JWT админки в httpOnly cookie + refresh.</li>
                 <li>CSP для media, ключ галереи, лимит корзины.</li>
                 <li>Таймауты HTTP/SMTP, <code>SKIP LOCKED</code> в outbox.</li>
@@ -4901,7 +4908,7 @@ SCENARIO_IDS=SC-028,SC-159 ./gradlew :tests:e2e:test --tests 'com.plantmarket.e2
               <tbody>
                 <tr>
                   <td><span class="sev p1">P1-1</span></td>
-                  <td>Резерв не отменяет заказ</td>
+                  <td>Резерв не отменяет заказ — <strong>исправлено</strong></td>
                   <td>
                     <span class="file">OrderService.java</span>,
                     <span class="file">OrderEntity.java</span>,
@@ -4938,7 +4945,7 @@ SCENARIO_IDS=SC-028,SC-159 ./gradlew :tests:e2e:test --tests 'com.plantmarket.e2
                 </tr>
                 <tr>
                   <td><span class="sev p1">P1-4</span></td>
-                  <td>Слабый webhook</td>
+                  <td>Слабый webhook — <strong>исправлено</strong></td>
                   <td><span class="file">PaymentService.java</span> <code>webhook</code></td>
                   <td>
                     Статический секрет, нет HMAC/timestamp/replay, нет сверки суммы. Нужна подпись

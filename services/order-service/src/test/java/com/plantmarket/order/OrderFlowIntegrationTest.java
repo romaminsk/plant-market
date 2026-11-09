@@ -26,6 +26,7 @@ import com.plantmarket.order.notification.OutboxPublisher;
 import com.plantmarket.order.repository.CareReminderRepository;
 import com.plantmarket.order.repository.OutboxEventRepository;
 import com.plantmarket.order.service.CareReminderService;
+import com.plantmarket.order.service.OrderExpiryService;
 import com.plantmarket.order.web.dto.CareReminderRequest;
 import com.plantmarket.order.web.dto.CareReminderResponse;
 import com.plantmarket.order.web.dto.CheckoutRequest;
@@ -110,6 +111,8 @@ class OrderFlowIntegrationTest {
   @Autowired private com.plantmarket.order.repository.OrderRepository orderRepository;
   @Autowired private CareReminderRepository careReminderRepository;
   @Autowired private CareReminderService careReminderService;
+  @Autowired private OrderExpiryService orderExpiryService;
+  @Autowired private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
   @MockitoBean private JavaMailSender mailSender;
 
@@ -203,6 +206,77 @@ class OrderFlowIntegrationTest {
     assertThat(history.getBody())
         .extracting(OrderHistoryEntry::status)
         .containsExactly(OrderStatus.DRAFT, OrderStatus.PENDING_PAYMENT, OrderStatus.CANCELLED);
+  }
+
+  @Test
+  void expiredPendingOrderIsCancelledAndReleased() {
+    UUID customerId = UUID.randomUUID();
+    HttpHeaders headers = headers(customerId);
+    UUID orderId = createVariantOrder(headers);
+    restTemplate.exchange(
+        "/api/v1/orders/" + orderId + "/checkout",
+        HttpMethod.POST,
+        new HttpEntity<>(headers),
+        OrderResponse.class);
+    expireReservation(orderId);
+    int releasesBefore = CATALOG.releaseCalls.get();
+
+    int cancelled = orderExpiryService.expireNow();
+
+    assertThat(cancelled).isGreaterThanOrEqualTo(1);
+    assertThat(CATALOG.releaseCalls.get() - releasesBefore).isEqualTo(1);
+    assertThat(order(orderId, headers).status()).isEqualTo(OrderStatus.CANCELLED);
+    ResponseEntity<OrderHistoryEntry[]> history =
+        restTemplate.exchange(
+            "/api/v1/orders/" + orderId + "/history",
+            HttpMethod.GET,
+            new HttpEntity<>(headers),
+            OrderHistoryEntry[].class);
+    assertThat(history.getBody())
+        .extracting(OrderHistoryEntry::status)
+        .containsExactly(OrderStatus.DRAFT, OrderStatus.PENDING_PAYMENT, OrderStatus.CANCELLED);
+  }
+
+  @Test
+  void payingExpiredOrderCancelsItWithoutCharging() {
+    UUID customerId = UUID.randomUUID();
+    HttpHeaders headers = headers(customerId);
+    UUID orderId = createVariantOrder(headers);
+    restTemplate.exchange(
+        "/api/v1/orders/" + orderId + "/checkout",
+        HttpMethod.POST,
+        new HttpEntity<>(headers),
+        OrderResponse.class);
+    expireReservation(orderId);
+    int paymentsBefore = PAYMENT.createCalls.get();
+
+    ResponseEntity<String> pay =
+        restTemplate.exchange(
+            "/api/v1/orders/" + orderId + "/pay",
+            HttpMethod.POST,
+            new HttpEntity<>(headers),
+            String.class);
+
+    assertThat(pay.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+    assertThat(PAYMENT.createCalls.get()).isEqualTo(paymentsBefore);
+    assertThat(order(orderId, headers).status()).isEqualTo(OrderStatus.CANCELLED);
+  }
+
+  private OrderResponse order(UUID orderId, HttpHeaders headers) {
+    ResponseEntity<OrderResponse> response =
+        restTemplate.exchange(
+            "/api/v1/orders/" + orderId,
+            HttpMethod.GET,
+            new HttpEntity<>(headers),
+            OrderResponse.class);
+    assertThat(response.getBody()).isNotNull();
+    return response.getBody();
+  }
+
+  private void expireReservation(UUID orderId) {
+    jdbcTemplate.update(
+        "update orders set reservation_expires_at = now() - interval '1 minute' where id = ?",
+        orderId);
   }
 
   @Test

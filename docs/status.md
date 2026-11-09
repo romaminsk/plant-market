@@ -63,8 +63,13 @@
 - `catalog-service`: таблица reservations, TTL 15 минут, `reserved_quantity` у вариантов, scheduled expiry; резерв вариантов и индивидуальных растений.
 - Gateway route `/api/v1/orders/**`; order-service в compose с healthcheck.
 - J5 API E2E: create → checkout → cancel → reservation released; отдельный integration-тест на reserve/confirm/release.
-- `payment-service`: sandbox-провайдер через WireMock, webhook с `X-Provider-Secret`, статусы
-  CREATED/PENDING/CONFIRMED/FAILED/REFUNDED; `/pay` подтверждает резерв только после CONFIRMED.
+- `payment-service`: sandbox-провайдер через WireMock, webhook с HMAC-SHA256
+  (`X-Provider-Timestamp`/`X-Provider-Event-Id`/`X-Provider-Signature`), окно 300 с и replay-
+  защитой по `payment_webhook_events`; статусы CREATED/PENDING/CONFIRMED/FAILED/REFUNDED; `/pay`
+  подтверждает резерв только после CONFIRMED.
+- **P1 TTL:** `OrderExpiryService` каждые 60 с отменяет `PENDING_PAYMENT` с истёкшим
+  `reservationExpiresAt`, освобождает резерв и пишет историю/outbox; `/pay` после истечения
+  отменяет заказ и возвращает 409 `reservation-expired` без вызова провайдера.
 - ADR-0007: платёжный sandbox; реальный провайдер и refund flow — перед prod/Phase 3.
 - Delivery zones + winter thermal rule; `CheckoutRequest` с `shippingZoneId`/`thermalPack`.
 - Outbox publisher на Spring events + MailHog-уведомления на PAID/CANCELLED (ADR-0008).
@@ -261,15 +266,15 @@
 
 | Модуль            | Тесты | Line coverage |
 | ----------------- | ----: | ------------: |
-| `platform-common` |     9 |           74% |
-| `auth-service`    |     3 |           89% |
-| `catalog-service` |     8 |           84% |
-| `order-service`   |     7 |           82% |
-| `payment-service` |     1 |           78% |
-| `api-gateway`     |    10 |           97% |
+| `platform-common` |    19 |           83% |
+| `auth-service`    |     3 |           73% |
+| `catalog-service` |    11 |           84% |
+| `order-service`   |    12 |           80% |
+| `payment-service` |    11 |           76% |
+| `api-gateway`     |    10 |           92% |
 | `tests:e2e`       |   478 |             — |
 
-Итого **38 backend-тестов + 478 E2E = 516 тестов, 0 падений**. JaCoCo-порог 70% проходит.
+Итого **66 backend-тестов + 478 E2E = 544 теста, 0 падений**. JaCoCo-порог 70% проходит.
 
 ### UI-матрица (100 кейсов)
 
@@ -358,8 +363,8 @@
 
 ## Следующие 3 шага
 
-1. P1: отмена заказа по истечении резерва, outbox `SKIP LOCKED`, HMAC/replay для webhook,
-   распределённый rate limit и таймауты HTTP/SMTP.
+1. P1: outbox `SKIP LOCKED`, распределённый rate limit, таймауты HTTP/SMTP, пагинация каталога,
+   лимит корзины и архивированные продукты.
 2. Storefront: слоты доставки, отзывы, consent-версионирование; slug-URL и sitemap.
 3. Staging A1/A15, MinIO/S3, юридический A11 L1–L8; до подписи prod запрещён.
 

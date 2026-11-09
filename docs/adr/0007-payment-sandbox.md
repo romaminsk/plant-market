@@ -19,20 +19,25 @@ PAN и без реальных списаний.
   ответ: `AUTHORIZED`, `providerRef`, `redirectUrl`.
 - `AUTHORIZED`/`CONFIRMED` маппятся в `PaymentStatus.CONFIRMED`; `PENDING`, `FAILED`, `REFUNDED`
   сохраняются отдельно.
-- Webhook `POST /api/v1/payments/webhook` требует `X-Provider-Secret`; секрет — env
-  `PAYMENT_WEBHOOK_SECRET`.
+- Webhook `POST /api/v1/payments/webhook` подписан HMAC-SHA256: заголовки
+  `X-Provider-Timestamp`, `X-Provider-Event-Id`, `X-Provider-Signature`; подпись считается по
+  `timestamp + "\n" + eventId + "\n" + rawBody`, секрет — env `PAYMENT_WEBHOOK_SECRET`.
+  Timestamp вне окна `PAYMENT_WEBHOOK_TOLERANCE_SECONDS` (300 с) отклоняется, повторный
+  `eventId` не применяет переход второй раз (`payment_webhook_events`).
 - `order-service.pay` создаёт платёж через payment-service и подтверждает резерв только при
   `CONFIRMED`; иначе заказ остаётся `PENDING_PAYMENT`.
 
 ## Последствия
 
 - PAN и платёжные данные не хранятся; это sandbox-контур, не production-платежи.
-- Перед prod нужен реальный адаптер провайдера (hosted page / redirect), проверка подписи webhook
-  и идемпотентность по `providerRef`.
+- Перед prod нужен реальный адаптер провайдера (hosted page / redirect) и сверка суммы webhook
+  с заказом; подпись, timestamp и replay-защита уже реализованы.
 - WireMock mapping загружается при старте контейнера; при изменении mapping нужен restart.
 - Refund flow и частичные возвраты — следующий шаг.
 
 ## Проверка
 
-- `PaymentFlowIntegrationTest`: create → CONFIRMED, webhook REFUNDED, wrong secret 401.
+- `PaymentFlowIntegrationTest`: create → CONFIRMED, webhook REFUNDED, invalid signature 401,
+  stale timestamp 401, duplicate event id идемпотентен.
+- `WebhookSignatureTest`: стабильный HMAC и отказ при подмене тела/event id/timestamp.
 - `OrderApiE2ETest`: order checkout → pay → PAID через payment-service + WireMock.

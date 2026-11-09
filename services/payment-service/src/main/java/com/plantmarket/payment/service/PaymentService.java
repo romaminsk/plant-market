@@ -7,30 +7,42 @@ import com.plantmarket.payment.client.ProviderPayment;
 import com.plantmarket.payment.domain.PaymentEntity;
 import com.plantmarket.payment.domain.PaymentStatus;
 import com.plantmarket.payment.repository.PaymentRepository;
+import com.plantmarket.payment.repository.WebhookEventRepository;
 import com.plantmarket.payment.web.dto.CreatePaymentRequest;
 import com.plantmarket.payment.web.dto.PaymentResponse;
 import com.plantmarket.payment.web.dto.PaymentWebhookRequest;
+import java.time.Instant;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class PaymentService {
 
   private final PaymentRepository paymentRepository;
+  private final WebhookEventRepository webhookEventRepository;
   private final PaymentProviderClient providerClient;
+  private final ObjectMapper objectMapper;
   private final String webhookSecret;
+  private final long webhookToleranceSeconds;
 
   public PaymentService(
       PaymentRepository paymentRepository,
+      WebhookEventRepository webhookEventRepository,
       PaymentProviderClient providerClient,
+      ObjectMapper objectMapper,
       @Value("${app.payment.webhook-secret}") String webhookSecret,
+      @Value("${app.payment.webhook-tolerance-seconds:300}") long webhookToleranceSeconds,
       @Value("${app.environment:dev}") String environment) {
     this.paymentRepository = paymentRepository;
+    this.webhookEventRepository = webhookEventRepository;
     this.providerClient = providerClient;
+    this.objectMapper = objectMapper;
     this.webhookSecret = webhookSecret;
+    this.webhookToleranceSeconds = webhookToleranceSeconds;
     SecretPolicy.validateWebhookSecret(webhookSecret, environment);
   }
 
@@ -94,9 +106,23 @@ public class PaymentService {
   }
 
   @Transactional
-  public PaymentResponse webhook(String secret, PaymentWebhookRequest request) {
-    if (!webhookSecret.equals(secret)) {
-      throw ApiException.unauthorized("Invalid payment webhook secret");
+  public PaymentResponse webhook(String timestamp, String eventId, String signature, String body) {
+    long timestampSeconds = parseTimestamp(timestamp);
+    if (Math.abs(Instant.now().getEpochSecond() - timestampSeconds) > webhookToleranceSeconds) {
+      throw ApiException.unauthorized("Webhook timestamp is outside the allowed tolerance");
+    }
+    if (eventId == null || eventId.isBlank() || eventId.length() > 128) {
+      throw ApiException.badRequest("Invalid webhook event id");
+    }
+    if (!WebhookSignature.matches(webhookSecret, timestamp, eventId, body, signature)) {
+      throw ApiException.unauthorized("Invalid payment webhook signature");
+    }
+    PaymentWebhookRequest request = parseBody(body);
+    if (webhookEventRepository.claim(eventId) == 0) {
+      return toResponse(
+          paymentRepository
+              .findByProviderRef(request.providerRef())
+              .orElseThrow(() -> ApiException.notFound("Payment not found")));
     }
     PaymentEntity payment =
         paymentRepository
@@ -111,6 +137,31 @@ public class PaymentService {
       payment.updateStatus(target);
     }
     return toResponse(payment);
+  }
+
+  private static long parseTimestamp(String timestamp) {
+    try {
+      return Long.parseLong(timestamp);
+    } catch (NumberFormatException exception) {
+      throw ApiException.unauthorized("Invalid webhook timestamp");
+    }
+  }
+
+  private PaymentWebhookRequest parseBody(String body) {
+    PaymentWebhookRequest request;
+    try {
+      request = objectMapper.readValue(body, PaymentWebhookRequest.class);
+    } catch (Exception exception) {
+      throw ApiException.badRequest("Malformed webhook payload");
+    }
+    if (request == null
+        || request.providerRef() == null
+        || request.providerRef().isBlank()
+        || request.status() == null
+        || request.status().isBlank()) {
+      throw ApiException.badRequest("Malformed webhook payload");
+    }
+    return request;
   }
 
   private static boolean canTransition(PaymentStatus from, PaymentStatus to) {

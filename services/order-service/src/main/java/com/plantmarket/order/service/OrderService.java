@@ -27,6 +27,7 @@ import com.plantmarket.order.web.dto.GuestCheckoutRequest;
 import com.plantmarket.order.web.dto.OrderHistoryEntry;
 import com.plantmarket.order.web.dto.OrderItemResponse;
 import com.plantmarket.order.web.dto.OrderResponse;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -138,7 +139,7 @@ public class OrderService {
     return toResponse(order);
   }
 
-  @Transactional
+  @Transactional(noRollbackFor = ReservationExpiredException.class)
   public OrderResponse guestCheckout(GuestCheckoutRequest request, String idempotencyKey) {
     OrderResponse created =
         create(null, request.guestEmail(), new CreateOrderRequest(request.items()), idempotencyKey);
@@ -198,7 +199,7 @@ public class OrderService {
     record(order, OrderStatus.PENDING_PAYMENT, "order.pending_payment");
   }
 
-  @Transactional
+  @Transactional(noRollbackFor = ReservationExpiredException.class)
   public OrderResponse pay(UUID customerId, UUID orderId) {
     OrderEntity order = findOwnedForUpdate(customerId, orderId);
     payOrder(order);
@@ -211,6 +212,10 @@ public class OrderService {
     }
     if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
       throw ApiException.conflict("Only PENDING_PAYMENT orders can be paid");
+    }
+    if (isExpired(order)) {
+      cancelExpiredOrder(order);
+      throw new ReservationExpiredException(order.getId());
     }
     PaymentResult payment =
         paymentClient.createPayment(order.getId(), order.getTotalMinor(), order.getCurrency());
@@ -235,6 +240,32 @@ public class OrderService {
     }
     order.markPaid();
     record(order, OrderStatus.PAID, "order.paid");
+  }
+
+  /** Cancels one expired order in its own transaction; safe to call from the expiry scanner. */
+  @Transactional
+  public boolean cancelExpired(UUID orderId) {
+    OrderEntity order = orderRepository.findByIdForUpdate(orderId).orElse(null);
+    if (order == null || order.getStatus() != OrderStatus.PENDING_PAYMENT || !isExpired(order)) {
+      return false;
+    }
+    cancelExpiredOrder(order);
+    return true;
+  }
+
+  private boolean isExpired(OrderEntity order) {
+    Instant expiresAt = order.getReservationExpiresAt();
+    return expiresAt != null && !expiresAt.isAfter(Instant.now());
+  }
+
+  private void cancelExpiredOrder(OrderEntity order) {
+    try {
+      catalogClient.release(order.getId());
+    } catch (RuntimeException exception) {
+      log.warn("Reservation release failed for expired order {}", order.getId(), exception);
+    }
+    order.cancel();
+    record(order, OrderStatus.CANCELLED, "order.expired");
   }
 
   @Transactional

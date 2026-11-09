@@ -16,7 +16,8 @@ psql_cmd=(docker compose exec -T postgres psql -U "$POSTGRES_USER" -v ON_ERROR_S
     "TRUNCATE reservations, restock_subscriptions, categories CASCADE;"
 "${psql_cmd[@]}" -d pm_orders -c \
     "TRUNCATE orders CASCADE; TRUNCATE care_reminders CASCADE; TRUNCATE outbox_events; TRUNCATE shipping_zones CASCADE;"
-"${psql_cmd[@]}" -d pm_payments -c "TRUNCATE payments CASCADE;"
+"${psql_cmd[@]}" -d pm_payments -c \
+    "TRUNCATE payments CASCADE; TRUNCATE payment_webhook_events;"
 "${psql_cmd[@]}" -d pm_auth -c "TRUNCATE users CASCADE;"
 
 ./scripts/seed.sh

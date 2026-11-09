@@ -7,9 +7,10 @@ import com.plantmarket.payment.client.ProviderPayment;
 import com.plantmarket.payment.domain.PaymentEntity;
 import com.plantmarket.payment.domain.PaymentStatus;
 import com.plantmarket.payment.repository.PaymentRepository;
+import com.plantmarket.payment.service.WebhookSignature;
 import com.plantmarket.payment.web.dto.CreatePaymentRequest;
 import com.plantmarket.payment.web.dto.PaymentResponse;
-import com.plantmarket.payment.web.dto.PaymentWebhookRequest;
+import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -134,34 +135,106 @@ class PaymentFlowIntegrationTest {
     String providerRef = created.getBody().providerRef();
     assertThat(providerRef).isNotBlank();
 
-    HttpHeaders headers = new HttpHeaders();
-    headers.set("X-Provider-Secret", "dev-payment-webhook-secret");
+    String body = webhookBody(providerRef, "REFUNDED");
     ResponseEntity<PaymentResponse> webhook =
         restTemplate.postForEntity(
             "/api/v1/payments/webhook",
-            new HttpEntity<>(new PaymentWebhookRequest(providerRef, "REFUNDED"), headers),
+            new HttpEntity<>(body, webhookHeaders(body, "evt-" + UUID.randomUUID(), nowSeconds())),
             PaymentResponse.class);
     assertThat(webhook.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(webhook.getBody()).isNotNull();
     assertThat(webhook.getBody().status().name()).isEqualTo("REFUNDED");
 
-    HttpHeaders wrongHeaders = new HttpHeaders();
-    wrongHeaders.set("X-Provider-Secret", "wrong-secret");
-    ResponseEntity<String> badSecret =
-        restTemplate.postForEntity(
-            "/api/v1/payments/webhook",
-            new HttpEntity<>(new PaymentWebhookRequest(providerRef, "CONFIRMED"), wrongHeaders),
-            String.class);
-    assertThat(badSecret.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-
-    HttpHeaders validHeaders = new HttpHeaders();
-    validHeaders.set("X-Provider-Secret", "dev-payment-webhook-secret");
+    String nextBody = webhookBody(providerRef, "FAILED");
     ResponseEntity<String> regression =
         restTemplate.postForEntity(
             "/api/v1/payments/webhook",
-            new HttpEntity<>(new PaymentWebhookRequest(providerRef, "FAILED"), validHeaders),
+            new HttpEntity<>(
+                nextBody, webhookHeaders(nextBody, "evt-" + UUID.randomUUID(), nowSeconds())),
             String.class);
     assertThat(regression.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+  }
+
+  @Test
+  void rejectsWebhookWithInvalidSignature() {
+    String providerRef = createPayment();
+    String body = webhookBody(providerRef, "REFUNDED");
+    HttpHeaders headers = webhookHeaders(body, "evt-" + UUID.randomUUID(), nowSeconds());
+    headers.set(
+        "X-Provider-Signature",
+        WebhookSignature.compute("wrong-secret", "1700000000", "evt-x", body));
+
+    ResponseEntity<String> response =
+        restTemplate.postForEntity(
+            "/api/v1/payments/webhook", new HttpEntity<>(body, headers), String.class);
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+  }
+
+  @Test
+  void rejectsWebhookWithStaleTimestamp() {
+    String providerRef = createPayment();
+    String body = webhookBody(providerRef, "REFUNDED");
+    long stale = nowSeconds() - 3600;
+
+    ResponseEntity<String> response =
+        restTemplate.postForEntity(
+            "/api/v1/payments/webhook",
+            new HttpEntity<>(body, webhookHeaders(body, "evt-" + UUID.randomUUID(), stale)),
+            String.class);
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+  }
+
+  @Test
+  void duplicateWebhookEventIsIdempotent() {
+    String providerRef = createPayment();
+    String body = webhookBody(providerRef, "REFUNDED");
+    String eventId = "evt-" + UUID.randomUUID();
+    long timestamp = nowSeconds();
+    HttpHeaders headers = webhookHeaders(body, eventId, timestamp);
+
+    ResponseEntity<PaymentResponse> first =
+        restTemplate.postForEntity(
+            "/api/v1/payments/webhook", new HttpEntity<>(body, headers), PaymentResponse.class);
+    ResponseEntity<PaymentResponse> second =
+        restTemplate.postForEntity(
+            "/api/v1/payments/webhook", new HttpEntity<>(body, headers), PaymentResponse.class);
+
+    assertThat(first.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(second.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(second.getBody()).isNotNull();
+    assertThat(second.getBody().status()).isEqualTo(PaymentStatus.REFUNDED);
+  }
+
+  private String createPayment() {
+    ResponseEntity<PaymentResponse> created =
+        restTemplate.postForEntity(
+            "/api/v1/payments",
+            new CreatePaymentRequest(UUID.randomUUID(), 129900L, "BYN"),
+            PaymentResponse.class);
+    assertThat(created.getBody()).isNotNull();
+    return created.getBody().providerRef();
+  }
+
+  private static String webhookBody(String providerRef, String status) {
+    return "{\"providerRef\":\"" + providerRef + "\",\"status\":\"" + status + "\"}";
+  }
+
+  private static long nowSeconds() {
+    return Instant.now().getEpochSecond();
+  }
+
+  private static HttpHeaders webhookHeaders(String body, String eventId, long timestamp) {
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+    headers.set("X-Provider-Timestamp", String.valueOf(timestamp));
+    headers.set("X-Provider-Event-Id", eventId);
+    headers.set(
+        "X-Provider-Signature",
+        WebhookSignature.compute(
+            "dev-payment-webhook-secret", String.valueOf(timestamp), eventId, body));
+    return headers;
   }
 
   @TestConfiguration

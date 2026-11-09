@@ -65,13 +65,34 @@ paths:
     post:
       operationId: paymentWebhook
       tags: [payments]
-      summary: Provider callback; requires X-Provider-Secret
+      summary: Provider callback; HMAC-SHA256 signed and replay-protected
+      description: |
+        The signature is hex HMAC-SHA256 over `timestamp + "\n" + eventId + "\n" + rawBody`,
+        using `PAYMENT_WEBHOOK_SECRET`. Timestamps outside the configured tolerance
+        (`PAYMENT_WEBHOOK_TOLERANCE_SECONDS`, default 300) are rejected. A repeated
+        `X-Provider-Event-Id` is acknowledged idempotently without applying the transition again.
       parameters:
-        - name: X-Provider-Secret
+        - name: X-Provider-Timestamp
           in: header
           required: true
+          description: Epoch seconds, included in the signature.
           schema:
             type: string
+            pattern: '^[0-9]+$'
+        - name: X-Provider-Event-Id
+          in: header
+          required: true
+          description: Unique provider event id, max 128 chars.
+          schema:
+            type: string
+            maxLength: 128
+        - name: X-Provider-Signature
+          in: header
+          required: true
+          description: Lowercase or uppercase hex HMAC-SHA256.
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{64}$'
       requestBody:
         required: true
         content:
@@ -80,19 +101,27 @@ paths:
               $ref: '#/components/schemas/PaymentWebhookRequest'
       responses:
         '200':
-          description: Updated payment
+          description: Updated payment (or current payment for a duplicate event)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Payment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
-          description: Invalid webhook secret
+          description: Invalid signature or timestamp outside the allowed tolerance
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          description: Illegal payment status transition
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
 
 components:
   responses:
