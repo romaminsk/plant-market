@@ -24,6 +24,7 @@ fi
 STORE_PORT="${DEMO_STOREFRONT_PORT:-3100}"
 
 NEXT_PUBLIC_SITE_URL="http://localhost:$STORE_PORT" \
+    AUTH_SERVICE_URL=http://localhost:8080 \
     pnpm --filter @plant-market/storefront build
 pnpm --filter @plant-market/admin build
 
@@ -31,7 +32,7 @@ pkill -f "next start -p $STORE_PORT" 2>/dev/null || true
 pkill -f "vite preview --port 5173" 2>/dev/null || true
 sleep 1
 
-API_URL=http://localhost:8080 AUTH_SERVICE_URL=http://localhost:8090 \
+API_URL=http://localhost:8080 AUTH_SERVICE_URL=http://localhost:8080 \
     nohup pnpm --filter @plant-market/storefront exec next start -p "$STORE_PORT" \
     > /tmp/plant-market-storefront.log 2>&1 &
 nohup pnpm --filter @plant-market/admin exec vite preview --port 5173 --strictPort \

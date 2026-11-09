@@ -1,7 +1,7 @@
 import type { NextConfig } from 'next';
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080';
-const authUrl = process.env.AUTH_SERVICE_URL ?? 'http://localhost:8090';
+const authUrl = process.env.AUTH_SERVICE_URL ?? 'http://localhost:8080';
 const contentSecurityPolicy = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline'",

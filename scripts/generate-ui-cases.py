@@ -458,10 +458,10 @@ case(
 case(
     "TC-046",
     "auth",
-    "Storefront login редиректит на auth-service",
+    "Storefront login редиректит на auth через gateway",
     "/api/auth/login?returnTo=/account/orders",
-    url(":8090/login"),
-    "URL /login на auth-service",
+    url(":8080/login"),
+    "URL /login на gateway",
 )
 case(
     "TC-047",

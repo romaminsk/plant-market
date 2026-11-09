@@ -27,7 +27,8 @@ public class CorsConfig {
     configuration.setAllowCredentials(true);
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-    source.registerCorsConfiguration("/**", configuration);
+    // Auth UI is server-rendered same-origin HTML; CORS is only for browser API calls.
+    source.registerCorsConfiguration("/api/**", configuration);
     return new CorsWebFilter(source);
   }
 }

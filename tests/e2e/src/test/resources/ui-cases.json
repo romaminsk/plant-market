@@ -642,15 +642,15 @@
     {
       "id": "TC-046",
       "area": "auth",
-      "name": "Storefront login редиректит на auth-service",
+      "name": "Storefront login редиректит на auth через gateway",
       "start": "/api/auth/login?returnTo=/account/orders",
       "steps": [
         {
           "action": "expectUrl",
-          "value": ":8090/login"
+          "value": ":8080/login"
         }
       ],
-      "expected": "URL /login на auth-service"
+      "expected": "URL /login на gateway"
     },
     {
       "id": "TC-047",

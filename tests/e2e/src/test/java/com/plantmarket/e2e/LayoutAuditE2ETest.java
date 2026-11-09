@@ -77,7 +77,7 @@ class LayoutAuditE2ETest extends PlaywrightTestBase {
 
   private final String baseUrl = env("E2E_BASE_URL", "http://localhost:3000");
   private final String adminUrl = env("E2E_ADMIN_URL", "http://localhost:5173");
-  private final String authUrl = env("E2E_AUTH_URL", "http://localhost:8090");
+  private final String authUrl = env("E2E_AUTH_URL", "http://localhost:8080");
   private final String apiUrl = env("E2E_API_URL", "http://localhost:8080");
   private final List<String> problems = new ArrayList<>();
 

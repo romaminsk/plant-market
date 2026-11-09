@@ -1292,7 +1292,7 @@
               Юридического закрытия РБ: торговый реестр, СКНО/ЕРИП, персональные данные, CITES,
               оферта, налоги (L1–L8).
             </li>
-            <li>Продакшен-инфраструктуры: TLS, секрет-хранилище, auth за reverse proxy.</li>
+            <li>Продакшен-инфраструктуры: TLS и секрет-хранилище.</li>
             <li>
               Некоторых обещанных глав: idempotency, tenant_id, Kafka/Redis, полноценные
               contract-тесты.
@@ -1938,10 +1938,9 @@ X-Request-Id: 01a1b627-a631-7e72-9e00-a621ccac5e1f</code></pre>
           <div class="callout warn">
             <span class="title">Находка ревью</span>
             <p>
-              Любая строка, начинающаяся с <code>Bearer </code>, считается «аутентифицированной» и
-              получает лимит 300/мин, даже если токен поддельный. А auth-service опубликован на
-              <code>localhost:8090</code> напрямую, минуя gateway, поэтому лимит 10/мин на
-              login/register можно обойти. Подробнее — <a href="#findings">P1-10</a>.
+              <strong>Исправлено:</strong> authenticated-bucket определяется по валидному principal,
+              окно общее через Redis, auth-service закрыт за gateway и не публикует порт. Подробнее
+              — <a href="#findings">P1-3</a>.
             </p>
           </div>
         </section>
@@ -3376,7 +3375,7 @@ variant.reserve(item.quantity());</code></pre>
                 <tr>
                   <td>Кража пароля перебором</td>
                   <td>Argon2id + лимит 10/мин на login.</td>
-                  <td>Лимит обходится прямым вызовом :8090; нет блокировки аккаунта.</td>
+                  <td>Осталась блокировка аккаунта после серии неудач.</td>
                 </tr>
                 <tr>
                   <td>Подделка JWT</td>
@@ -4338,8 +4337,8 @@ SCENARIO_IDS=SC-028,SC-159 ./gradlew :tests:e2e:test --tests 'com.plantmarket.e2
             <div class="card">
               <h4>Auth / регистрация</h4>
               <p>
-                <a href="http://localhost:8090/register" target="_blank" rel="noreferrer"
-                  >http://localhost:8090/register</a
+                <a href="http://localhost:8080/register" target="_blank" rel="noreferrer"
+                  >http://localhost:8080/register</a
                 >
               </p>
             </div>
@@ -4460,9 +4459,8 @@ SCENARIO_IDS=SC-028,SC-159 ./gradlew :tests:e2e:test --tests 'com.plantmarket.e2
               Актуальная оценка безопасности — <strong>9/10</strong>, готовности к проду —
               <strong>7/10</strong>: закрыты TTL-отмена, HMAC/replay/amount check webhook, outbox
               <code>SKIP LOCKED</code>, таймауты HTTP/SMTP, пагинация каталога, лимит корзины,
-              архивные продукты, disabled-refresh, persistent SAS и распределённый rate limit;
-              впереди auth за reverse proxy. Ниже сохранён исходный срез ревью, чтобы была видна
-              история.
+              архивные продукты, disabled-refresh, persistent SAS, распределённый rate limit и auth
+              за gateway. Ниже сохранён исходный срез ревью, чтобы была видна история.
             </p>
           </div>
 
@@ -4941,15 +4939,15 @@ SCENARIO_IDS=SC-028,SC-159 ./gradlew :tests:e2e:test --tests 'com.plantmarket.e2
                 </tr>
                 <tr>
                   <td><span class="sev p1">P1-3</span></td>
-                  <td>Rate limit обходится — <strong>частично исправлено</strong></td>
+                  <td>Rate limit обходится — <strong>исправлено</strong></td>
                   <td>
                     <span class="file">RateLimitFilter.java</span>,
                     <span class="file">RedisRateLimitStore.java</span>,
-                    <span class="file">docker-compose.yml</span> (auth :8090)
+                    <span class="file">docker-compose.yml</span>
                   </td>
                   <td>
-                    Окно общее через Redis, authenticated-bucket только для валидного principal;
-                    осталось закрыть прямой порт auth за reverse proxy.
+                    Окно общее через Redis, authenticated-bucket только для валидного principal,
+                    auth-service закрыт за gateway и не публикует порт.
                   </td>
                 </tr>
                 <tr>
@@ -4963,14 +4961,15 @@ SCENARIO_IDS=SC-028,SC-159 ./gradlew :tests:e2e:test --tests 'com.plantmarket.e2
                 </tr>
                 <tr>
                   <td><span class="sev p1">P1-5</span></td>
-                  <td>CSP блокирует загруженные фото</td>
+                  <td>CSP блокирует загруженные фото — <strong>исправлено</strong></td>
                   <td>
                     <span class="file">clients/storefront/next.config.ts</span>,
                     <span class="file">FileSystemMediaStorage.java</span>
                   </td>
                   <td>
-                    <code>img-src</code> не содержит <code>http://localhost:8081</code>;
-                    WYSIWYG-фото ломаются. Нужен media-proxy через gateway или разрешённый origin.
+                    Media выдаётся через gateway <code>/media/**</code>, а
+                    <code>MEDIA_PUBLIC_BASE_URL</code> указывает на разрешённый
+                    <code>img-src</code>.
                   </td>
                 </tr>
                 <tr>
@@ -5676,7 +5675,7 @@ SCENARIO_IDS=SC-028,SC-159 ./gradlew :tests:e2e:test --tests 'com.plantmarket.e2
                 </tr>
                 <tr>
                   <td>Регистрация / вход</td>
-                  <td><code>http://localhost:8090/register</code>, <code>/login</code></td>
+                  <td><code>http://localhost:8080/register</code>, <code>/login</code></td>
                 </tr>
                 <tr>
                   <td>API Gateway</td>
@@ -6017,10 +6016,9 @@ pnpm lint &amp;&amp; pnpm format:check
             <summary>Где хранятся фотографии?</summary>
             <div class="body">
               <p>
-                В локальном Docker-volume <code>media-data</code>, отдаются catalog-service по
-                <code>/media/**</code>. В проде нужен S3/MinIO (ADR-0011). Сейчас есть проблема: CSP
-                storefront не разрешает <code>http://localhost:8081</code>, поэтому загруженные фото
-                могут не отображаться (P1-5).
+                В локальном Docker-volume <code>media-data</code>, отдаются через gateway по
+                <code>/media/**</code>; <code>MEDIA_PUBLIC_BASE_URL</code> совпадает с разрешённым
+                <code>img-src</code>. В проде нужен S3/MinIO (ADR-0011).
               </p>
             </div>
           </details>

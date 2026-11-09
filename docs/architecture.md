@@ -53,7 +53,8 @@ admin (React + Vite) ─┘                     ─→ catalog-service :8081 →
 - Kafka, Redis, gRPC, GraphQL в Phase 0 не добавляются (C4).
 - Секреты — только через переменные окружения; `.env` не коммитится.
 - В prod `auth-service` и внутренние порты не публикуются напрямую: `/oauth2/**` и `/login`
-  проксируются reverse proxy с TLS; сейчас dev/E2E ходят на `:8090` напрямую.
+  проксируются reverse proxy с TLS; dev/E2E идут через gateway `:8080`, auth-service не
+  публикует порт на хост.
 
 ## Ссылки
 

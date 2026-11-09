@@ -66,14 +66,12 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-plantmarket}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       AUTH_SERVICE_PORT: 8090
-      JWT_ISSUER: ${JWT_ISSUER:-http://localhost:8090}
+      JWT_ISSUER: ${JWT_ISSUER:-http://localhost:8080}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-PT10M}
       JWT_REFRESH_TTL: ${JWT_REFRESH_TTL:-P7D}
       SESSION_COOKIE_NAME: ${SESSION_COOKIE_NAME:-PM-SESSION}
       SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
-    ports:
-      - '127.0.0.1:${AUTH_SERVICE_PORT:-8090}:8090'
     depends_on:
       postgres:
         condition: service_healthy

@@ -51,7 +51,7 @@ Runner: `tests/e2e/src/test/java/com/plantmarket/e2e/UiMatrixE2ETest.java`.
 | TC-043 | checkout   | Пустой checkout предлагает каталог                            | Ссылка в каталог                   |
 | TC-044 | checkout   | Checkout с товаром предлагает гостевую форму                  | Гостевая форма без регистрации     |
 | TC-045 | checkout   | Meta title checkout задан                                     | Title содержит «Оформление заказа» |
-| TC-046 | auth       | Storefront login редиректит на auth-service                   | URL /login на auth-service         |
+| TC-046 | auth       | Storefront login редиректит на auth через gateway             | URL /login на gateway              |
 | TC-047 | auth       | Брендированный login имеет title                              | Title «Вход — Plant Market»        |
 | TC-048 | auth       | Брендированный login показывает заголовок «Вход»              | Заголовок и eyebrow                |
 | TC-049 | auth       | Login показывает бренд Plant Market                           | Бренд                              |

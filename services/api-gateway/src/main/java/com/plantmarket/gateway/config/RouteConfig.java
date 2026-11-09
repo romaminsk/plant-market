@@ -17,7 +17,22 @@ public class RouteConfig {
       @Value("${app.gateway.order-uri}") String orderUri) {
     return builder
         .routes()
-        .route("auth-service", route -> route.path("/api/v1/auth/**").uri(authUri))
+        .route(
+            "auth-service",
+            route ->
+                route
+                    .path(
+                        "/api/v1/auth/**",
+                        "/oauth2/**",
+                        "/.well-known/**",
+                        "/login",
+                        "/register",
+                        "/auth.css",
+                        "/fonts/**",
+                        "/images/**",
+                        "/error")
+                    .filters(filters -> filters.preserveHostHeader())
+                    .uri(authUri))
         .route("media", route -> route.path("/media/**").uri(catalogUri))
         .route(
             "catalog-service",

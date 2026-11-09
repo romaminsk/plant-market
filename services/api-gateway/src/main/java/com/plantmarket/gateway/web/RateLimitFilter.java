@@ -57,7 +57,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
   @Override
   public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
     String path = exchange.getRequest().getPath().value();
-    if (!path.startsWith("/api/")) {
+    if (!path.startsWith("/api/") && !path.equals("/login") && !path.startsWith("/oauth2/")) {
       return chain.filter(exchange);
     }
 
@@ -94,7 +94,10 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
   }
 
   private int limitFor(String path, boolean authenticated) {
-    if (path.equals("/api/v1/auth/login") || path.equals("/api/v1/auth/register")) {
+    if (path.equals("/api/v1/auth/login")
+        || path.equals("/api/v1/auth/register")
+        || path.equals("/login")
+        || path.startsWith("/oauth2/")) {
       return authRequestsPerMinute;
     }
     return authenticated ? authenticatedRequestsPerMinute : publicRequestsPerMinute;

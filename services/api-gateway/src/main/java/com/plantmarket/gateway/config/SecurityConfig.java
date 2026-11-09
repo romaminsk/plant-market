@@ -59,15 +59,28 @@ public class SecurityConfig {
                         ReferrerPolicyServerHttpHeadersWriter.ReferrerPolicy.NO_REFERRER))
                 .permissionsPolicy(
                     permissions -> permissions.policy("geolocation=(), microphone=(), camera=()"))
-                .contentSecurityPolicy(
-                    csp -> csp.policyDirectives("default-src 'none'; frame-ancestors 'none'")))
+                .contentSecurityPolicy(csp ->
+                    csp.policyDirectives(
+                        "default-src 'none'; style-src 'self' 'unsafe-inline'; "
+                            + "font-src 'self'; img-src 'self' data:; script-src 'self'; "
+                            + "frame-ancestors 'none'; base-uri 'self'")))
         .authorizeExchange(exchange ->
             exchange
                 .pathMatchers(HttpMethod.OPTIONS, "/**")
                 .permitAll()
                 .pathMatchers("/actuator/health/**", "/actuator/info")
                 .permitAll()
-                .pathMatchers("/api/v1/auth/**", "/api/v1/restock-subscriptions/**")
+                .pathMatchers(
+                    "/api/v1/auth/**",
+                    "/api/v1/restock-subscriptions/**",
+                    "/oauth2/**",
+                    "/.well-known/**",
+                    "/login",
+                    "/register",
+                    "/auth.css",
+                    "/fonts/**",
+                    "/images/**",
+                    "/error")
                 .permitAll()
                 .pathMatchers(HttpMethod.GET, "/media/**")
                 .permitAll()
