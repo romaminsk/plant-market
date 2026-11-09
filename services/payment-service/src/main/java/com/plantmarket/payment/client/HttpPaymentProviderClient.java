@@ -1,6 +1,7 @@
 package com.plantmarket.payment.client;
 
 import com.plantmarket.common.error.ApiException;
+import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,12 +16,15 @@ public class HttpPaymentProviderClient implements PaymentProviderClient {
 
   private final RestClient restClient;
 
-  public HttpPaymentProviderClient(@Value("${app.payment.provider-uri}") String providerUri) {
+  public HttpPaymentProviderClient(
+      @Value("${app.payment.provider-uri}") String providerUri,
+      @Value("${app.http.connect-timeout:PT2S}") Duration connectTimeout,
+      @Value("${app.http.read-timeout:PT5S}") Duration readTimeout) {
+    SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+    requestFactory.setConnectTimeout((int) connectTimeout.toMillis());
+    requestFactory.setReadTimeout((int) readTimeout.toMillis());
     this.restClient =
-        RestClient.builder()
-            .baseUrl(providerUri)
-            .requestFactory(new SimpleClientHttpRequestFactory())
-            .build();
+        RestClient.builder().baseUrl(providerUri).requestFactory(requestFactory).build();
   }
 
   @Override

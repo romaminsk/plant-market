@@ -65,10 +65,10 @@ export function addToCart(item: CartItem): void {
   const existing = items.find((entry) => entry.id === item.id && entry.type === item.type);
   if (existing) {
     if (item.type === 'VARIANT') {
-      existing.quantity += item.quantity;
+      existing.quantity = Math.min(10, existing.quantity + item.quantity);
     }
   } else {
-    items.push(item);
+    items.push({ ...item, quantity: Math.min(10, item.quantity) });
   }
   writeCart(items);
 }

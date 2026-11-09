@@ -98,6 +98,10 @@ public class UserEntity {
     return status;
   }
 
+  public void disable() {
+    this.status = UserStatus.DISABLED;
+  }
+
   public Set<RoleEntity> getRoles() {
     return Set.copyOf(roles);
   }

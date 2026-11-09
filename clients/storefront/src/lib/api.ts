@@ -114,11 +114,15 @@ async function fetchJson<T>(url: string, label: string): Promise<T> {
   throw new Error(`${label} request failed`);
 }
 
-export async function fetchPublishedProducts(): Promise<ProductPage> {
+export async function fetchPublishedProducts(page = 0, size = 50): Promise<ProductPage> {
   return fetchJson<ProductPage>(
-    `${API_URL}/api/v1/products?page=0&size=50&status=PUBLISHED`,
+    `${API_URL}/api/v1/products?page=${page}&size=${size}&status=PUBLISHED`,
     'Catalog',
   );
+}
+
+export async function fetchAllPublishedProducts(): Promise<Product[]> {
+  return collectPages((page) => fetchPublishedProducts(page));
 }
 
 export async function fetchProduct(id: string): Promise<Product> {
@@ -127,8 +131,9 @@ export async function fetchProduct(id: string): Promise<Product> {
 
 export async function fetchIndividualPlants(
   filters: PlantFilters = {},
+  page = 0,
 ): Promise<IndividualPlantPage> {
-  const params = new URLSearchParams({ status: 'AVAILABLE', size: '50' });
+  const params = new URLSearchParams({ status: 'AVAILABLE', size: '50', page: String(page) });
   if (filters.variegated !== undefined) {
     params.set('variegated', String(filters.variegated));
   }
@@ -142,6 +147,23 @@ export async function fetchIndividualPlants(
     `${API_URL}/api/v1/individual-plants?${params}`,
     'Individual plants',
   );
+}
+
+export async function fetchAllIndividualPlants(): Promise<IndividualPlant[]> {
+  return collectPages((page) => fetchIndividualPlants({}, page));
+}
+
+async function collectPages<T>(
+  fetchPage: (page: number) => Promise<{ items: T[]; totalPages: number }>,
+): Promise<T[]> {
+  const first = await fetchPage(0);
+  if (first.totalPages <= 1) {
+    return first.items;
+  }
+  const rest = await Promise.all(
+    Array.from({ length: first.totalPages - 1 }, (_, index) => fetchPage(index + 1)),
+  );
+  return [...first.items, ...rest.flatMap((page) => page.items)];
 }
 
 export async function fetchIndividualPlant(id: string): Promise<IndividualPlant> {

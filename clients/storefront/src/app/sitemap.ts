@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { fetchIndividualPlants, fetchPublishedProducts } from '@/lib/api';
+import { fetchAllIndividualPlants, fetchAllPublishedProducts } from '@/lib/api';
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
 
@@ -14,10 +14,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
   try {
     const [products, plants] = await Promise.all([
-      fetchPublishedProducts(),
-      fetchIndividualPlants(),
+      fetchAllPublishedProducts(),
+      fetchAllIndividualPlants(),
     ]);
-    for (const product of products.items) {
+    for (const product of products) {
       entries.push({
         url: `${baseUrl}/catalog/${product.id}`,
         lastModified: new Date(product.updatedAt),
@@ -25,7 +25,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.8,
       });
     }
-    for (const plant of plants.items) {
+    for (const plant of plants) {
       entries.push({
         url: `${baseUrl}/plants/${plant.id}`,
         lastModified: new Date(plant.updatedAt),

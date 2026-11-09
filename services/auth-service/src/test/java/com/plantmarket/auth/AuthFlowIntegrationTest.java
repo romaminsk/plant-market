@@ -2,6 +2,8 @@ package com.plantmarket.auth;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.plantmarket.auth.domain.UserEntity;
+import com.plantmarket.auth.repository.UserRepository;
 import com.plantmarket.auth.web.dto.LoginRequest;
 import com.plantmarket.auth.web.dto.RefreshRequest;
 import com.plantmarket.auth.web.dto.RegisterRequest;
@@ -49,6 +51,7 @@ class AuthFlowIntegrationTest {
   }
 
   @Autowired private TestRestTemplate restTemplate;
+  @Autowired private UserRepository userRepository;
 
   @Test
   void registerLoginReadCurrentUserAndRotateRefreshToken() {
@@ -96,6 +99,31 @@ class AuthFlowIntegrationTest {
             "/api/v1/auth/refresh", new RefreshRequest(refreshToken), String.class);
     assertThat(reused.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     assertThat(reused.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_PROBLEM_JSON);
+  }
+
+  @Test
+  void disabledUserCannotRefreshTokens() {
+    String email = "disabled-" + UUID.randomUUID() + "@example.com";
+    String password = "correct-horse-battery";
+    restTemplate.postForEntity(
+        "/api/v1/auth/register",
+        new RegisterRequest(email, password, "Disabled"),
+        UserResponse.class);
+    ResponseEntity<TokenResponse> loggedIn =
+        restTemplate.postForEntity(
+            "/api/v1/auth/login", new LoginRequest(email, password), TokenResponse.class);
+    assertThat(loggedIn.getBody()).isNotNull();
+
+    UserEntity user = userRepository.findByEmailIgnoreCase(email).orElseThrow();
+    user.disable();
+    userRepository.saveAndFlush(user);
+
+    ResponseEntity<String> refreshed =
+        restTemplate.postForEntity(
+            "/api/v1/auth/refresh",
+            new RefreshRequest(loggedIn.getBody().refreshToken()),
+            String.class);
+    assertThat(refreshed.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
   }
 
   @Test

@@ -1474,6 +1474,19 @@ button.secondary:hover {
   color: var(--accent-strong);
 }
 
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 1.5rem 0 2rem;
+}
+
+.pagination .button-link {
+  min-width: 8rem;
+  text-align: center;
+}
+
 .plant-photo {
   position: relative;
 }

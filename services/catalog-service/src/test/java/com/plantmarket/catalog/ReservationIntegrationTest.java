@@ -113,6 +113,25 @@ class ReservationIntegrationTest {
   }
 
   @Test
+  void archivedProductCannotBeReserved() {
+    String suffix = UUID.randomUUID().toString().substring(0, 8);
+    VariantFixture fixture = createVariantFixture(suffix, 5);
+    restTemplate.delete("/api/v1/products/" + fixture.product().id());
+
+    ResponseEntity<String> rejected =
+        restTemplate.postForEntity(
+            "/api/v1/reservations",
+            new ReservationRequest(
+                UUID.randomUUID(),
+                List.of(
+                    new ReservationItemRequest(
+                        ReservationTargetType.VARIANT, fixture.variant().id(), 1))),
+            String.class);
+
+    assertThat(rejected.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+  }
+
+  @Test
   void individualPlantReservationMovesPlantToReservedAndBack() {
     String suffix = UUID.randomUUID().toString().substring(0, 8);
     VariantFixture fixture = createVariantFixture(suffix, 1);

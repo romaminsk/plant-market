@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import {
+  fetchAllPublishedProducts,
   fetchIndividualPlants,
-  fetchPublishedProducts,
   formatPrice,
   productImage,
   type PlantFilters,
@@ -32,14 +32,33 @@ export default async function CatalogPage({
       ? Math.round(maxPrice * 100)
       : undefined;
 
+  const pageParam = typeof params.page === 'string' ? Number(params.page) : 0;
+  const page = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 0;
   const filters: PlantFilters = { variegated, light, maxPriceMinor };
   const filtersActive = Boolean(variegated || light || maxPriceMinor !== undefined);
   const [plants, products, allPlants] = await Promise.all([
-    fetchIndividualPlants(filters),
-    fetchPublishedProducts(),
+    fetchIndividualPlants(filters, page),
+    fetchAllPublishedProducts(),
     filtersActive ? fetchIndividualPlants({}) : Promise.resolve(null),
   ]);
   const totalAvailable = allPlants?.totalElements ?? plants.totalElements;
+  const pageHref = (target: number) => {
+    const query = new URLSearchParams();
+    if (variegated) {
+      query.set('variegated', 'true');
+    }
+    if (light) {
+      query.set('light', light);
+    }
+    if (maxPrice !== undefined) {
+      query.set('maxPrice', String(maxPrice));
+    }
+    if (target > 0) {
+      query.set('page', String(target));
+    }
+    const value = query.toString();
+    return value ? `/catalog?${value}` : '/catalog';
+  };
 
   return (
     <section>
@@ -121,6 +140,28 @@ export default async function CatalogPage({
           </ul>
         )}
 
+        {plants.totalPages > 1 ? (
+          <nav className="pagination" aria-label="Страницы каталога">
+            {page > 0 ? (
+              <Link className="button-link" href={pageHref(page - 1)}>
+                ← Назад
+              </Link>
+            ) : (
+              <span />
+            )}
+            <span className="muted">
+              Страница {page + 1} из {plants.totalPages}
+            </span>
+            {page + 1 < plants.totalPages ? (
+              <Link className="button-link" href={pageHref(page + 1)}>
+                Следующая →
+              </Link>
+            ) : (
+              <span />
+            )}
+          </nav>
+        ) : null}
+
         {!filtersActive ? (
           <>
             <div className="section-heading">
@@ -129,15 +170,14 @@ export default async function CatalogPage({
                 <h2>Позиции каталога</h2>
               </div>
               <span className="count">
-                {products.totalElements}{' '}
-                {pluralRu(products.totalElements, 'позиция', 'позиции', 'позиций')}
+                {products.length} {pluralRu(products.length, 'позиция', 'позиции', 'позиций')}
               </span>
             </div>
-            {products.items.length === 0 ? (
+            {products.length === 0 ? (
               <p className="empty">Каталог пока пуст.</p>
             ) : (
               <ul className="product-list">
-                {products.items.map((product) => (
+                {products.map((product) => (
                   <li key={product.id} className="product-row">
                     <div className="product-row-photo">
                       <img

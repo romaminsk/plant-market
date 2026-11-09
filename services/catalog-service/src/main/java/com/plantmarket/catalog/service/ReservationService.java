@@ -2,6 +2,7 @@ package com.plantmarket.catalog.service;
 
 import com.plantmarket.catalog.domain.IndividualPlantEntity;
 import com.plantmarket.catalog.domain.IndividualPlantStatus;
+import com.plantmarket.catalog.domain.ProductStatus;
 import com.plantmarket.catalog.domain.ProductVariantEntity;
 import com.plantmarket.catalog.domain.ReservationEntity;
 import com.plantmarket.catalog.domain.ReservationStatus;
@@ -109,6 +110,9 @@ public class ReservationService {
         variantRepository
             .findByIdForUpdate(item.targetId())
             .orElseThrow(() -> ApiException.notFound("Variant not found: " + item.targetId()));
+    if (variant.getProduct().getStatus() != ProductStatus.PUBLISHED) {
+      throw ApiException.conflict("Product is not published: " + variant.getProduct().getSku());
+    }
     int available =
         batchRepository.availableQuantity(variant.getId(), StockBatchStatus.AVAILABLE)
             - variant.getReservedQuantity();

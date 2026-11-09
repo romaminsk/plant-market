@@ -1,8 +1,9 @@
 # Plant Market — статус проекта
 
-**Обновлено:** 2026-11-06
-**Фаза:** 2 — gate закрыт по коду: J2/J3/J4 зелёные, A11-техника закрыта
-**Текущая задача:** Phase 3 — галерея и care-напоминания готовы, далее MinIO и outbox retry
+**Обновлено:** 2026-11-09
+**Фаза:** 3 — функции готовы; идёт P1-хардening после ревью
+**Текущая задача:** P1 — распределённый rate limit, persistent OAuth2 SAS, auth за reverse proxy,
+реальные media URL вместо hardcoded картинок
 
 ## Состояние окружения
 
@@ -128,10 +129,13 @@
 
 - `outbox_events`: `attempts`, `last_error`, `next_attempt_at`, `dead`; publisher выбирает только
   готовые к попытке события (ADR-0012).
+- Батч захватывается `FOR UPDATE SKIP LOCKED` и лизится через `next_attempt_at`; уведомление
+  отправляется вне транзакции, поэтому два экземпляра не дублируют письмо, а SMTP-зависание не
+  держит БД-транзакцию.
 - Ошибка SMTP в `OrderNotificationListener` теперь доходит до publisher: до 5 попыток с
   экспоненциальной задержкой 30 с…1 ч, затем dead-letter.
-- Integration-тест: падение SMTP → `attempts=1` и будущий `next_attempt_at`, затем успешная
-  публикация после восстановления.
+- Integration-тесты: падение SMTP → `attempts=1` и будущий `next_attempt_at`, затем успешная
+  публикация после восстановления; параллельный publisher не отправляет событие дважды.
 
 ### Phase 3 — загрузка фото (✅)
 
@@ -267,14 +271,14 @@
 | Модуль            | Тесты | Line coverage |
 | ----------------- | ----: | ------------: |
 | `platform-common` |    19 |           83% |
-| `auth-service`    |     3 |           73% |
-| `catalog-service` |    11 |           84% |
-| `order-service`   |    12 |           80% |
+| `auth-service`    |     4 |           74% |
+| `catalog-service` |    12 |           84% |
+| `order-service`   |    14 |           82% |
 | `payment-service` |    11 |           76% |
 | `api-gateway`     |    10 |           92% |
 | `tests:e2e`       |   478 |             — |
 
-Итого **66 backend-тестов + 478 E2E = 544 теста, 0 падений**. JaCoCo-порог 70% проходит.
+Итого **70 backend-тестов + 478 E2E = 548 тестов, 0 падений**. JaCoCo-порог 70% проходит.
 
 ### UI-матрица (100 кейсов)
 
@@ -361,11 +365,23 @@
 - Проверено: backend integration-тесты, admin login/gallery E2E, guest checkout с SYSTEM-токенами,
   повтор guest checkout с тем же `Idempotency-Key`, media upload/download через gateway.
 
+### P1-хардening — второй батч (2026-11-09)
+
+- **Outbox:** `SKIP LOCKED` + lease, уведомления вне транзакции; тест на параллельную публикацию.
+- **Таймауты:** connect/read для catalog/payment/provider HTTP-клиентов и SMTP
+  connection/read/write; настройки `HTTP_*`, `MAIL_SMTP_*`.
+- **Гостевые претензии и care:** null-safe ownership check, 404 вместо 500.
+- **Disabled user:** `refresh` проверяет статус и отзывает все активные токены.
+- **Архивные продукты:** резерв отклоняет не-`PUBLISHED`, карточка отдаёт 404, неактивные
+  варианты скрыты.
+- **Корзина:** количество клампится до 10, позиция не исчезает.
+- **Каталог/sitemap:** серверная пагинация, `collectPages` обходит все страницы для sitemap.
+
 ## Следующие 3 шага
 
-1. P1: outbox `SKIP LOCKED`, распределённый rate limit, таймауты HTTP/SMTP, пагинация каталога,
-   лимит корзины и архивированные продукты.
-2. Storefront: слоты доставки, отзывы, consent-версионирование; slug-URL и sitemap.
+1. P1: распределённый rate limit, persistent OAuth2 SAS, auth за reverse proxy, реальные media URL
+   вместо hardcoded картинок.
+2. Storefront: слоты доставки, отзывы, consent-версионирование; slug-URL.
 3. Staging A1/A15, MinIO/S3, юридический A11 L1–L8; до подписи prod запрещён.
 
 ## Блокеры и риски

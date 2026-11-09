@@ -21,6 +21,9 @@ spring:
     properties:
       mail.smtp.auth: false
       mail.smtp.starttls.enable: false
+      mail.smtp.connectiontimeout: ${MAIL_SMTP_CONNECTION_TIMEOUT_MS:5000}
+      mail.smtp.timeout: ${MAIL_SMTP_READ_TIMEOUT_MS:5000}
+      mail.smtp.writetimeout: ${MAIL_SMTP_WRITE_TIMEOUT_MS:5000}
 
 server:
   port: ${ORDER_SERVICE_PORT:8083}
@@ -37,6 +40,9 @@ management:
         enabled: true
 
 app:
+  http:
+    connect-timeout: ${HTTP_CONNECT_TIMEOUT:PT2S}
+    read-timeout: ${HTTP_READ_TIMEOUT:PT5S}
   jwt:
     secret: ${JWT_SECRET}
     environment: ${APP_ENV:prod}

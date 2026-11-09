@@ -2,10 +2,12 @@ package com.plantmarket.order.client;
 
 import com.plantmarket.common.error.ApiException;
 import com.plantmarket.order.security.ServiceTokenProvider;
+import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
@@ -16,10 +18,17 @@ public class HttpPaymentClient implements PaymentClient {
   private final RestClient restClient;
 
   public HttpPaymentClient(
-      @Value("${app.payment.base-uri}") String baseUri, ServiceTokenProvider serviceTokens) {
+      @Value("${app.payment.base-uri}") String baseUri,
+      @Value("${app.http.connect-timeout:PT2S}") Duration connectTimeout,
+      @Value("${app.http.read-timeout:PT5S}") Duration readTimeout,
+      ServiceTokenProvider serviceTokens) {
+    SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+    requestFactory.setConnectTimeout((int) connectTimeout.toMillis());
+    requestFactory.setReadTimeout((int) readTimeout.toMillis());
     this.restClient =
         RestClient.builder()
             .baseUrl(baseUri)
+            .requestFactory(requestFactory)
             .requestInterceptor((request, body, execution) -> {
               request.getHeaders().setBearerAuth(serviceTokens.token());
               return execution.execute(request, body);

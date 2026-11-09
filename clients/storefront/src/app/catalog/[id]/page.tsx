@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { fetchProduct, fetchVariants, formatPrice, productImage } from '@/lib/api';
 import { AddVariantToCart } from './AddVariantToCart';
 import { safeJsonLd } from '@/lib/seo';
@@ -14,6 +15,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params;
   const product = await fetchProduct(id);
+  if (product.status !== 'PUBLISHED') {
+    notFound();
+  }
   return {
     title: `${product.name} — Plant Market`,
     description:
@@ -29,7 +33,11 @@ export async function generateMetadata({
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [product, variants] = await Promise.all([fetchProduct(id), fetchVariants(id)]);
+  const [product, allVariants] = await Promise.all([fetchProduct(id), fetchVariants(id)]);
+  if (product.status !== 'PUBLISHED') {
+    notFound();
+  }
+  const variants = allVariants.filter((variant) => variant.status === 'ACTIVE');
   const inStock = variants.some((variant) => variant.availableQuantity > 0);
   const jsonLd = {
     '@context': 'https://schema.org',

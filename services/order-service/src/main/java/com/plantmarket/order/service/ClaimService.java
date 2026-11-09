@@ -104,7 +104,7 @@ public class ClaimService {
   private OrderEntity findOwnedOrder(UUID customerId, UUID orderId) {
     return orderRepository
         .findById(orderId)
-        .filter(order -> order.getCustomerId().equals(customerId))
+        .filter(order -> customerId.equals(order.getCustomerId()))
         .orElseThrow(() -> ApiException.notFound("Order not found: " + orderId));
   }
 

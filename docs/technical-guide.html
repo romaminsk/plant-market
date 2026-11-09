@@ -1271,7 +1271,7 @@
               <span class="tag">Качество</span>
               <h4>Тесты</h4>
               <p>
-                66 backend-тестов, 478 E2E, 350 пользовательских сценариев, layout-аудит,
+                70 backend-тестов, 478 E2E, 350 пользовательских сценариев, layout-аудит,
                 мутационное тестирование.
               </p>
             </div>
@@ -3822,12 +3822,12 @@ const EVENT = 'pm-cart-changed';</code></pre>
           </h2>
 
           <p class="lead-in">
-            В проекте 544 теста: 66 backend и 478 E2E. Это много для демо и мало для продакшена —
+            В проекте 548 тестов: 70 backend и 478 E2E. Это много для демо и мало для продакшена —
             важно не количество, а то, что именно каждый слой доказывает.
           </p>
 
           <div class="stats">
-            <div class="stat"><b>66</b><span>backend-тестов</span></div>
+            <div class="stat"><b>70</b><span>backend-тестов</span></div>
             <div class="stat"><b>478</b><span>E2E-тестов</span></div>
             <div class="stat"><b>350</b><span>пользовательских сценариев</span></div>
             <div class="stat"><b>100</b><span>UI-матрица</span></div>
@@ -3850,16 +3850,16 @@ const EVENT = 'pm-cart-changed';</code></pre>
                 <tr>
                   <td>Unit / slice</td>
                   <td>UUIDv7, пагинация, RFC 7807, request-id, rate limit, webhook HMAC.</td>
-                  <td>22</td>
+                  <td>24</td>
                   <td>JUnit 6, MockMvc</td>
                 </tr>
                 <tr>
                   <td>Integration</td>
                   <td>
                     Spring + Flyway + реальный PostgreSQL: auth, каталог, резервы, заказы, оплата,
-                    TTL-отмена, webhook replay, gateway authz.
+                    TTL-отмена, webhook replay, outbox lease, gateway authz.
                   </td>
-                  <td>44</td>
+                  <td>46</td>
                   <td>Testcontainers <code>postgres:18.6</code>, WebTestClient</td>
                 </tr>
                 <tr>
@@ -4458,8 +4458,9 @@ SCENARIO_IDS=SC-028,SC-159 ./gradlew :tests:e2e:test --tests 'com.plantmarket.e2
             </p>
             <p>
               Актуальная оценка безопасности — <strong>7/10</strong>, готовности к проду —
-              <strong>5/10</strong>: из P1 закрыты отмена по TTL и HMAC/replay webhook; впереди
-              распределённый rate limit, outbox <code>SKIP LOCKED</code>, таймауты и SAS
+              <strong>7/10</strong>: закрыты TTL-отмена, HMAC/replay webhook, outbox
+              <code>SKIP LOCKED</code>, таймауты HTTP/SMTP, пагинация каталога, лимит корзины,
+              архивные продукты и disabled-refresh; впереди распределённый rate limit и SAS
               persistence. Ниже сохранён исходный срез ревью, чтобы была видна история.
             </p>
           </div>
@@ -4663,7 +4664,13 @@ SCENARIO_IDS=SC-028,SC-159 ./gradlew :tests:e2e:test --tests 'com.plantmarket.e2
                 </li>
                 <li>JWT админки в httpOnly cookie + refresh.</li>
                 <li>CSP для media, ключ галереи, лимит корзины.</li>
-                <li>Таймауты HTTP/SMTP, <code>SKIP LOCKED</code> в outbox.</li>
+                <li>
+                  <s
+                    >Таймауты HTTP/SMTP, <code>SKIP LOCKED</code> в outbox, пагинация каталога,
+                    архивные продукты, disabled-refresh.</s
+                  >
+                  Готово.
+                </li>
               </ol>
             </div>
             <div class="card">
@@ -4966,37 +4973,38 @@ SCENARIO_IDS=SC-028,SC-159 ./gradlew :tests:e2e:test --tests 'com.plantmarket.e2
                 </tr>
                 <tr>
                   <td><span class="sev p1">P1-6</span></td>
-                  <td>Outbox может дублировать письма</td>
+                  <td>Outbox может дублировать письма — <strong>исправлено</strong></td>
                   <td>
                     <span class="file">OutboxPublisher.java</span>,
                     <span class="file">OrderNotificationListener.java</span>,
                     <span class="file">OutboxEventRepository.java</span>
                   </td>
                   <td>
-                    Публикация до коммита и отсутствие <code>SKIP LOCKED</code>. Нужен AFTER_COMMIT
-                    + блокировка строк.
+                    Публикация идёт после коммита; батч захватывается
+                    <code>FOR UPDATE SKIP LOCKED</code> и лизится через
+                    <code>next_attempt_at</code>, письмо отправляется вне транзакции.
                   </td>
                 </tr>
                 <tr>
                   <td><span class="sev p1">P1-7</span></td>
-                  <td>Нет таймаутов HTTP/SMTP под блокировкой</td>
+                  <td>Нет таймаутов HTTP/SMTP под блокировкой — <strong>исправлено</strong></td>
                   <td>
                     <span class="file">HttpCatalogClient.java</span>,
                     <span class="file">HttpPaymentClient.java</span>,
                     <span class="file">order/application.yml</span>
                   </td>
                   <td>
-                    Зависший вызов держит строку заказа и поток. Нужны connect/read timeout, retry,
-                    circuit breaker.
+                    Connect/read timeout для всех межсервисных вызовов и SMTP connection/read/write
+                    timeout. Retry и circuit breaker остаются в P2.
                   </td>
                 </tr>
                 <tr>
                   <td><span class="sev p1">P1-8</span></td>
-                  <td>Disabled user может refresh</td>
+                  <td>Disabled user может refresh — <strong>исправлено</strong></td>
                   <td><span class="file">AuthService.java</span> <code>refresh</code></td>
                   <td>
-                    Заблокированный пользователь продолжает получать токены до 7 дней. Нужна
-                    проверка <code>UserStatus</code>.
+                    <code>refresh</code> проверяет <code>UserStatus.ACTIVE</code> и отзывает все
+                    активные refresh-токены; ответ 403.
                   </td>
                 </tr>
                 <tr>
@@ -5021,48 +5029,49 @@ SCENARIO_IDS=SC-028,SC-159 ./gradlew :tests:e2e:test --tests 'com.plantmarket.e2
                 </tr>
                 <tr>
                   <td><span class="sev p1">P1-11</span></td>
-                  <td>Каталог и sitemap ограничены 50</td>
+                  <td>Каталог и sitemap ограничены 50 — <strong>исправлено</strong></td>
                   <td>
                     <span class="file">lib/api.ts</span>,
                     <span class="file">catalog/page.tsx</span>, <span class="file">sitemap.ts</span>
                   </td>
                   <td>
-                    При росте ассортимента часть товаров не видна. Нужна пагинация/бесконечный
-                    скролл.
+                    Каталог получил серверную пагинацию, sitemap обходит все страницы через
+                    <code>collectPages</code>.
                   </td>
                 </tr>
                 <tr>
                   <td><span class="sev p1">P1-12</span></td>
-                  <td>11-й товар исчезает из корзины</td>
+                  <td>11-й товар исчезает из корзины — <strong>исправлено</strong></td>
                   <td><span class="file">lib/cart.ts</span></td>
                   <td>
-                    Запись отклоняется при quantity &gt; 10. Нужен внятный лимит и сообщение, а не
-                    молчаливое удаление.
+                    Количество клампится до 10 вместо отбрасывания записи; позиция остаётся в
+                    корзине.
                   </td>
                 </tr>
                 <tr>
                   <td><span class="sev p1">P1-13</span></td>
-                  <td>Архивный продукт можно купить</td>
+                  <td>Архивный продукт можно купить — <strong>исправлено</strong></td>
                   <td>
                     <span class="file">OrderService.java</span>,
                     <span class="file">ReservationService.java</span>,
                     <span class="file">ProductService.java</span>
                   </td>
                   <td>
-                    Архивирование не меняет варианты. Нужна проверка статуса продукта при
-                    создании/резерве.
+                    Резерв отклоняет не-<code>PUBLISHED</code> продукт, карточка отдаёт 404, а
+                    storefront скрывает неактивные варианты.
                   </td>
                 </tr>
                 <tr>
                   <td><span class="sev p1">P1-14</span></td>
-                  <td>NPE у гостевых претензий/care</td>
+                  <td>NPE у гостевых претензий/care — <strong>исправлено</strong></td>
                   <td>
                     <span class="file">ClaimService.java</span>,
                     <span class="file">CareReminderService.java</span>
                   </td>
                   <td>
-                    <code>getCustomerId().equals()</code> при <code>NULL</code> даёт 500. Нужен
-                    null-safe ownership check.
+                    Ownership check перевёрнут на
+                    <code>customerId.equals(order.getCustomerId())</code>; гостевая претензия
+                    возвращает 404 вместо 500.
                   </td>
                 </tr>
               </tbody>

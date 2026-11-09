@@ -92,7 +92,7 @@ public class CareReminderService {
     CareReminderEntity reminder =
         reminderRepository
             .findById(reminderId)
-            .filter(entity -> entity.getCustomerId().equals(customerId))
+            .filter(entity -> customerId.equals(entity.getCustomerId()))
             .orElseThrow(() -> ApiException.notFound("Care reminder not found: " + reminderId));
     reminder.deactivate();
   }
@@ -112,7 +112,7 @@ public class CareReminderService {
   private OrderEntity findOwned(UUID customerId, UUID orderId) {
     return orderRepository
         .findById(orderId)
-        .filter(order -> order.getCustomerId().equals(customerId))
+        .filter(order -> customerId.equals(order.getCustomerId()))
         .orElseThrow(() -> ApiException.notFound("Order not found: " + orderId));
   }
 

@@ -2,6 +2,7 @@ package com.plantmarket.order;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.reset;
 
@@ -35,6 +36,7 @@ import com.plantmarket.order.web.dto.ClaimRequest;
 import com.plantmarket.order.web.dto.ClaimResponse;
 import com.plantmarket.order.web.dto.CreateOrderItemRequest;
 import com.plantmarket.order.web.dto.CreateOrderRequest;
+import com.plantmarket.order.web.dto.GuestCheckoutRequest;
 import com.plantmarket.order.web.dto.OrderHistoryEntry;
 import com.plantmarket.order.web.dto.OrderResponse;
 import com.plantmarket.order.web.dto.OutboxEventResponse;
@@ -458,6 +460,105 @@ class OrderFlowIntegrationTest {
     outboxPublisher.publishPending();
     assertThat(outboxEventRepository.findById(paid.getId()).orElseThrow().getPublishedAt())
         .isNotNull();
+  }
+
+  @Test
+  void outboxPublisherLeasesEventsWhileNotificationSends() throws Exception {
+    UUID customerId = UUID.randomUUID();
+    HttpHeaders headers = headers(customerId);
+    UUID orderId = createVariantOrder(headers);
+    restTemplate.exchange(
+        "/api/v1/orders/" + orderId + "/checkout",
+        HttpMethod.POST,
+        new HttpEntity<>(Map.of(), headers),
+        OrderResponse.class);
+    restTemplate.exchange(
+        "/api/v1/orders/" + orderId + "/pay",
+        HttpMethod.POST,
+        new HttpEntity<>(Map.of(), headers),
+        OrderResponse.class);
+
+    CountDownLatch entered = new CountDownLatch(1);
+    CountDownLatch release = new CountDownLatch(1);
+    AtomicInteger sends = new AtomicInteger();
+    doAnswer(
+            invocation -> {
+              sends.incrementAndGet();
+              entered.countDown();
+              release.await(10, TimeUnit.SECONDS);
+              return null;
+            })
+        .when(mailSender)
+        .send(any(SimpleMailMessage.class));
+
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    try {
+      Future<?> first = executor.submit(outboxPublisher::publishPending);
+      assertThat(entered.await(10, TimeUnit.SECONDS)).isTrue();
+
+      outboxPublisher.publishPending();
+
+      assertThat(sends.get()).isEqualTo(1);
+      release.countDown();
+      first.get(10, TimeUnit.SECONDS);
+    } finally {
+      release.countDown();
+      executor.shutdownNow();
+    }
+
+    OutboxEventEntity paid =
+        outboxEventRepository.findAll().stream()
+            .filter(event ->
+                "order.paid".equals(event.getEventType()) && event.getAggregateId().equals(orderId))
+            .findFirst()
+            .orElseThrow();
+    assertThat(paid.getPublishedAt()).isNotNull();
+  }
+
+  @Test
+  void guestOrderClaimReturnsNotFoundInsteadOfNpe() {
+    UUID customerId = UUID.randomUUID();
+    HttpHeaders headers = headers(customerId);
+    ShippingZoneResponse zone =
+        restTemplate
+            .exchange(
+                "/api/v1/shipping/zones",
+                HttpMethod.POST,
+                new HttpEntity<>(
+                    new ShippingZoneRequest(
+                        "Guest claim " + customerId, "Minsk", 500L, 50000L, 1, 2, false, 0L, true),
+                    headers),
+                ShippingZoneResponse.class)
+            .getBody();
+    assertThat(zone).isNotNull();
+
+    ResponseEntity<OrderResponse> guest =
+        restTemplate.exchange(
+            "/api/v1/orders/guest",
+            HttpMethod.POST,
+            new HttpEntity<>(
+                new GuestCheckoutRequest(
+                    List.of(new CreateOrderItemRequest(VARIANT_ID, null, 1)),
+                    "guest-" + customerId + "@example.com",
+                    zone.id(),
+                    false,
+                    "Minsk, Nezavisimosti 1"),
+                headers),
+            OrderResponse.class);
+    assertThat(guest.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    assertThat(guest.getBody()).isNotNull();
+    assertThat(guest.getBody().customerId()).isNull();
+
+    ResponseEntity<String> claim =
+        restTemplate.exchange(
+            "/api/v1/orders/" + guest.getBody().id() + "/claims",
+            HttpMethod.POST,
+            new HttpEntity<>(
+                new ClaimRequest("Guest order claim", List.of("https://example.test/photo.jpg")),
+                headers),
+            String.class);
+
+    assertThat(claim.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
   }
 
   @Test
