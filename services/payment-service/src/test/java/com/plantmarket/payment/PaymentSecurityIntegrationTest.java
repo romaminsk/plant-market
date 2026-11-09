@@ -100,7 +100,10 @@ class PaymentSecurityIntegrationTest {
             PaymentResponse.class);
     assertThat(created.getBody()).isNotNull();
     String providerRef = created.getBody().providerRef();
-    String body = "{\"providerRef\":\"" + providerRef + "\",\"status\":\"REFUNDED\"}";
+    String body =
+        "{\"providerRef\":\""
+            + providerRef
+            + "\",\"status\":\"REFUNDED\",\"amountMinor\":1000,\"currency\":\"BYN\"}";
     String timestamp = String.valueOf(Instant.now().getEpochSecond());
     String eventId = "evt-" + UUID.randomUUID();
 

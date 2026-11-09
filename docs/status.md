@@ -2,8 +2,7 @@
 
 **Обновлено:** 2026-11-09
 **Фаза:** 3 — функции готовы; идёт P1-хардening после ревью
-**Текущая задача:** P1 — распределённый rate limit, persistent OAuth2 SAS, auth за reverse proxy,
-реальные media URL вместо hardcoded картинок
+**Текущая задача:** P1 — auth за reverse proxy и сверка суммы платёжного webhook
 
 ## Состояние окружения
 
@@ -274,16 +273,18 @@
 | `auth-service`    |     4 |           74% |
 | `catalog-service` |    12 |           84% |
 | `order-service`   |    14 |           82% |
-| `payment-service` |    11 |           76% |
-| `api-gateway`     |    10 |           92% |
+| `payment-service` |    12 |           77% |
+| `api-gateway`     |    12 |           85% |
 | `tests:e2e`       |   478 |             — |
 
-Итого **70 backend-тестов + 478 E2E = 548 тестов, 0 падений**. JaCoCo-порог 70% проходит.
+Итого **73 backend-теста + 478 E2E = 551 тест, 0 падений**. JaCoCo-порог 70% проходит.
 
 ### UI-матрица (100 кейсов)
 
 - `docs/test-cases.md` — 100 кейсов TC-001…TC-100: catalog, plant, product, cart, checkout,
   auth, legal, consent, SEO, admin, responsive, a11y.
+- Полный E2E-прогон фиксирует порядок классов JUnit (`ClassOrderer$ClassName`): каталоговые
+  проверки идут на seed-данных, 350-сценарный `UserScenarioE2ETest` — последним.
 - Генератор: `scripts/generate-ui-cases.py`; данные: `tests/e2e/src/test/resources/ui-cases.json`;
   runner: `UiMatrixE2ETest` (JUnit 5 `@TestFactory`, Playwright, один контекст, сброс cookies/storage).
 - Глубокие сценарии checkout/claims остаются в отдельных тестах; матрица закрывает страницы,
@@ -376,11 +377,18 @@
   варианты скрыты.
 - **Корзина:** количество клампится до 10, позиция не исчезает.
 - **Каталог/sitemap:** серверная пагинация, `collectPages` обходит все страницы для sitemap.
+- **OAuth2 SAS:** авторизации и consent хранятся в PostgreSQL (`oauth2_authorization`), рестарт
+  auth-service не разлогинивает клиентов; тест проверяет строку в БД и refresh-ротацию.
+- **Картинки товаров:** `products.image_url` в API и админке; storefront использует URL из API,
+  SKU-map остался только fallback для старых записей.
+- **Rate limit:** fixed window вынесен в Redis (`RATE_LIMIT_REDIS_URL`), лимит общий для нескольких
+  gateway; authenticated-bucket определяется по валидному principal, а не по заголовку Bearer.
+- **Webhook amount check:** payload обязан содержать `amountMinor` и `currency`; несовпадение с
+  платежом даёт 400 до применения перехода и до записи event id.
 
 ## Следующие 3 шага
 
-1. P1: распределённый rate limit, persistent OAuth2 SAS, auth за reverse proxy, реальные media URL
-   вместо hardcoded картинок.
+1. P1: auth за reverse proxy (закрыть прямой :8090).
 2. Storefront: слоты доставки, отзывы, consent-версионирование; slug-URL.
 3. Staging A1/A15, MinIO/S3, юридический A11 L1–L8; до подписи prod запрещён.
 
@@ -388,8 +396,9 @@
 
 - Remote workflow использует `actions/*@v4`; обновление до `@v7`/`setup-java@v6` требует `gh auth refresh -s workflow`. CI на `@v4` зелёный.
 - A11 T2: double-submit CSRF реализован; `__Host-`/Secure cookie включаются prod-конфигом, проверить в staging.
-- In-memory SAS authorizations теряются при рестарте auth-service; для одного экземпляра Phase 1 допустимо (ADR-0006).
-- In-memory rate limit не разделяется между экземплярами gateway (ADR-0005).
+- SAS authorizations теперь в PostgreSQL и переживают рестарт; in-memory остались только
+  зарегистрированные OAuth-клиенты (статическая конфигурация).
+- Rate limit общий через Redis; если Redis недоступен, gateway деградирует до локального окна.
 - Прямой порт auth открыт на localhost (нужен для OAuth-редиректов); catalog/payment/order
   больше не публикуются на хост. Перед prod закрыть auth за reverse proxy.
 - MailHog `v1.0.1` — только `linux/amd64`.

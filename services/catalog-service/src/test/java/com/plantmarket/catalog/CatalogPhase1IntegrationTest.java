@@ -96,7 +96,8 @@ class CatalogPhase1IntegrationTest {
                     false,
                     true,
                     "MEDIUM",
-                    "Bright indirect light"),
+                    "Bright indirect light",
+                    null),
                 ProductResponse.class)
             .getBody();
     assertThat(product).isNotNull();

@@ -106,6 +106,22 @@ ensure_category() {
     jq -r '.id' /tmp/pm-seed-category.json
 }
 
+product_image_for_sku() {
+    case "$1" in
+        MON-001 | MON-002) echo "/images/plants/monstera.jpg" ;;
+        FERN-001) echo "/images/plants/fern.jpg" ;;
+        SUCC-001) echo "/images/plants/echeveria.jpg" ;;
+        SUCC-002) echo "/images/plants/haworthia.jpg" ;;
+        PLANT-001) echo "/images/plants/philodendron.jpg" ;;
+        PLANT-002) echo "/images/plants/anthurium.jpg" ;;
+        PLANT-003) echo "/images/plants/alocasia.jpg" ;;
+        PLANT-004) echo "/images/plants/syngonium.jpg" ;;
+        PLANT-005) echo "/images/plants/scindapsus.jpg" ;;
+        PLANT-006) echo "/images/plants/anthurium.jpg" ;;
+        *) echo "/images/plants/monstera.jpg" ;;
+    esac
+}
+
 ensure_product() {
     local sku="$1"
     local name="$2"
@@ -139,9 +155,10 @@ ensure_product() {
                 --arg light "$light" \
                 --argjson petSafe "$pet_safe" \
                 --argjson variegated "$variegated" \
+                --arg imageUrl "$(product_image_for_sku "$sku")" \
                 '{sku: $sku, name: $name, slug: $slug, description: $description, categoryId: $categoryId,
                   priceMinor: $priceMinor, currency: "BYN", status: "PUBLISHED", careLevel: $careLevel,
-                  light: $light, petSafe: $petSafe, variegated: $variegated}')" \
+                  light: $light, petSafe: $petSafe, variegated: $variegated, imageUrl: $imageUrl}')" \
             "$API_URL/api/v1/products"
     )"
     if [[ "$status" != "201" ]]; then

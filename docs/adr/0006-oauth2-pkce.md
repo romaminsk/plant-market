@@ -30,14 +30,18 @@ Server 7.1.2 по умолчанию:
   `HttpOnly` + `SameSite=Lax` через `SESSION_COOKIE_NAME`/`SESSION_COOKIE_SECURE`.
 - CSRF на форме логина — double-submit cookie (`XSRF-TOKEN` + `_csrf`), не HttpOnly по
   определению double-submit; session cookie остаётся HttpOnly.
-- Хранилища SAS (registered clients, authorizations, consents) — in-memory, один экземпляр.
+- Registered clients — in-memory (статическая конфигурация); authorizations и consents —
+  `JdbcOAuth2AuthorizationService` в PostgreSQL (`oauth2_authorization`).
 
 ## Последствия
 
 - Публичные клиенты получают refresh token и ротацию; повторное использование старого токена
   возвращает `invalid_grant` (проверено `OAuth2PkceIntegrationTest`).
-- In-memory authorizations теряются при рестарте auth-service; для одного экземпляра Phase 1
-  допустимо, перед масштабированием — JDBC-хранилище.
+- Authorizations и consents переживают рестарт auth-service и общие для нескольких экземпляров;
+  registered clients остаются статической in-memory конфигурацией.
+- SAS 7.1.2 на Jackson 3 отклоняет Java 9 immutable collections в JWT claims, поэтому
+  `JdbcOAuth2AuthorizationService` использует JsonMapper с разрешённым
+  `java.util.ImmutableCollections$`.
 - HMAC-секрет общий для auth-service и gateway; секрет должен быть заменён в prod и храниться
   в Vault/SOPS.
 - CSRF double-submit и cookie `__Host-` включаются в prod-конфиге; dev использует `PM-SESSION` и
@@ -45,5 +49,6 @@ Server 7.1.2 по умолчанию:
 
 ## Проверка
 
-- `OAuth2PkceIntegrationTest`: authorize → login → code → token → refresh → reuse rejected.
+- `OAuth2PkceIntegrationTest`: authorize → login → code → token → refresh → reuse rejected;
+  строка авторизации сохранена в `oauth2_authorization`.
 - Ручной curl-flow: access token принят gateway на `/api/v1/auth/me` и защищённой мутации каталога.

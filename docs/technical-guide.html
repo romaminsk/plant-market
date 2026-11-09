@@ -1271,8 +1271,8 @@
               <span class="tag">Качество</span>
               <h4>Тесты</h4>
               <p>
-                70 backend-тестов, 478 E2E, 350 пользовательских сценариев, layout-аудит,
-                мутационное тестирование.
+                73 backend-теста, 478 E2E, 350 пользовательских сценариев, layout-аудит, мутационное
+                тестирование.
               </p>
             </div>
             <div class="card">
@@ -1292,10 +1292,7 @@
               Юридического закрытия РБ: торговый реестр, СКНО/ЕРИП, персональные данные, CITES,
               оферта, налоги (L1–L8).
             </li>
-            <li>
-              Продакшен-инфраструктуры: TLS, секрет-хранилище, распределённый rate limit, persistent
-              OAuth-сессии.
-            </li>
+            <li>Продакшен-инфраструктуры: TLS, секрет-хранилище, auth за reverse proxy.</li>
             <li>
               Некоторых обещанных глав: idempotency, tenant_id, Kafka/Redis, полноценные
               contract-тесты.
@@ -2593,7 +2590,10 @@ variant.reserve(item.quantity());</code></pre>
                 <strong>Исправлено:</strong> webhook проверяет HMAC-SHA256, timestamp (окно 300 с) и
                 replay по event id; повторный event id идемпотентен.
               </li>
-              <li>Нет проверки суммы: webhook не сверяет <code>amountMinor</code> с заказом.</li>
+              <li>
+                <strong>Исправлено:</strong> webhook сверяет <code>amountMinor</code> и
+                <code>currency</code> с платежом до применения перехода.
+              </li>
               <li>Нет refund-эндпоинта, хотя статус <code>REFUNDED</code> есть.</li>
               <li>Повторный <code>POST /payments</code> создаёт новый платёж на тот же заказ.</li>
             </ul>
@@ -3395,8 +3395,8 @@ variant.reserve(item.quantity());</code></pre>
                 </tr>
                 <tr>
                   <td>Подделка платёжного webhook</td>
-                  <td>HMAC-SHA256 + timestamp + replay-защита.</td>
-                  <td>Осталась сверка суммы <code>amountMinor</code> с заказом.</td>
+                  <td>HMAC-SHA256 + timestamp + replay-защита + amount check.</td>
+                  <td>—</td>
                 </tr>
                 <tr>
                   <td>Покупка без оплаты</td>
@@ -3822,12 +3822,12 @@ const EVENT = 'pm-cart-changed';</code></pre>
           </h2>
 
           <p class="lead-in">
-            В проекте 548 тестов: 70 backend и 478 E2E. Это много для демо и мало для продакшена —
+            В проекте 551 тест: 73 backend и 478 E2E. Это много для демо и мало для продакшена —
             важно не количество, а то, что именно каждый слой доказывает.
           </p>
 
           <div class="stats">
-            <div class="stat"><b>70</b><span>backend-тестов</span></div>
+            <div class="stat"><b>73</b><span>backend-теста</span></div>
             <div class="stat"><b>478</b><span>E2E-тестов</span></div>
             <div class="stat"><b>350</b><span>пользовательских сценариев</span></div>
             <div class="stat"><b>100</b><span>UI-матрица</span></div>
@@ -3850,7 +3850,7 @@ const EVENT = 'pm-cart-changed';</code></pre>
                 <tr>
                   <td>Unit / slice</td>
                   <td>UUIDv7, пагинация, RFC 7807, request-id, rate limit, webhook HMAC.</td>
-                  <td>24</td>
+                  <td>26</td>
                   <td>JUnit 6, MockMvc</td>
                 </tr>
                 <tr>
@@ -3859,7 +3859,7 @@ const EVENT = 'pm-cart-changed';</code></pre>
                     Spring + Flyway + реальный PostgreSQL: auth, каталог, резервы, заказы, оплата,
                     TTL-отмена, webhook replay, outbox lease, gateway authz.
                   </td>
-                  <td>46</td>
+                  <td>47</td>
                   <td>Testcontainers <code>postgres:18.6</code>, WebTestClient</td>
                 </tr>
                 <tr>
@@ -4457,11 +4457,12 @@ SCENARIO_IDS=SC-028,SC-159 ./gradlew :tests:e2e:test --tests 'com.plantmarket.e2
               <code>@Version</code>; галерея ключуется по <code>plant.id</code>.
             </p>
             <p>
-              Актуальная оценка безопасности — <strong>7/10</strong>, готовности к проду —
-              <strong>7/10</strong>: закрыты TTL-отмена, HMAC/replay webhook, outbox
+              Актуальная оценка безопасности — <strong>9/10</strong>, готовности к проду —
+              <strong>7/10</strong>: закрыты TTL-отмена, HMAC/replay/amount check webhook, outbox
               <code>SKIP LOCKED</code>, таймауты HTTP/SMTP, пагинация каталога, лимит корзины,
-              архивные продукты и disabled-refresh; впереди распределённый rate limit и SAS
-              persistence. Ниже сохранён исходный срез ревью, чтобы была видна история.
+              архивные продукты, disabled-refresh, persistent SAS и распределённый rate limit;
+              впереди auth за reverse proxy. Ниже сохранён исходный срез ревью, чтобы была видна
+              история.
             </p>
           </div>
 
@@ -4940,14 +4941,15 @@ SCENARIO_IDS=SC-028,SC-159 ./gradlew :tests:e2e:test --tests 'com.plantmarket.e2
                 </tr>
                 <tr>
                   <td><span class="sev p1">P1-3</span></td>
-                  <td>Rate limit обходится</td>
+                  <td>Rate limit обходится — <strong>частично исправлено</strong></td>
                   <td>
                     <span class="file">RateLimitFilter.java</span>,
+                    <span class="file">RedisRateLimitStore.java</span>,
                     <span class="file">docker-compose.yml</span> (auth :8090)
                   </td>
                   <td>
-                    Любой Bearer получает 300/мин; прямой вызов auth обходит 10/мин. Нужна валидация
-                    токена до лимита и закрытый порт auth.
+                    Окно общее через Redis, authenticated-bucket только для валидного principal;
+                    осталось закрыть прямой порт auth за reverse proxy.
                   </td>
                 </tr>
                 <tr>
@@ -4955,8 +4957,8 @@ SCENARIO_IDS=SC-028,SC-159 ./gradlew :tests:e2e:test --tests 'com.plantmarket.e2
                   <td>Слабый webhook — <strong>исправлено</strong></td>
                   <td><span class="file">PaymentService.java</span> <code>webhook</code></td>
                   <td>
-                    Статический секрет, нет HMAC/timestamp/replay, нет сверки суммы. Нужна подпись
-                    тела и идемпотентность.
+                    HMAC-SHA256, timestamp, replay-защита и сверка <code>amountMinor</code>/
+                    <code>currency</code> с платежом.
                   </td>
                 </tr>
                 <tr>
@@ -5009,22 +5011,23 @@ SCENARIO_IDS=SC-028,SC-159 ./gradlew :tests:e2e:test --tests 'com.plantmarket.e2
                 </tr>
                 <tr>
                   <td><span class="sev p1">P1-9</span></td>
-                  <td>SAS-сессии в памяти</td>
+                  <td>SAS-сессии в памяти — <strong>исправлено</strong></td>
                   <td><span class="file">auth/SecurityConfig.java</span></td>
                   <td>
-                    Рестарт auth разлогинивает OAuth-клиентов. Нужен persistent
-                    <code>OAuth2AuthorizationService</code>.
+                    <code>JdbcOAuth2AuthorizationService</code> хранит авторизации и consent в
+                    PostgreSQL; рестарт auth не разлогинивает клиентов.
                   </td>
                 </tr>
                 <tr>
                   <td><span class="sev p1">P1-10</span></td>
-                  <td>Картинки товаров — hardcoded map</td>
+                  <td>Картинки товаров — hardcoded map — <strong>исправлено</strong></td>
                   <td>
                     <span class="file">clients/storefront/src/lib/api.ts</span>,
-                    <span class="file">PlantGallery.tsx</span>
+                    <span class="file">clients/admin/src/App.tsx</span>
                   </td>
                   <td>
-                    Новые/админские товары показывают монстеру. Нужны реальные media URL из API.
+                    У продукта появился <code>imageUrl</code> в API и админке; storefront берёт его,
+                    SKU-map остался fallback.
                   </td>
                 </tr>
                 <tr>

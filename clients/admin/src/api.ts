@@ -21,6 +21,7 @@ export interface Product {
   variegated: boolean;
   size: string | null;
   careGuide: string | null;
+  imageUrl: string | null;
 }
 
 export interface Variant {

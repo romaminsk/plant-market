@@ -118,16 +118,17 @@ public class PaymentService {
       throw ApiException.unauthorized("Invalid payment webhook signature");
     }
     PaymentWebhookRequest request = parseBody(body);
-    if (webhookEventRepository.claim(eventId) == 0) {
-      return toResponse(
-          paymentRepository
-              .findByProviderRef(request.providerRef())
-              .orElseThrow(() -> ApiException.notFound("Payment not found")));
-    }
     PaymentEntity payment =
         paymentRepository
             .findByProviderRef(request.providerRef())
             .orElseThrow(() -> ApiException.notFound("Payment not found"));
+    if (request.amountMinor() != payment.getAmountMinor()
+        || !request.currency().equalsIgnoreCase(payment.getCurrency())) {
+      throw ApiException.badRequest("Webhook amount does not match the payment");
+    }
+    if (webhookEventRepository.claim(eventId) == 0) {
+      return toResponse(payment);
+    }
     PaymentStatus target = mapStatus(request.status());
     if (!canTransition(payment.getStatus(), target)) {
       throw ApiException.conflict(
@@ -158,7 +159,10 @@ public class PaymentService {
         || request.providerRef() == null
         || request.providerRef().isBlank()
         || request.status() == null
-        || request.status().isBlank()) {
+        || request.status().isBlank()
+        || request.amountMinor() == null
+        || request.currency() == null
+        || request.currency().isBlank()) {
       throw ApiException.badRequest("Malformed webhook payload");
     }
     return request;

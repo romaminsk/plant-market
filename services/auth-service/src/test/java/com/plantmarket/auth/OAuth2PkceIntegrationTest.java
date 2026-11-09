@@ -18,8 +18,10 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.postgresql.PostgreSQLContainer;
@@ -52,6 +54,8 @@ class OAuth2PkceIntegrationTest {
   }
 
   @LocalServerPort private int port;
+
+  @Autowired private JdbcTemplate jdbcTemplate;
 
   @Test
   void authorizationCodeWithPkceAndRefreshRotation() throws Exception {
@@ -124,6 +128,12 @@ class OAuth2PkceIntegrationTest {
     String refreshToken = tokenJson.path("refresh_token").asString();
     assertThat(accessToken).isNotBlank();
     assertThat(refreshToken).isNotBlank();
+    assertThat(
+            jdbcTemplate.queryForObject(
+                "select count(*) from oauth2_authorization where principal_name = ?",
+                Integer.class,
+                email))
+        .isEqualTo(1);
 
     HttpResponse<String> me =
         client.send(

@@ -28,4 +28,5 @@ public record ProductRequest(
     @NotNull Boolean petSafe,
     Boolean variegated,
     @Size(max = 32) String size,
-    @Size(max = 5000) String careGuide) {}
+    @Size(max = 5000) String careGuide,
+    @Size(max = 1000) String imageUrl) {}

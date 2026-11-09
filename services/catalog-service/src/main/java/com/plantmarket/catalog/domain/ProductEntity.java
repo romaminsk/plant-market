@@ -69,6 +69,9 @@ public class ProductEntity {
   @Column(name = "care_guide", length = 5000)
   private String careGuide;
 
+  @Column(name = "image_url", length = 1000)
+  private String imageUrl;
+
   @Version
   @Column(name = "version", nullable = false)
   private long version;
@@ -95,7 +98,8 @@ public class ProductEntity {
       boolean petSafe,
       boolean variegated,
       String size,
-      String careGuide) {
+      String careGuide,
+      String imageUrl) {
     this.sku = sku;
     this.name = name;
     this.slug = slug;
@@ -110,6 +114,7 @@ public class ProductEntity {
     this.variegated = variegated;
     this.size = size;
     this.careGuide = careGuide;
+    this.imageUrl = imageUrl;
   }
 
   @PrePersist
@@ -141,7 +146,8 @@ public class ProductEntity {
       boolean petSafe,
       boolean variegated,
       String size,
-      String careGuide) {
+      String careGuide,
+      String imageUrl) {
     this.sku = sku;
     this.name = name;
     this.slug = slug;
@@ -156,6 +162,7 @@ public class ProductEntity {
     this.variegated = variegated;
     this.size = size;
     this.careGuide = careGuide;
+    this.imageUrl = imageUrl;
   }
 
   public void archive() {
@@ -220,6 +227,10 @@ public class ProductEntity {
 
   public String getCareGuide() {
     return careGuide;
+  }
+
+  public String getImageUrl() {
+    return imageUrl;
   }
 
   public Instant getCreatedAt() {

@@ -11,6 +11,7 @@ export interface Product {
   careLevel: 'EASY' | 'MEDIUM' | 'HARD';
   light: 'LOW' | 'MEDIUM' | 'BRIGHT' | 'DIRECT';
   petSafe: boolean;
+  imageUrl: string | null;
   createdAt: string;
   updatedAt: string;
 }

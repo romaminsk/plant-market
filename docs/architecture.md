@@ -20,7 +20,7 @@ admin (React + Vite) ─┘                     ─→ catalog-service :8081 →
 
 | Сервис            | Порт | БД            | API                                          | Фаза |
 | ----------------- | ---: | ------------- | -------------------------------------------- | ---- |
-| `api-gateway`     | 8080 | —             | HTTP proxy, CORS, rate limit, `X-Request-Id` | 0    |
+| `api-gateway`     | 8080 | Redis         | HTTP proxy, CORS, rate limit, `X-Request-Id` | 0    |
 | `auth-service`    | 8090 | `pm_auth`     | REST, OIDC                                   | 0    |
 | `catalog-service` | 8081 | `pm_catalog`  | REST                                         | 0    |
 | `order-service`   | 8083 | `pm_orders`   | REST                                         | 2    |

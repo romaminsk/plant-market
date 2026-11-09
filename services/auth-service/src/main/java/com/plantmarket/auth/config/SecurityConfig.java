@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -28,6 +29,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.jackson.SecurityJacksonModules;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -35,6 +37,10 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationConsentService;
+import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService;
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService;
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
@@ -52,6 +58,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
+import tools.jackson.databind.JacksonModule;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 
 @Configuration
 @EnableConfigurationProperties(JwtProperties.class)
@@ -177,6 +186,40 @@ public class SecurityConfig {
         registeredClient(
             "storefront", "Plant Market Storefront", properties, split(storefrontRedirects)),
         registeredClient("admin", "Plant Market Admin", properties, split(adminRedirects)));
+  }
+
+  @Bean
+  public OAuth2AuthorizationService authorizationService(
+      JdbcTemplate jdbcTemplate, RegisteredClientRepository registeredClientRepository) {
+    JdbcOAuth2AuthorizationService service =
+        new JdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository);
+    JsonMapper jsonMapper = authorizationJsonMapper();
+    service.setAuthorizationRowMapper(
+        new JdbcOAuth2AuthorizationService.JsonMapperOAuth2AuthorizationRowMapper(
+            registeredClientRepository, jsonMapper));
+    service.setAuthorizationParametersMapper(
+        new JdbcOAuth2AuthorizationService.JsonMapperOAuth2AuthorizationParametersMapper(
+            jsonMapper));
+    return service;
+  }
+
+  /**
+   * Spring Security's default mapper rejects Java 9+ immutable collections that appear in JWT
+   * claims (for example {@code aud} as {@code List.of(...)}), so allow that package.
+   */
+  private static JsonMapper authorizationJsonMapper() {
+    BasicPolymorphicTypeValidator.Builder validator =
+        BasicPolymorphicTypeValidator.builder().allowIfSubType("java.util.ImmutableCollections$");
+    List<JacksonModule> modules =
+        SecurityJacksonModules.getModules(
+            JdbcOAuth2AuthorizationService.class.getClassLoader(), validator);
+    return JsonMapper.builder().addModules(modules).build();
+  }
+
+  @Bean
+  public OAuth2AuthorizationConsentService authorizationConsentService(
+      JdbcTemplate jdbcTemplate, RegisteredClientRepository registeredClientRepository) {
+    return new JdbcOAuth2AuthorizationConsentService(jdbcTemplate, registeredClientRepository);
   }
 
   private static String[] split(String value) {

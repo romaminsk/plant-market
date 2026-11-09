@@ -118,7 +118,8 @@ class CatalogFlowIntegrationTest {
             false,
             false,
             null,
-            null);
+            null,
+            "https://cdn.example.test/monstera.jpg");
 
     ResponseEntity<ProductResponse> created =
         restTemplate.postForEntity("/api/v1/products", productRequest, ProductResponse.class);
@@ -126,6 +127,7 @@ class CatalogFlowIntegrationTest {
     assertThat(created.getBody()).isNotNull();
     UUID productId = created.getBody().id();
     assertThat(created.getBody().priceMinor()).isEqualTo(129900L);
+    assertThat(created.getBody().imageUrl()).isEqualTo("https://cdn.example.test/monstera.jpg");
 
     ResponseEntity<PageResponse<ProductResponse>> listed =
         restTemplate.exchange(
@@ -158,6 +160,7 @@ class CatalogFlowIntegrationTest {
             LightLevel.BRIGHT,
             true,
             false,
+            null,
             null,
             null);
     ResponseEntity<ProductResponse> updatedResponse =
@@ -269,6 +272,7 @@ class CatalogFlowIntegrationTest {
                     true,
                     false,
                     null,
+                    null,
                     null),
                 ProductResponse.class)
             .getBody();
@@ -355,6 +359,7 @@ class CatalogFlowIntegrationTest {
                     LightLevel.MEDIUM,
                     true,
                     false,
+                    null,
                     null,
                     null),
                 ProductResponse.class)
@@ -475,6 +480,7 @@ class CatalogFlowIntegrationTest {
             LightLevel.MEDIUM,
             true,
             false,
+            null,
             null,
             null);
     assertThat(

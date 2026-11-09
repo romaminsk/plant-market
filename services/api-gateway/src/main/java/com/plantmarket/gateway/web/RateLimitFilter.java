@@ -1,8 +1,8 @@
 package com.plantmarket.gateway.web;
 
 import java.net.InetSocketAddress;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.time.Duration;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -13,30 +13,45 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 /**
- * Phase 0 fixed-window limiter. Deliberately in-memory: Redis is out of scope until A14 triggers.
- * Replace with a distributed limiter before running more than one gateway instance.
+ * Fixed-window limiter. The store is Redis-backed in compose, so several gateway instances share
+ * one window; local runs without Redis fall back to an in-memory store.
  */
 @Component
 public class RateLimitFilter implements GlobalFilter, Ordered {
 
-  private static final long WINDOW_MILLIS = 60_000;
-  private static final int MAX_TRACKED_KEYS = 10_000;
+  private static final Duration WINDOW = Duration.ofMinutes(1);
 
   private final ProblemResponseWriter responseWriter;
   private final int publicRequestsPerMinute;
   private final int authRequestsPerMinute;
   private final int authenticatedRequestsPerMinute;
-  private final ConcurrentHashMap<String, Window> windows = new ConcurrentHashMap<>();
+  private final RateLimitStore store;
 
+  public RateLimitFilter(
+      ProblemResponseWriter responseWriter,
+      int publicRequestsPerMinute,
+      int authRequestsPerMinute,
+      int authenticatedRequestsPerMinute) {
+    this(
+        responseWriter,
+        publicRequestsPerMinute,
+        authRequestsPerMinute,
+        authenticatedRequestsPerMinute,
+        new InMemoryRateLimitStore());
+  }
+
+  @Autowired
   public RateLimitFilter(
       ProblemResponseWriter responseWriter,
       @Value("${app.rate-limit.public-rpm:60}") int publicRequestsPerMinute,
       @Value("${app.rate-limit.auth-rpm:10}") int authRequestsPerMinute,
-      @Value("${app.rate-limit.authenticated-rpm:300}") int authenticatedRequestsPerMinute) {
+      @Value("${app.rate-limit.authenticated-rpm:300}") int authenticatedRequestsPerMinute,
+      RateLimitStore store) {
     this.responseWriter = responseWriter;
     this.publicRequestsPerMinute = publicRequestsPerMinute;
     this.authRequestsPerMinute = authRequestsPerMinute;
     this.authenticatedRequestsPerMinute = authenticatedRequestsPerMinute;
+    this.store = store;
   }
 
   @Override
@@ -46,28 +61,31 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
       return chain.filter(exchange);
     }
 
-    long now = System.currentTimeMillis();
-    boolean authenticated = isAuthenticated(exchange);
+    return exchange
+        .getPrincipal()
+        .map(principal -> !"anonymousUser".equals(principal.getName()))
+        .defaultIfEmpty(false)
+        .flatMap(authenticated -> limit(exchange, chain, path, authenticated));
+  }
+
+  private Mono<Void> limit(
+      ServerWebExchange exchange, GatewayFilterChain chain, String path, boolean authenticated) {
     String key = clientKey(exchange) + ":" + (authenticated ? "auth:" : "public:") + routeKey(path);
-    Window window =
-        windows.compute(
-            key,
-            (ignored, existing) ->
-                existing == null || now - existing.startMillis >= WINDOW_MILLIS
-                    ? new Window(now)
-                    : existing);
-
-    if (window.count.incrementAndGet() > limitFor(path, authenticated)) {
-      long retryAfterSeconds = Math.max(1, (WINDOW_MILLIS - (now - window.startMillis)) / 1000);
-      exchange.getResponse().getHeaders().set("Retry-After", Long.toString(retryAfterSeconds));
-      return responseWriter.write(
-          exchange, HttpStatus.TOO_MANY_REQUESTS, "rate-limit", "Rate limit exceeded");
-    }
-
-    if (windows.size() > MAX_TRACKED_KEYS) {
-      windows.entrySet().removeIf(entry -> now - entry.getValue().startMillis >= WINDOW_MILLIS);
-    }
-    return chain.filter(exchange);
+    int limit = limitFor(path, authenticated);
+    return store
+        .increment(key, WINDOW)
+        .flatMap(window -> {
+          if (window.count() > limit) {
+            long retryAfterSeconds = Math.max(1, window.resetAfterMillis() / 1000);
+            exchange
+                .getResponse()
+                .getHeaders()
+                .set("Retry-After", Long.toString(retryAfterSeconds));
+            return responseWriter.write(
+                exchange, HttpStatus.TOO_MANY_REQUESTS, "rate-limit", "Rate limit exceeded");
+          }
+          return chain.filter(exchange);
+        });
   }
 
   @Override
@@ -82,11 +100,6 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
     return authenticated ? authenticatedRequestsPerMinute : publicRequestsPerMinute;
   }
 
-  private boolean isAuthenticated(ServerWebExchange exchange) {
-    String authorization = exchange.getRequest().getHeaders().getFirst("Authorization");
-    return authorization != null && authorization.startsWith("Bearer ");
-  }
-
   private String clientKey(ServerWebExchange exchange) {
     InetSocketAddress address = exchange.getRequest().getRemoteAddress();
     return address == null || address.getAddress() == null
@@ -97,14 +110,5 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
   private String routeKey(String path) {
     String[] segments = path.split("/");
     return segments.length > 3 ? segments[3] : "root";
-  }
-
-  private static final class Window {
-    private final long startMillis;
-    private final AtomicInteger count = new AtomicInteger();
-
-    private Window(long startMillis) {
-      this.startMillis = startMillis;
-    }
   }
 }

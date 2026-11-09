@@ -9,6 +9,7 @@
   `reservation-expired` без списания.
 - Webhook возвращает 401: неверная HMAC-подпись, отсутствующий заголовок или timestamp
   старше `PAYMENT_WEBHOOK_TOLERANCE_SECONDS` (300 с).
+- Webhook возвращает 400: в payload нет `amountMinor`/`currency` или они не совпадают с платежом.
 
 ## Влияние
 

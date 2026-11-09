@@ -23,5 +23,6 @@ public record ProductResponse(
     boolean variegated,
     String size,
     String careGuide,
+    String imageUrl,
     Instant createdAt,
     Instant updatedAt) {}

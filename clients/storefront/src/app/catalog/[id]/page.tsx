@@ -67,7 +67,12 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
       </Link>
       <div className="detail-layout">
         <div className="detail-photo product-hero">
-          <img src={productImage(product.sku)} alt={product.name} width={800} height={600} />
+          <img
+            src={product.imageUrl ?? productImage(product.sku)}
+            alt={product.name}
+            width={800}
+            height={600}
+          />
         </div>
         <div>
           <p className="sku">{product.sku}</p>

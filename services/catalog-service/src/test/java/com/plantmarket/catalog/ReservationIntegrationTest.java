@@ -200,6 +200,7 @@ class ReservationIntegrationTest {
                     true,
                     false,
                     null,
+                    null,
                     null),
                 ProductResponse.class)
             .getBody();

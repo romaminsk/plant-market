@@ -331,6 +331,7 @@ export default function App() {
                   variegated: data.get('variegated') === 'on',
                   size: formValue(data, 'size') || null,
                   careGuide: formValue(data, 'careGuide') || null,
+                  imageUrl: formValue(data, 'imageUrl') || null,
                 };
                 void run(
                   async () => {
@@ -442,6 +443,15 @@ export default function App() {
                   name="careGuide"
                   rows={2}
                   defaultValue={editingProduct?.careGuide ?? ''}
+                />
+              </label>
+              <label>
+                URL изображения
+                <input
+                  name="imageUrl"
+                  type="url"
+                  placeholder="/images/plants/monstera.jpg"
+                  defaultValue={editingProduct?.imageUrl ?? ''}
                 />
               </label>
               <div className="checks">

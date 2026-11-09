@@ -1,6 +1,11 @@
 spring:
   application:
     name: api-gateway
+  data:
+    redis:
+      # Keep the limiter fast when Redis is unreachable; the store then falls back in-memory.
+      timeout: ${REDIS_TIMEOUT:2s}
+      connect-timeout: ${REDIS_CONNECT_TIMEOUT:2s}
 
 server:
   port: ${API_GATEWAY_PORT:8080}
@@ -15,6 +20,11 @@ management:
     health:
       probes:
         enabled: true
+  health:
+    redis:
+      # Compose already gates startup on the redis healthcheck; a Redis blip must not make the
+      # whole gateway report DOWN.
+      enabled: false
 
 app:
   jwt:
@@ -30,3 +40,4 @@ app:
     public-rpm: ${RATE_LIMIT_PUBLIC_RPM:60}
     auth-rpm: ${RATE_LIMIT_AUTH_RPM:10}
     authenticated-rpm: ${RATE_LIMIT_AUTHENTICATED_RPM:300}
+    redis-url: ${RATE_LIMIT_REDIS_URL:}

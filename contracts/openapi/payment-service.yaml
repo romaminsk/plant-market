@@ -158,13 +158,21 @@ components:
     PaymentWebhookRequest:
       type: object
       additionalProperties: false
-      required: [providerRef, status]
+      required: [providerRef, status, amountMinor, currency]
       properties:
         providerRef:
           type: string
         status:
           type: string
           enum: [AUTHORIZED, CONFIRMED, PENDING, FAILED, REFUNDED]
+        amountMinor:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Must match the stored payment amount.
+        currency:
+          type: string
+          enum: [BYN]
 
     PaymentStatus:
       type: string

@@ -891,6 +891,10 @@ components:
         careGuide:
           type: string
           maxLength: 5000
+        imageUrl:
+          type: string
+          maxLength: 1000
+          description: Product card image; relative media paths and absolute URLs are allowed.
         createdAt:
           type: string
           format: date-time
@@ -945,6 +949,10 @@ components:
         careGuide:
           type: string
           maxLength: 5000
+        imageUrl:
+          type: string
+          maxLength: 1000
+          description: Product card image; relative media paths and absolute URLs are allowed.
 
     PageProduct:
       type: object

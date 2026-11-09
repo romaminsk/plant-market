@@ -156,6 +156,23 @@ class PaymentFlowIntegrationTest {
   }
 
   @Test
+  void rejectsWebhookWithMismatchedAmount() {
+    String providerRef = createPayment();
+    String body =
+        "{\"providerRef\":\""
+            + providerRef
+            + "\",\"status\":\"REFUNDED\",\"amountMinor\":1,\"currency\":\"BYN\"}";
+
+    ResponseEntity<String> response =
+        restTemplate.postForEntity(
+            "/api/v1/payments/webhook",
+            new HttpEntity<>(body, webhookHeaders(body, "evt-" + UUID.randomUUID(), nowSeconds())),
+            String.class);
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+  }
+
+  @Test
   void rejectsWebhookWithInvalidSignature() {
     String providerRef = createPayment();
     String body = webhookBody(providerRef, "REFUNDED");
@@ -218,7 +235,11 @@ class PaymentFlowIntegrationTest {
   }
 
   private static String webhookBody(String providerRef, String status) {
-    return "{\"providerRef\":\"" + providerRef + "\",\"status\":\"" + status + "\"}";
+    return "{\"providerRef\":\""
+        + providerRef
+        + "\",\"status\":\""
+        + status
+        + "\",\"amountMinor\":129900,\"currency\":\"BYN\"}";
   }
 
   private static long nowSeconds() {

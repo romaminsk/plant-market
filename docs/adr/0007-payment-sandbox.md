@@ -23,15 +23,16 @@ PAN и без реальных списаний.
   `X-Provider-Timestamp`, `X-Provider-Event-Id`, `X-Provider-Signature`; подпись считается по
   `timestamp + "\n" + eventId + "\n" + rawBody`, секрет — env `PAYMENT_WEBHOOK_SECRET`.
   Timestamp вне окна `PAYMENT_WEBHOOK_TOLERANCE_SECONDS` (300 с) отклоняется, повторный
-  `eventId` не применяет переход второй раз (`payment_webhook_events`).
+  `eventId` не применяет переход второй раз (`payment_webhook_events`). Payload обязан содержать
+  `amountMinor`/`currency`, совпадающие с платежом; иначе 400 до применения перехода.
 - `order-service.pay` создаёт платёж через payment-service и подтверждает резерв только при
   `CONFIRMED`; иначе заказ остаётся `PENDING_PAYMENT`.
 
 ## Последствия
 
 - PAN и платёжные данные не хранятся; это sandbox-контур, не production-платежи.
-- Перед prod нужен реальный адаптер провайдера (hosted page / redirect) и сверка суммы webhook
-  с заказом; подпись, timestamp и replay-защита уже реализованы.
+- Перед prod нужен реальный адаптер провайдера (hosted page / redirect); подпись, timestamp,
+  replay-защита и сверка суммы с платежом уже реализованы.
 - WireMock mapping загружается при старте контейнера; при изменении mapping нужен restart.
 - Refund flow и частичные возвраты — следующий шаг.
 

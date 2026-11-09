@@ -181,7 +181,7 @@ export default async function CatalogPage({
                   <li key={product.id} className="product-row">
                     <div className="product-row-photo">
                       <img
-                        src={productImage(product.sku)}
+                        src={product.imageUrl ?? productImage(product.sku)}
                         alt={product.name}
                         width={200}
                         height={200}

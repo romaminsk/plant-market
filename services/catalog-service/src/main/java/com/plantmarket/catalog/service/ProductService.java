@@ -86,7 +86,8 @@ public class ProductService {
             request.petSafe(),
             Boolean.TRUE.equals(request.variegated()),
             normalizeOptional(request.size()),
-            normalizeOptional(request.careGuide()));
+            normalizeOptional(request.careGuide()),
+            normalizeOptional(request.imageUrl()));
     return toResponse(productRepository.save(product));
   }
 
@@ -116,7 +117,8 @@ public class ProductService {
         request.petSafe(),
         Boolean.TRUE.equals(request.variegated()),
         normalizeOptional(request.size()),
-        normalizeOptional(request.careGuide()));
+        normalizeOptional(request.careGuide()),
+        normalizeOptional(request.imageUrl()));
     return toResponse(product);
   }
 
@@ -212,6 +214,7 @@ public class ProductService {
         product.isVariegated(),
         product.getSize(),
         product.getCareGuide(),
+        product.getImageUrl(),
         product.getCreatedAt(),
         product.getUpdatedAt());
   }
