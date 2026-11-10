@@ -1271,7 +1271,7 @@
               <span class="tag">Качество</span>
               <h4>Тесты</h4>
               <p>
-                75 backend-тестов, 479 E2E, 350 пользовательских сценариев, layout-аудит,
+                77 backend-тестов, 479 E2E, 350 пользовательских сценариев, layout-аудит,
                 мутационное тестирование.
               </p>
             </div>
@@ -1292,7 +1292,10 @@
               Юридического закрытия РБ: торговый реестр, СКНО/ЕРИП, персональные данные, CITES,
               оферта, налоги (L1–L8).
             </li>
-            <li>Продакшен-инфраструктуры: TLS и секрет-хранилище.</li>
+            <li>
+              Публичного staging DNS/ACME, бэкапов и Vault/SOPS; локальный staging с TLS, Docker
+              secrets и S3-совместимым media уже есть (ADR-0017).
+            </li>
             <li>
               Некоторых обещанных глав: idempotency, tenant_id, Kafka/Redis, полноценные
               contract-тесты.
@@ -3829,12 +3832,12 @@ const EVENT = 'pm-cart-changed';</code></pre>
           </h2>
 
           <p class="lead-in">
-            В проекте 554 теста: 75 backend и 479 E2E. Это много для демо и мало для продакшена —
+            В проекте 556 тестов: 77 backend и 479 E2E. Это много для демо и мало для продакшена —
             важно не количество, а то, что именно каждый слой доказывает.
           </p>
 
           <div class="stats">
-            <div class="stat"><b>75</b><span>backend-тестов</span></div>
+            <div class="stat"><b>77</b><span>backend-тестов</span></div>
             <div class="stat"><b>479</b><span>E2E-тестов</span></div>
             <div class="stat"><b>350</b><span>пользовательских сценариев</span></div>
             <div class="stat"><b>100</b><span>UI-матрица</span></div>
@@ -3857,7 +3860,7 @@ const EVENT = 'pm-cart-changed';</code></pre>
                 <tr>
                   <td>Unit / slice</td>
                   <td>UUIDv7, пагинация, RFC 7807, request-id, rate limit, webhook HMAC.</td>
-                  <td>27</td>
+                  <td>29</td>
                   <td>JUnit 6, MockMvc</td>
                 </tr>
                 <tr>
@@ -6027,7 +6030,8 @@ pnpm lint &amp;&amp; pnpm format:check
               <p>
                 В локальном Docker-volume <code>media-data</code>, отдаются через gateway по
                 <code>/media/**</code>; <code>MEDIA_PUBLIC_BASE_URL</code> совпадает с разрешённым
-                <code>img-src</code>. В проде нужен S3/MinIO (ADR-0011).
+                <code>img-src</code>. В staging media хранится в SeaweedFS S3 и отдаётся через
+                catalog-service; в проде — managed S3 (ADR-0011/0017).
               </p>
             </div>
           </details>

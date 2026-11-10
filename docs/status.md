@@ -2,7 +2,7 @@
 
 **Обновлено:** 2026-11-10
 **Фаза:** 3 — функции готовы; все P1-находки ревью закрыты
-**Текущая задача:** storefront-функции: отзывы
+**Текущая задача:** staging hardening (DNS/ACME, backups, Vault) и storefront-отзывы
 
 ## Состояние окружения
 
@@ -271,13 +271,13 @@
 | ----------------- | ----: | ------------: |
 | `platform-common` |    19 |           83% |
 | `auth-service`    |     4 |           74% |
-| `catalog-service` |    12 |           84% |
+| `catalog-service` |    14 |           84% |
 | `order-service`   |    15 |           83% |
 | `payment-service` |    12 |           77% |
 | `api-gateway`     |    13 |           85% |
 | `tests:e2e`       |   479 |             — |
 
-Итого **75 backend-тестов + 479 E2E = 554 теста, 0 падений**. JaCoCo-порог 70% проходит.
+Итого **77 backend-тестов + 479 E2E = 556 тестов, 0 падений**. JaCoCo-порог 70% проходит.
 
 ### UI-матрица (100 кейсов)
 
@@ -395,11 +395,14 @@
 - **Окно доставки:** checkout принимает `deliveryDate`/`deliveryWindow`, дата проверяется по
   min/max дням зоны в UTC; без полей используется ближайшая дата и `DAY` (ADR-0016). Ёмкость
   окон — следующий шаг.
+- **Staging:** Caddy TLS (`app/admin/api.<domain>`), Docker secrets для JWT/БД/webhook,
+  контейнерные storefront/admin, SeaweedFS S3 для media (ADR-0017); проверены HTTPS, OAuth с
+  `__Host-` cookie, загрузка/выдача media. Публичный DNS/ACME, бэкапы и Vault — дальше.
 
 ## Следующие 3 шага
 
 1. Storefront: отзывы.
-2. Staging A1/A15, MinIO/S3, TLS и секрет-хранилище.
+2. Staging hardening: публичный DNS/ACME, бэкапы, Vault/SOPS, нагрузочный A15.
 3. Юридический A11 L1–L8; до подписи prod запрещён.
 
 ## Блокеры и риски
@@ -421,14 +424,17 @@
 - CI E2E копирует `.env.example` (dev-лимиты 2000/100) и использует опубликованный auth-service
   `:8080` для PKCE-логина (auth за gateway); prod-лимиты 60/10/300 задаются окружением.
 - `docker-compose.test.yml` остаётся опциональным override для ручного прогона тестового стека.
-- Storefront checkout: адрес есть; слоты доставки и отзывы — следующая итерация. Refresh в BFF
-  реализован только в checkout, history-страницы при истёкшем токене просят войти снова.
+- Storefront checkout: адрес, дата и окно доставки есть; отзывы — следующая итерация. Refresh в
+  BFF реализован только в checkout, history-страницы при истёкшем токене просят войти снова.
 - **Pre-prod блокеры из ревью:** J6/B2B (Phase 4), tenant_id, revocation refresh при
   logout. Slug-URL закрыт 2026-11-10 (ADR-0015). P0-блокеры безопасности/денег закрыты
   2026-11-08 (см. ниже).
 - Фото принимаются как URL и через загрузку в админке; media отдаётся через gateway
   (`/media/**`), CSP storefront разрешает этот origin.
-- Media volume не реплицируется и не бэкапится; публичные файлы без content sniffing (ADR-0011).
+- Staging media — single-node SeaweedFS без репликации/бэкапа; публичные файлы без content
+  sniffing. Dev media — локальный volume (ADR-0011/0017).
+- Staging проверен локально на `*.localhost` с внутренним CA; публичный DNS/ACME и firewall
+  (base compose публикует Postgres/gateway/WireMock/MailHog на localhost) не проверены.
 - Галерея в seed использует placehold.co; фотостандарт (нейтральный фон, линейка, 4 ракурса)
   должен соблюдаться оператором при загрузке реальных фото.
 - Диск 29 GiB; чистить `docker system prune -f` после сессий.

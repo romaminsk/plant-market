@@ -1,0 +1,66 @@
+{
+    admin 0.0.0.0:2019
+}
+
+(api) {
+    reverse_proxy api-gateway:8080 {
+        header_up X-Forwarded-Proto https
+        header_up X-Forwarded-Host {host}
+    }
+}
+
+(auth) {
+    reverse_proxy auth-service:8090 {
+        header_up X-Forwarded-Proto https
+        header_up X-Forwarded-Host {host}
+    }
+}
+
+(storefront) {
+    reverse_proxy storefront:3000 {
+        header_up X-Forwarded-Proto https
+        header_up X-Forwarded-Host {host}
+    }
+}
+
+{$STAGING_DOMAIN} {
+    tls {$STAGING_TLS_VALUE}
+    encode zstd gzip
+
+    handle /api/v1/* {
+        import api
+    }
+    handle /oauth2/* {
+        import auth
+    }
+    handle /.well-known/* {
+        import auth
+    }
+    handle /login {
+        import auth
+    }
+    handle /register {
+        import auth
+    }
+    handle /auth.css {
+        import auth
+    }
+    handle /fonts/* {
+        import auth
+    }
+    handle /images/* {
+        import auth
+    }
+    handle /media/* {
+        import api
+    }
+    handle {
+        import storefront
+    }
+}
+
+admin.{$STAGING_DOMAIN} {
+    tls {$STAGING_TLS_VALUE}
+    encode zstd gzip
+    reverse_proxy admin:80
+}

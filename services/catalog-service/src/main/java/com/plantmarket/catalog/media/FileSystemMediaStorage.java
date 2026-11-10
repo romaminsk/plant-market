@@ -4,7 +4,9 @@ import com.plantmarket.common.id.UuidV7;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
@@ -12,6 +14,10 @@ import org.springframework.stereotype.Component;
  * upload API (ADR-0011).
  */
 @Component
+@ConditionalOnProperty(
+    name = "app.media.storage",
+    havingValue = "filesystem",
+    matchIfMissing = true)
 public class FileSystemMediaStorage implements MediaStorage {
 
   private final Path root;
@@ -37,5 +43,22 @@ public class FileSystemMediaStorage implements MediaStorage {
       throw new IllegalStateException("Could not store media file", exception);
     }
     return publicBaseUrl + "/" + name;
+  }
+
+  @Override
+  public Optional<StoredMedia> load(String key) {
+    Path file = root.resolve(key).normalize();
+    if (!file.startsWith(root) || !Files.isRegularFile(file)) {
+      return Optional.empty();
+    }
+    try {
+      String contentType = Files.probeContentType(file);
+      return Optional.of(
+          new StoredMedia(
+              Files.readAllBytes(file),
+              contentType == null ? "application/octet-stream" : contentType));
+    } catch (IOException exception) {
+      throw new IllegalStateException("Could not read media file", exception);
+    }
   }
 }

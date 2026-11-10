@@ -1,6 +1,6 @@
 # ADR-0003: Object storage (MinIO) в Phase 0
 
-- **Статус:** Accepted — вариант D (отложить до Phase 3)
+- **Статус:** Superseded by ADR-0017 (SeaweedFS для staging)
 - **Дата:** 2026-11-05
 - **Решающие:** владелец проекта, AI-лид
 - **Связанные документы:** `MASTER_PROMPT.md` A7, C1 Task 0.3; `docs/architecture.md`

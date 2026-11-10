@@ -11,3 +11,6 @@ MASTER_PROMPT.md
 .env
 .env.*
 clients/storefront/next-env.d.ts
+
+infra/staging/secrets
+infra/staging/seaweedfs-s3.json

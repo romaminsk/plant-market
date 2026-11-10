@@ -37,8 +37,15 @@ app:
     secret: ${JWT_SECRET}
     environment: ${APP_ENV:prod}
   media:
+    storage: ${MEDIA_STORAGE:filesystem}
     root: ${MEDIA_ROOT:./data/media}
     public-base-url: ${MEDIA_PUBLIC_BASE_URL:http://localhost:8081/media}
+    s3:
+      endpoint: ${S3_ENDPOINT:http://localhost:9000}
+      region: ${S3_REGION:us-east-1}
+      bucket: ${S3_BUCKET:plant-market-media}
+      access-key: ${S3_ACCESS_KEY:}
+      secret-key: ${S3_SECRET_KEY:}
 
 management:
   endpoints:

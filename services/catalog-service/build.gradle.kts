@@ -12,6 +12,7 @@ dependencies {
     implementation(libs.flyway.core)
     implementation(libs.spring.boot.starter.actuator)
     implementation(libs.spring.boot.starter.security.oauth2.resource.server)
+    implementation(libs.aws.sdk.s3)
     runtimeOnly(libs.flyway.database.postgresql)
     runtimeOnly(libs.postgresql)
 

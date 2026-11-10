@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { COOKIE_SECURE, authServiceUrl } from '@/lib/auth';
+import { COOKIE_SECURE, authPublicUrl, requestOrigin } from '@/lib/auth';
 import { createChallenge, createVerifier } from '@/lib/pkce';
 import { safeReturnTo } from '@/lib/safe-redirect';
 
@@ -13,12 +13,12 @@ const COOKIE_OPTIONS = {
 };
 
 export function GET(request: NextRequest) {
-  const origin = request.nextUrl.origin;
+  const origin = requestOrigin(request);
   const verifier = createVerifier();
   const state = createVerifier();
   const returnTo = safeReturnTo(request.nextUrl.searchParams.get('returnTo'));
 
-  const authorize = new URL('/oauth2/authorize', authServiceUrl());
+  const authorize = new URL('/oauth2/authorize', authPublicUrl());
   authorize.searchParams.set('response_type', 'code');
   authorize.searchParams.set('client_id', 'storefront');
   authorize.searchParams.set('redirect_uri', `${origin}/auth/callback`);

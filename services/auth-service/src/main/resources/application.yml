@@ -19,6 +19,11 @@ spring:
 server:
   port: ${AUTH_SERVICE_PORT:8090}
   shutdown: graceful
+  forward-headers-strategy: framework
+  tomcat:
+    remoteip:
+      remote-ip-header: x-forwarded-for
+      protocol-header: x-forwarded-proto
   servlet:
     session:
       cookie:

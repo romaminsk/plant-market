@@ -1,6 +1,12 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { ACCESS_COOKIE, COOKIE_SECURE, REFRESH_COOKIE, authServiceUrl } from '@/lib/auth';
+import {
+  ACCESS_COOKIE,
+  COOKIE_SECURE,
+  REFRESH_COOKIE,
+  authServiceUrl,
+  requestOrigin,
+} from '@/lib/auth';
 import { safeReturnTo } from '@/lib/safe-redirect';
 
 export async function GET(request: NextRequest) {
@@ -9,10 +15,10 @@ export async function GET(request: NextRequest) {
   const verifier = request.cookies.get('pm.pkce')?.value;
   const expectedState = request.cookies.get('pm.state')?.value;
   const returnTo = safeReturnTo(request.cookies.get('pm.return')?.value);
-  const origin = request.nextUrl.origin;
+  const origin = requestOrigin(request);
 
   if (!code || !verifier || !state || state !== expectedState) {
-    return NextResponse.redirect(new URL(`${returnTo}?error=oauth`, request.url));
+    return NextResponse.redirect(new URL(`${returnTo}?error=oauth`, origin));
   }
 
   const body = new URLSearchParams({
@@ -29,7 +35,7 @@ export async function GET(request: NextRequest) {
     cache: 'no-store',
   });
   if (!tokenResponse.ok) {
-    return NextResponse.redirect(new URL(`${returnTo}?error=token`, request.url));
+    return NextResponse.redirect(new URL(`${returnTo}?error=token`, origin));
   }
   const tokens = (await tokenResponse.json()) as {
     access_token: string;
@@ -38,7 +44,7 @@ export async function GET(request: NextRequest) {
   };
 
   const secure = COOKIE_SECURE;
-  const response = NextResponse.redirect(new URL(returnTo, request.url));
+  const response = NextResponse.redirect(new URL(returnTo, origin));
   response.cookies.set(ACCESS_COOKIE, tokens.access_token, {
     httpOnly: true,
     sameSite: 'lax',

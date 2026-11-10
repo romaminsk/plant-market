@@ -2,7 +2,6 @@
 .gradle
 .idea
 node_modules
-clients
 tests
 docs
 contracts
@@ -14,3 +13,13 @@ contracts
 **/build/resources
 **/build/generated
 **/build/test-results
+
+# Frontend build artifacts
+clients/*/.next
+clients/*/dist
+clients/*/tsconfig.tsbuildinfo
+
+# Staging secrets must never enter an image
+.env.staging
+infra/staging/secrets
+infra/staging/seaweedfs-s3.json

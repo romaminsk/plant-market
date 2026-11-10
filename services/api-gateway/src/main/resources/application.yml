@@ -1,6 +1,11 @@
 spring:
   application:
     name: api-gateway
+  cloud:
+    gateway:
+      # Caddy is the TLS edge and already supplies X-Forwarded-*; don't overwrite them with http.
+      x-forwarded:
+        enabled: false
   data:
     redis:
       # Keep the limiter fast when Redis is unreachable; the store then falls back in-memory.

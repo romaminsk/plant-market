@@ -23,6 +23,8 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+infra/staging/secrets/*.txt
+!infra/staging/secrets/.gitkeep
 
 # Node / frontend
 node_modules/
@@ -57,3 +59,5 @@ infra/mailhog/data/
 
 # Playwright MCP artifacts
 .playwright-mcp/
+
+infra/staging/seaweedfs-s3.json
