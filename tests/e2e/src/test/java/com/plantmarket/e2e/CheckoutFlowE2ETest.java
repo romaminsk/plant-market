@@ -57,7 +57,10 @@ class CheckoutFlowE2ETest extends PlaywrightTestBase {
     page.locator("button[type='submit']").click();
 
     page.getByLabel("Адрес доставки").fill("Минск, Независимости 1");
-    page.locator("select").selectOption(new SelectOption().setLabel("Минск · 1–2 дн."));
+    page.getByLabel("Зона доставки").selectOption(new SelectOption().setLabel("Минск · 1–2 дн."));
+    page.getByLabel("Дата доставки")
+        .fill(java.time.LocalDate.now(java.time.ZoneOffset.UTC).plusDays(1).toString());
+    page.getByLabel("Время доставки").selectOption("EVENING");
     page.getByRole(
             AriaRole.BUTTON,
             new com.microsoft.playwright.Page.GetByRoleOptions().setName("Оплатить"))

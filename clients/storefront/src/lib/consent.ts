@@ -1,14 +1,41 @@
 export type Consent = 'all' | 'essential';
 
+export const CONSENT_VERSION = '2026-11-10';
+
 const KEY = 'pm.consent.v1';
+const META_KEY = 'pm.consent.meta.v1';
 const EVENT = 'pm-consent-changed';
+
+interface ConsentMeta {
+  version: string;
+  acceptedAt: string;
+}
+
+function readMeta(): ConsentMeta | null {
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(META_KEY) ?? 'null') as unknown;
+    if (typeof parsed !== 'object' || parsed === null) {
+      return null;
+    }
+    const candidate = parsed as Partial<ConsentMeta>;
+    return typeof candidate.version === 'string' && typeof candidate.acceptedAt === 'string'
+      ? { version: candidate.version, acceptedAt: candidate.acceptedAt }
+      : null;
+  } catch {
+    return null;
+  }
+}
 
 export function readConsent(): Consent | null {
   if (typeof window === 'undefined') {
     return null;
   }
   const value = window.localStorage.getItem(KEY);
-  return value === 'all' || value === 'essential' ? value : null;
+  if (value !== 'all' && value !== 'essential') {
+    return null;
+  }
+  const meta = readMeta();
+  return meta?.version === CONSENT_VERSION ? value : null;
 }
 
 export function writeConsent(consent: Consent): void {
@@ -16,6 +43,10 @@ export function writeConsent(consent: Consent): void {
     return;
   }
   window.localStorage.setItem(KEY, consent);
+  window.localStorage.setItem(
+    META_KEY,
+    JSON.stringify({ version: CONSENT_VERSION, acceptedAt: new Date().toISOString() }),
+  );
   window.dispatchEvent(new Event(EVENT));
 }
 

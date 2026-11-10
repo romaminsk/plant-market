@@ -32,8 +32,8 @@ public class CategoryService {
   }
 
   @Transactional(readOnly = true)
-  public CategoryResponse get(UUID id) {
-    return toResponse(find(id));
+  public CategoryResponse get(String idOrSlug) {
+    return toResponse(find(idOrSlug));
   }
 
   @Transactional
@@ -72,6 +72,24 @@ public class CategoryService {
     return categoryRepository
         .findById(id)
         .orElseThrow(() -> ApiException.notFound("Category not found: " + id));
+  }
+
+  private CategoryEntity find(String idOrSlug) {
+    UUID id = parseUuid(idOrSlug);
+    if (id != null) {
+      return find(id);
+    }
+    return categoryRepository
+        .findBySlug(idOrSlug)
+        .orElseThrow(() -> ApiException.notFound("Category not found: " + idOrSlug));
+  }
+
+  private static UUID parseUuid(String value) {
+    try {
+      return UUID.fromString(value);
+    } catch (IllegalArgumentException exception) {
+      return null;
+    }
   }
 
   private static String normalizeDescription(String description) {

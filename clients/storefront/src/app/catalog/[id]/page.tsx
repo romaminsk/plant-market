@@ -22,7 +22,7 @@ export async function generateMetadata({
     title: `${product.name} — Plant Market`,
     description:
       product.description ?? `${product.name}: фото, уход, свет и цена. Доставка по Беларуси.`,
-    alternates: { canonical: `/catalog/${product.id}` },
+    alternates: { canonical: `/catalog/${product.slug}` },
     openGraph: {
       title: `${product.name} — Plant Market`,
       description: product.description ?? undefined,
@@ -33,10 +33,11 @@ export async function generateMetadata({
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [product, allVariants] = await Promise.all([fetchProduct(id), fetchVariants(id)]);
+  const product = await fetchProduct(id);
   if (product.status !== 'PUBLISHED') {
     notFound();
   }
+  const allVariants = await fetchVariants(product.id);
   const variants = allVariants.filter((variant) => variant.status === 'ACTIVE');
   const inStock = variants.some((variant) => variant.availableQuantity > 0);
   const jsonLd = {

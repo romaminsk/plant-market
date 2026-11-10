@@ -644,6 +644,11 @@ components:
         deliveryAddress:
           type: string
           maxLength: 500
+        deliveryDate:
+          type: string
+          format: date
+        deliveryWindow:
+          $ref: '#/components/schemas/DeliveryWindow'
         status:
           $ref: '#/components/schemas/OrderStatus'
         subtotalMinor:
@@ -706,6 +711,16 @@ components:
         deliveryAddress:
           type: string
           maxLength: 500
+        deliveryDate:
+          type: string
+          format: date
+          description: Must fall between today + zone.minDays and today + zone.maxDays (UTC).
+        deliveryWindow:
+          $ref: '#/components/schemas/DeliveryWindow'
+
+    DeliveryWindow:
+      type: string
+      enum: [MORNING, DAY, EVENING]
 
     ShippingZoneRequest:
       type: object

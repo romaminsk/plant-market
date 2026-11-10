@@ -21,7 +21,7 @@ export async function generateMetadata({
     description:
       plant.description ??
       `Индивидуальное растение ${plant.productName}, код ${plant.code}, WYSIWYG.`,
-    alternates: { canonical: `/plants/${plant.id}` },
+    alternates: { canonical: `/plants/${plant.code}` },
   };
 }
 

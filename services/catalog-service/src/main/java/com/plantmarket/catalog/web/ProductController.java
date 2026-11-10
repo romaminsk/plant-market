@@ -47,9 +47,9 @@ public class ProductController {
     return productService.create(request);
   }
 
-  @GetMapping("/{id}")
-  public ProductResponse get(@PathVariable UUID id) {
-    return productService.get(id);
+  @GetMapping("/{idOrSlug}")
+  public ProductResponse get(@PathVariable String idOrSlug) {
+    return productService.get(idOrSlug);
   }
 
   @PutMapping("/{id}")

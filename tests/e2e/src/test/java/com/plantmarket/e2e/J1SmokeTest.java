@@ -7,7 +7,6 @@ import com.plantmarket.e2e.pages.ProductPage;
 import com.plantmarket.e2e.support.PlaywrightTestBase;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
-import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 
@@ -31,7 +30,7 @@ class J1SmokeTest extends PlaywrightTestBase {
     ProductPage product = new ProductPage(page);
     product.waitForLoaded();
 
-    assertThat(page.url()).matches(Pattern.compile(".*/catalog/[0-9a-f-]{36}$"));
+    assertThat(page.url()).endsWith("/catalog/monstera-deliciosa");
     assertThat(product.heading()).isEqualTo("Monstera Deliciosa");
     assertThat(product.price().replaceAll("[^0-9]", "")).contains("1299");
   }

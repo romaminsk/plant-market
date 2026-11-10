@@ -38,9 +38,9 @@ public class CategoryController {
     return categoryService.create(request);
   }
 
-  @GetMapping("/{id}")
-  public CategoryResponse get(@PathVariable UUID id) {
-    return categoryService.get(id);
+  @GetMapping("/{idOrSlug}")
+  public CategoryResponse get(@PathVariable String idOrSlug) {
+    return categoryService.get(idOrSlug);
   }
 
   @PutMapping("/{id}")

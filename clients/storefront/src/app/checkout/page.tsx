@@ -3,10 +3,16 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { fetchShippingZones, formatPrice } from '@/lib/api';
-import type { ShippingZone } from '@/lib/api';
+import type { DeliveryWindow, ShippingZone } from '@/lib/api';
 import { clearCart, readCart } from '@/lib/cart';
 import { track } from '@/lib/analytics';
 import type { CartItem } from '@/lib/cart';
+
+function isoDate(offsetDays: number): string {
+  const date = new Date();
+  date.setUTCDate(date.getUTCDate() + offsetDays);
+  return date.toISOString().slice(0, 10);
+}
 
 export default function CheckoutPage() {
   const [items, setItems] = useState<CartItem[]>([]);
@@ -14,6 +20,8 @@ export default function CheckoutPage() {
   const [zoneId, setZoneId] = useState('');
   const [thermal, setThermal] = useState(false);
   const [address, setAddress] = useState('');
+  const [deliveryDate, setDeliveryDate] = useState('');
+  const [deliveryWindow, setDeliveryWindow] = useState<DeliveryWindow>('DAY');
   const [email, setEmail] = useState('');
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
   const [status, setStatus] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
@@ -46,6 +54,18 @@ export default function CheckoutPage() {
 
   const subtotal = items.reduce((total, item) => total + item.priceMinor * item.quantity, 0);
   const zone = zones.find((item) => item.id === zoneId);
+  const minDate = zone ? isoDate(zone.minDays) : '';
+  const maxDate = zone ? isoDate(zone.maxDays) : '';
+
+  useEffect(() => {
+    if (!zone) {
+      return;
+    }
+    const min = isoDate(zone.minDays);
+    const max = isoDate(zone.maxDays);
+    setDeliveryDate((current) => (!current || current < min || current > max ? min : current));
+  }, [zone?.id, zone?.minDays, zone?.maxDays]);
+
   const shipping = zone
     ? (subtotal >= zone.freeFromMinor ? 0 : zone.priceMinor) + (thermal ? zone.thermalPackMinor : 0)
     : 0;
@@ -75,6 +95,8 @@ export default function CheckoutPage() {
           shippingZoneId: zoneId,
           thermalPack: thermal,
           deliveryAddress: address,
+          deliveryDate,
+          deliveryWindow,
           guestEmail: guest ? email.trim() : undefined,
         }),
       });
@@ -204,6 +226,28 @@ export default function CheckoutPage() {
               ))}
             </select>
           </label>
+          <label>
+            Дата доставки
+            <input
+              type="date"
+              value={deliveryDate}
+              min={minDate}
+              max={maxDate}
+              onChange={(event) => setDeliveryDate(event.target.value)}
+              required
+            />
+          </label>
+          <label>
+            Время доставки
+            <select
+              value={deliveryWindow}
+              onChange={(event) => setDeliveryWindow(event.target.value as DeliveryWindow)}
+            >
+              <option value="MORNING">Утро, 9–12</option>
+              <option value="DAY">День, 12–17</option>
+              <option value="EVENING">Вечер, 17–21</option>
+            </select>
+          </label>
           {zone?.winterRequiresThermal ? (
             <label className="checkout-thermal">
               <input
@@ -242,6 +286,8 @@ export default function CheckoutPage() {
               authenticated === null ||
               (guest && !guestEmailValid) ||
               address.trim().length === 0 ||
+              !deliveryDate ||
+              !deliveryWindow ||
               thermalMissing
             }
             onClick={() => void submit()}

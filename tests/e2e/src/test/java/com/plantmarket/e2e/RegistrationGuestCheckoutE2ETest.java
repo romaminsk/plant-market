@@ -88,11 +88,11 @@ class RegistrationGuestCheckoutE2ETest extends PlaywrightTestBase {
             AriaRole.HEADING,
             new com.microsoft.playwright.Page.GetByRoleOptions().setName("Оформление заказа"))
         .waitFor();
-    assertThat(page.locator(".checkout-form select option:checked").innerText()).contains("Минск");
+    assertThat(page.getByLabel("Зона доставки").locator("option:checked").innerText())
+        .contains("Минск");
     page.locator("input[name='guestEmail']").fill("guest-checkout@example.test");
     page.locator(".checkout-form textarea").fill("Минск, Независимости 1");
-    page.locator(".checkout-form select")
-        .selectOption(new SelectOption().setLabel("Минск · 1–2 дн."));
+    page.getByLabel("Зона доставки").selectOption(new SelectOption().setLabel("Минск · 1–2 дн."));
     page.getByRole(
             AriaRole.BUTTON,
             new com.microsoft.playwright.Page.GetByRoleOptions().setName("Оплатить"))
@@ -112,8 +112,7 @@ class RegistrationGuestCheckoutE2ETest extends PlaywrightTestBase {
     page.navigate(baseUrl + "/checkout");
     page.locator("input[name='guestEmail']").waitFor();
     page.locator(".checkout-form textarea").fill("Минск, Независимости 1");
-    page.locator(".checkout-form select")
-        .selectOption(new SelectOption().setLabel("Минск · 1–2 дн."));
+    page.getByLabel("Зона доставки").selectOption(new SelectOption().setLabel("Минск · 1–2 дн."));
     assertThat(page.locator("button:has-text('Оплатить')").isDisabled()).isTrue();
     page.locator("input[name='guestEmail']").fill("not-an-email");
     assertThat(page.locator("button:has-text('Оплатить')").isDisabled()).isTrue();

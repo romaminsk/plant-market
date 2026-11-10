@@ -24,6 +24,8 @@ class ConsentAnalyticsE2ETest extends PlaywrightTestBase {
             AriaRole.DIALOG,
             new com.microsoft.playwright.Page.GetByRoleOptions().setName("Cookie и аналитика"))
         .waitFor();
+    String consentVersion = page.getAttribute("aside.cookie-banner", "data-consent-version");
+    assertThat(consentVersion).isNotBlank();
     Object beforeConsent = page.evaluate("() => (window.dataLayer ?? []).length");
     assertThat(((Number) beforeConsent).intValue()).isZero();
 
@@ -31,6 +33,12 @@ class ConsentAnalyticsE2ETest extends PlaywrightTestBase {
             AriaRole.BUTTON,
             new com.microsoft.playwright.Page.GetByRoleOptions().setName("Принять аналитику"))
         .click();
+
+    Object meta = page.evaluate("() => JSON.parse(localStorage.getItem('pm.consent.meta.v1'))");
+    assertThat(meta).isInstanceOf(java.util.Map.class);
+    java.util.Map<?, ?> record = (java.util.Map<?, ?>) meta;
+    assertThat(record.get("version")).isEqualTo(consentVersion);
+    assertThat(record.get("acceptedAt")).isNotNull();
 
     String productId = SeedData.productId(apiUrl, "MON-001");
     page.navigate(baseUrl + "/catalog/" + productId);
@@ -44,5 +52,19 @@ class ConsentAnalyticsE2ETest extends PlaywrightTestBase {
         page.evaluate(
             "() => (window.dataLayer ?? []).some(entry => entry.event === 'add_to_cart')");
     assertThat((Boolean) tracked).isTrue();
+  }
+
+  @Test
+  void staleConsentVersionAsksAgain() {
+    page.navigate(baseUrl + "/catalog");
+    page.evaluate(
+        "() => { localStorage.setItem('pm.consent.v1', 'all');"
+            + " localStorage.setItem('pm.consent.meta.v1',"
+            + " JSON.stringify({version: 'old', acceptedAt: '2025-01-01T00:00:00.000Z'})); }");
+    page.reload();
+    page.getByRole(
+            AriaRole.DIALOG,
+            new com.microsoft.playwright.Page.GetByRoleOptions().setName("Cookie и аналитика"))
+        .waitFor();
   }
 }

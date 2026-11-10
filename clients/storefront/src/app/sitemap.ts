@@ -19,7 +19,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ]);
     for (const product of products) {
       entries.push({
-        url: `${baseUrl}/catalog/${product.id}`,
+        url: `${baseUrl}/catalog/${product.slug}`,
         lastModified: new Date(product.updatedAt),
         changeFrequency: 'weekly',
         priority: 0.8,
@@ -27,7 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
     for (const plant of plants) {
       entries.push({
-        url: `${baseUrl}/plants/${plant.id}`,
+        url: `${baseUrl}/plants/${plant.code}`,
         lastModified: new Date(plant.updatedAt),
         changeFrequency: 'weekly',
         priority: 0.7,

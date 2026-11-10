@@ -55,7 +55,8 @@ class WinterCheckoutE2ETest extends PlaywrightTestBase {
     page.locator("button[type='submit']").click();
 
     page.getByLabel("Адрес доставки").fill("Гомель, Советская 1");
-    page.locator("select").selectOption(new SelectOption().setLabel("Гомель (зима) · 2–4 дн."));
+    page.getByLabel("Зона доставки")
+        .selectOption(new SelectOption().setLabel("Гомель (зима) · 2–4 дн."));
     assertThat(
             page.getByRole(
                     AriaRole.BUTTON,

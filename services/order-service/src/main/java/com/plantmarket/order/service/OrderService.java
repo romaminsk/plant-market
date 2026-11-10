@@ -9,6 +9,7 @@ import com.plantmarket.order.client.PaymentResult;
 import com.plantmarket.order.client.ReservationRequest;
 import com.plantmarket.order.client.ReservationResult;
 import com.plantmarket.order.client.ReservationTargetType;
+import com.plantmarket.order.domain.DeliveryWindow;
 import com.plantmarket.order.domain.OrderEntity;
 import com.plantmarket.order.domain.OrderItemEntity;
 import com.plantmarket.order.domain.OrderItemType;
@@ -28,6 +29,8 @@ import com.plantmarket.order.web.dto.OrderHistoryEntry;
 import com.plantmarket.order.web.dto.OrderItemResponse;
 import com.plantmarket.order.web.dto.OrderResponse;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -151,7 +154,11 @@ public class OrderService {
       checkoutOrder(
           order,
           new CheckoutRequest(
-              request.shippingZoneId(), request.thermalPack(), request.deliveryAddress()));
+              request.shippingZoneId(),
+              request.thermalPack(),
+              request.deliveryAddress(),
+              request.deliveryDate(),
+              request.deliveryWindow()));
     }
     if (order.getStatus() == OrderStatus.PENDING_PAYMENT) {
       payOrder(order);
@@ -182,7 +189,20 @@ public class OrderService {
       if (thermal) {
         shipping += zone.getThermalPackMinor();
       }
-      order.applyShipping(zone.getId(), shipping, thermal, address);
+      LocalDate deliveryDate = request.deliveryDate();
+      DeliveryWindow deliveryWindow = request.deliveryWindow();
+      if (deliveryDate == null && deliveryWindow == null) {
+        deliveryDate = LocalDate.now(ZoneOffset.UTC).plusDays(zone.getMinDays());
+        deliveryWindow = DeliveryWindow.DAY;
+      } else if (deliveryDate == null || deliveryWindow == null) {
+        throw ApiException.badRequest("deliveryDate and deliveryWindow are required together");
+      }
+      LocalDate earliest = LocalDate.now(ZoneOffset.UTC).plusDays(zone.getMinDays());
+      LocalDate latest = LocalDate.now(ZoneOffset.UTC).plusDays(zone.getMaxDays());
+      if (deliveryDate.isBefore(earliest) || deliveryDate.isAfter(latest)) {
+        throw ApiException.badRequest("deliveryDate is outside the zone window");
+      }
+      order.applyShipping(zone.getId(), shipping, thermal, address, deliveryDate, deliveryWindow);
     }
     List<ReservationRequest.Item> items =
         order.getItems().stream()
@@ -349,6 +369,8 @@ public class OrderService {
         order.getShippingZoneId(),
         order.isThermalPack(),
         order.getDeliveryAddress(),
+        order.getDeliveryDate(),
+        order.getDeliveryWindow(),
         order.getStatus(),
         order.getSubtotalMinor(),
         order.getShippingMinor(),

@@ -102,6 +102,16 @@ class CatalogFlowIntegrationTest {
                 CategoryResponse.class)
             .getBody();
     assertThat(category).isNotNull();
+    ResponseEntity<CategoryResponse> categoryBySlug =
+        restTemplate.getForEntity("/api/v1/categories/" + category.slug(), CategoryResponse.class);
+    assertThat(categoryBySlug.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(categoryBySlug.getBody()).isNotNull();
+    assertThat(categoryBySlug.getBody().id()).isEqualTo(category.id());
+    assertThat(
+            restTemplate
+                .getForEntity("/api/v1/categories/no-such-category", String.class)
+                .getStatusCode())
+        .isEqualTo(HttpStatus.NOT_FOUND);
 
     ProductRequest productRequest =
         new ProductRequest(
@@ -145,6 +155,17 @@ class CatalogFlowIntegrationTest {
     assertThat(fetched.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(fetched.getBody()).isNotNull();
     assertThat(fetched.getBody().categoryId()).isEqualTo(category.id());
+
+    ResponseEntity<ProductResponse> bySlug =
+        restTemplate.getForEntity(
+            "/api/v1/products/" + productRequest.slug(), ProductResponse.class);
+    assertThat(bySlug.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(bySlug.getBody()).isNotNull();
+    assertThat(bySlug.getBody().id()).isEqualTo(productId);
+
+    ResponseEntity<String> missingSlug =
+        restTemplate.getForEntity("/api/v1/products/no-such-slug", String.class);
+    assertThat(missingSlug.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 
     ProductRequest updated =
         new ProductRequest(
@@ -294,6 +315,17 @@ class CatalogFlowIntegrationTest {
                 IndividualPlantResponse.class)
             .getBody();
     assertThat(plant).isNotNull();
+    ResponseEntity<IndividualPlantResponse> plantByCode =
+        restTemplate.getForEntity(
+            "/api/v1/individual-plants/" + plant.code(), IndividualPlantResponse.class);
+    assertThat(plantByCode.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(plantByCode.getBody()).isNotNull();
+    assertThat(plantByCode.getBody().id()).isEqualTo(plant.id());
+    assertThat(
+            restTemplate
+                .getForEntity("/api/v1/individual-plants/NO-SUCH-CODE", String.class)
+                .getStatusCode())
+        .isEqualTo(HttpStatus.NOT_FOUND);
 
     ResponseEntity<IndividualPlantResponse> updated =
         restTemplate.exchange(

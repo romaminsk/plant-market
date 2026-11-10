@@ -7,7 +7,6 @@ import com.microsoft.playwright.options.AriaRole;
 import com.plantmarket.e2e.support.PlaywrightTestBase;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
-import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 
@@ -37,7 +36,7 @@ class J1FilterTest extends PlaywrightTestBase {
     Locator price = page.getByTestId("plant-price");
     price.waitFor();
 
-    assertThat(page.url()).matches(Pattern.compile(".*/plants/[0-9a-f-]{36}$"));
+    assertThat(page.url()).endsWith("/plants/IP-001");
     assertThat(page.locator("body").innerText()).contains("WYSIWYG");
     assertThat(price.innerText().replaceAll("[^0-9]", "")).contains("12000");
   }

@@ -56,8 +56,8 @@ public class ProductService {
   }
 
   @Transactional(readOnly = true)
-  public ProductResponse get(UUID id) {
-    return toResponse(find(id));
+  public ProductResponse get(String idOrSlug) {
+    return toResponse(find(idOrSlug));
   }
 
   @Transactional
@@ -132,6 +132,24 @@ public class ProductService {
     return productRepository
         .findById(id)
         .orElseThrow(() -> ApiException.notFound("Product not found: " + id));
+  }
+
+  private ProductEntity find(String idOrSlug) {
+    UUID id = parseUuid(idOrSlug);
+    if (id != null) {
+      return find(id);
+    }
+    return productRepository
+        .findBySlug(idOrSlug)
+        .orElseThrow(() -> ApiException.notFound("Product not found: " + idOrSlug));
+  }
+
+  private static UUID parseUuid(String value) {
+    try {
+      return UUID.fromString(value);
+    } catch (IllegalArgumentException exception) {
+      return null;
+    }
   }
 
   private CategoryEntity findCategory(UUID id) {

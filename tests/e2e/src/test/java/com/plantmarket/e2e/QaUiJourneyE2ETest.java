@@ -77,7 +77,7 @@ class QaUiJourneyE2ETest extends PlaywrightTestBase {
     page.locator("button[type='submit']").click();
 
     page.getByLabel("Адрес доставки").fill("Минск, Независимости 1");
-    page.locator("select").selectOption(new SelectOption().setLabel("Минск · 1–2 дн."));
+    page.getByLabel("Зона доставки").selectOption(new SelectOption().setLabel("Минск · 1–2 дн."));
     page.getByRole(
             AriaRole.BUTTON,
             new com.microsoft.playwright.Page.GetByRoleOptions().setName("Оплатить"))

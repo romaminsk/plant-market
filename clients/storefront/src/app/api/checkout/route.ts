@@ -27,6 +27,8 @@ export async function POST(request: NextRequest) {
     shippingZoneId?: string;
     thermalPack?: boolean;
     deliveryAddress?: string;
+    deliveryDate?: string;
+    deliveryWindow?: string;
     guestEmail?: string;
   };
   const items = Array.isArray(payload.items) ? payload.items : [];
@@ -77,6 +79,8 @@ export async function POST(request: NextRequest) {
         shippingZoneId,
         thermalPack: Boolean(payload.thermalPack),
         deliveryAddress,
+        deliveryDate: payload.deliveryDate,
+        deliveryWindow: payload.deliveryWindow,
       }),
       cache: 'no-store',
     });
@@ -158,6 +162,8 @@ export async function POST(request: NextRequest) {
       shippingZoneId,
       thermalPack: Boolean(payload.thermalPack),
       deliveryAddress,
+      deliveryDate: payload.deliveryDate,
+      deliveryWindow: payload.deliveryWindow,
     }),
   });
   if (!checkoutResponse.ok) {

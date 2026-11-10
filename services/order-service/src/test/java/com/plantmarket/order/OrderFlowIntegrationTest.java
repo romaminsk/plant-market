@@ -707,6 +707,69 @@ class OrderFlowIntegrationTest {
   }
 
   @Test
+  void checkoutStoresDeliveryWindowAndRejectsOutOfRangeDate() {
+    UUID customerId = UUID.randomUUID();
+    HttpHeaders headers = headers(customerId);
+    ShippingZoneResponse zone =
+        restTemplate
+            .exchange(
+                "/api/v1/shipping/zones",
+                HttpMethod.POST,
+                new HttpEntity<>(
+                    new ShippingZoneRequest(
+                        "Slot zone " + customerId, "Minsk", 500L, 50000L, 2, 5, false, 0L, true),
+                    headers),
+                ShippingZoneResponse.class)
+            .getBody();
+    assertThat(zone).isNotNull();
+    java.time.LocalDate validDate = java.time.LocalDate.now(java.time.ZoneOffset.UTC).plusDays(3);
+
+    UUID orderId = createVariantOrder(headers);
+    ResponseEntity<String> accepted =
+        restTemplate.exchange(
+            "/api/v1/orders/" + orderId + "/checkout",
+            HttpMethod.POST,
+            new HttpEntity<>(
+                Map.of(
+                    "shippingZoneId",
+                    zone.id(),
+                    "thermalPack",
+                    false,
+                    "deliveryAddress",
+                    "Minsk, Nezavisimosti 1",
+                    "deliveryDate",
+                    validDate.toString(),
+                    "deliveryWindow",
+                    "EVENING"),
+                headers),
+            String.class);
+    assertThat(accepted.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(accepted.getBody()).contains("\"deliveryWindow\":\"EVENING\"");
+    assertThat(accepted.getBody()).contains("\"deliveryDate\":\"" + validDate + "\"");
+
+    UUID tooEarlyOrder = createVariantOrder(headers);
+    ResponseEntity<String> rejected =
+        restTemplate.exchange(
+            "/api/v1/orders/" + tooEarlyOrder + "/checkout",
+            HttpMethod.POST,
+            new HttpEntity<>(
+                Map.of(
+                    "shippingZoneId",
+                    zone.id(),
+                    "thermalPack",
+                    false,
+                    "deliveryAddress",
+                    "Minsk, Nezavisimosti 2",
+                    "deliveryDate",
+                    java.time.LocalDate.now(java.time.ZoneOffset.UTC).plusDays(1).toString(),
+                    "deliveryWindow",
+                    "DAY"),
+                headers),
+            String.class);
+    assertThat(rejected.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+  }
+
+  @Test
   void customerOpensClaimAndAdminDecidesReplacement() {
     UUID customerId = UUID.randomUUID();
     HttpHeaders headers = headers(customerId);

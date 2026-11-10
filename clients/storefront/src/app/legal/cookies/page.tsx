@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { CONSENT_VERSION } from '@/lib/consent';
 
 export const metadata: Metadata = {
   title: 'Cookie и аналитика — Plant Market',
@@ -33,9 +34,14 @@ export default function CookiePolicyPage() {
         </li>
         <li>
           <code>localStorage: pm.cart.v1</code> — корзина; <code>pm.consent.v1</code> — выбор
-          согласия.
+          согласия; <code>pm.consent.meta.v1</code> — версия политики и дата принятия.
         </li>
       </ul>
+
+      <p>
+        Текущая версия политики: <code>{CONSENT_VERSION}</code>. При изменении версии баннер
+        появится снова, а аналитика останется выключенной до нового согласия.
+      </p>
 
       <h2>Аналитика</h2>
       <p>
@@ -47,8 +53,9 @@ export default function CookiePolicyPage() {
 
       <h2>Как изменить выбор</h2>
       <p>
-        Очистите <code>pm.consent.v1</code> в настройках браузера и перезагрузите страницу — баннер
-        появится снова. Отказ от аналитики не ограничивает покупки.
+        Очистите <code>pm.consent.v1</code> и <code>pm.consent.meta.v1</code> в настройках браузера
+        и перезагрузите страницу — баннер появится снова. Отказ от аналитики не ограничивает
+        покупки.
       </p>
     </article>
   );

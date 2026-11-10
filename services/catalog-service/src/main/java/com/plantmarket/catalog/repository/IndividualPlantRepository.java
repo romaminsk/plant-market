@@ -16,6 +16,8 @@ public interface IndividualPlantRepository
 
   boolean existsByCode(String code);
 
+  Optional<IndividualPlantEntity> findByCode(String code);
+
   boolean existsByCodeAndIdNot(String code, UUID id);
 
   @Lock(LockModeType.PESSIMISTIC_WRITE)

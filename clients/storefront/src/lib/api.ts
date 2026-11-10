@@ -80,6 +80,8 @@ export interface Variant {
   availableQuantity: number;
 }
 
+export type DeliveryWindow = 'MORNING' | 'DAY' | 'EVENING';
+
 export interface ShippingZone {
   id: string;
   name: string;

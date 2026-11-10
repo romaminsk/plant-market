@@ -103,7 +103,11 @@ export default async function CatalogPage({
           <ul className="plant-grid">
             {plants.items.map((plant) => (
               <li key={plant.id} className="plant-card">
-                <Link className="plant-photo" href={`/plants/${plant.id}`} aria-label={plant.code}>
+                <Link
+                  className="plant-photo"
+                  href={`/plants/${plant.code}`}
+                  aria-label={plant.code}
+                >
                   <img
                     src={plant.photos?.[0]?.url ?? plant.photoUrl ?? '/images/plants/monstera.jpg'}
                     alt={`${plant.productName}, ${plant.code}`}
@@ -116,7 +120,7 @@ export default async function CatalogPage({
                 <div className="product-body">
                   <p className="sku">{plant.code}</p>
                   <h2>
-                    <Link href={`/plants/${plant.id}`}>{plant.productName}</Link>
+                    <Link href={`/plants/${plant.code}`}>{plant.productName}</Link>
                   </h2>
                   <p className="muted plant-description">{plant.description}</p>
                   <dl className="facts">
@@ -191,7 +195,7 @@ export default async function CatalogPage({
                     <div className="product-row-body">
                       <p className="sku">{product.sku}</p>
                       <h2>
-                        <Link href={`/catalog/${product.id}`}>{product.name}</Link>
+                        <Link href={`/catalog/${product.slug}`}>{product.name}</Link>
                       </h2>
                       <p className="muted plant-description">{product.description}</p>
                       <div className="product-row-foot">

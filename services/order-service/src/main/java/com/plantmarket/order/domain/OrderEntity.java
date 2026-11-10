@@ -14,6 +14,7 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -38,6 +39,13 @@ public class OrderEntity {
 
   @Column(name = "delivery_address", length = 500)
   private String deliveryAddress;
+
+  @Column(name = "delivery_date")
+  private LocalDate deliveryDate;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "delivery_window", length = 20)
+  private DeliveryWindow deliveryWindow;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "status", length = 30, nullable = false)
@@ -106,11 +114,18 @@ public class OrderEntity {
   }
 
   public void applyShipping(
-      UUID zoneId, long shippingMinor, boolean thermalPack, String deliveryAddress) {
+      UUID zoneId,
+      long shippingMinor,
+      boolean thermalPack,
+      String deliveryAddress,
+      LocalDate deliveryDate,
+      DeliveryWindow deliveryWindow) {
     this.shippingZoneId = zoneId;
     this.shippingMinor = shippingMinor;
     this.thermalPack = thermalPack;
     this.deliveryAddress = deliveryAddress;
+    this.deliveryDate = deliveryDate;
+    this.deliveryWindow = deliveryWindow;
     this.totalMinor = subtotalMinor + shippingMinor + taxMinor - discountMinor;
   }
 
@@ -189,6 +204,14 @@ public class OrderEntity {
 
   public String getDeliveryAddress() {
     return deliveryAddress;
+  }
+
+  public LocalDate getDeliveryDate() {
+    return deliveryDate;
+  }
+
+  public DeliveryWindow getDeliveryWindow() {
+    return deliveryWindow;
   }
 
   public OrderStatus getStatus() {

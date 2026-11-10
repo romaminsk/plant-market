@@ -97,7 +97,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
     if (path.equals("/api/v1/auth/login")
         || path.equals("/api/v1/auth/register")
         || path.equals("/login")
-        || path.startsWith("/oauth2/")) {
+        || path.equals("/oauth2/token")) {
       return authRequestsPerMinute;
     }
     return authenticated ? authenticatedRequestsPerMinute : publicRequestsPerMinute;

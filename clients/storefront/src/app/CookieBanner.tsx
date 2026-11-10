@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { readConsent, subscribeToConsent, writeConsent } from '@/lib/consent';
+import { CONSENT_VERSION, readConsent, subscribeToConsent, writeConsent } from '@/lib/consent';
 import type { Consent } from '@/lib/consent';
 
 export function CookieBanner() {
@@ -23,7 +23,12 @@ export function CookieBanner() {
   }
 
   return (
-    <aside className="cookie-banner" role="dialog" aria-label="Cookie и аналитика">
+    <aside
+      className="cookie-banner"
+      role="dialog"
+      aria-label="Cookie и аналитика"
+      data-consent-version={CONSENT_VERSION}
+    >
       <p>
         Используем необходимые cookie для входа и корзины. Аналитику включаем только с вашего
         согласия.

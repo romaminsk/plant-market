@@ -1,8 +1,8 @@
 # Plant Market — статус проекта
 
-**Обновлено:** 2026-11-09
-**Фаза:** 3 — функции готовы; идёт P1-хардening после ревью
-**Текущая задача:** P1 закрыт; далее storefront-функции и staging-инфраструктура
+**Обновлено:** 2026-11-10
+**Фаза:** 3 — функции готовы; все P1-находки ревью закрыты
+**Текущая задача:** storefront-функции: отзывы
 
 ## Состояние окружения
 
@@ -272,12 +272,12 @@
 | `platform-common` |    19 |           83% |
 | `auth-service`    |     4 |           74% |
 | `catalog-service` |    12 |           84% |
-| `order-service`   |    14 |           82% |
+| `order-service`   |    15 |           83% |
 | `payment-service` |    12 |           77% |
-| `api-gateway`     |    12 |           85% |
-| `tests:e2e`       |   478 |             — |
+| `api-gateway`     |    13 |           85% |
+| `tests:e2e`       |   479 |             — |
 
-Итого **73 backend-теста + 478 E2E = 551 тест, 0 падений**. JaCoCo-порог 70% проходит.
+Итого **75 backend-тестов + 479 E2E = 554 теста, 0 падений**. JaCoCo-порог 70% проходит.
 
 ### UI-матрица (100 кейсов)
 
@@ -366,7 +366,7 @@
 - Проверено: backend integration-тесты, admin login/gallery E2E, guest checkout с SYSTEM-токенами,
   повтор guest checkout с тем же `Idempotency-Key`, media upload/download через gateway.
 
-### P1-хардening — второй батч (2026-11-09)
+### P1-хардening — второй и третий батчи (2026-11-09)
 
 - **Outbox:** `SKIP LOCKED` + lease, уведомления вне транзакции; тест на параллельную публикацию.
 - **Таймауты:** connect/read для catalog/payment/provider HTTP-клиентов и SMTP
@@ -388,10 +388,17 @@
 - **Auth за gateway:** `/oauth2/**`, `/.well-known/**`, `/login`, `/register` и статика идут через
   `:8080` с сохранением Host; auth-service больше не публикует порт. CORS ограничен `/api/**`,
   CSP login-страниц разрешает свои стили/шрифты/картинки.
+- **Slug-URL:** каталог отдаёт `/catalog/{slug}`, растения — `/plants/{code}`; canonical и sitemap
+  используют те же значения, UUID-URL остаются валидными (ADR-0015).
+- **Consent-версионирование:** `pm.consent.meta.v1` хранит версию политики и `acceptedAt`; при
+  смене версии баннер показывается снова, аналитика выключена до нового согласия (ADR-0014).
+- **Окно доставки:** checkout принимает `deliveryDate`/`deliveryWindow`, дата проверяется по
+  min/max дням зоны в UTC; без полей используется ближайшая дата и `DAY` (ADR-0016). Ёмкость
+  окон — следующий шаг.
 
 ## Следующие 3 шага
 
-1. Storefront: слоты доставки, отзывы, consent-версионирование; slug-URL.
+1. Storefront: отзывы.
 2. Staging A1/A15, MinIO/S3, TLS и секрет-хранилище.
 3. Юридический A11 L1–L8; до подписи prod запрещён.
 
@@ -416,8 +423,9 @@
 - `docker-compose.test.yml` остаётся опциональным override для ручного прогона тестового стека.
 - Storefront checkout: адрес есть; слоты доставки и отзывы — следующая итерация. Refresh в BFF
   реализован только в checkout, history-страницы при истёкшем токене просят войти снова.
-- **Pre-prod блокеры из ревью:** J6/B2B (Phase 4), slug-URL, tenant_id, revocation refresh при
-  logout. P0-блокеры безопасности/денег закрыты 2026-11-08 (см. ниже).
+- **Pre-prod блокеры из ревью:** J6/B2B (Phase 4), tenant_id, revocation refresh при
+  logout. Slug-URL закрыт 2026-11-10 (ADR-0015). P0-блокеры безопасности/денег закрыты
+  2026-11-08 (см. ниже).
 - Фото принимаются как URL и через загрузку в админке; media отдаётся через gateway
   (`/media/**`), CSP storefront разрешает этот origin.
 - Media volume не реплицируется и не бэкапится; публичные файлы без content sniffing (ADR-0011).

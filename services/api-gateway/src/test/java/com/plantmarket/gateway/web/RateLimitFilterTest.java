@@ -61,6 +61,24 @@ class RateLimitFilterTest {
   }
 
   @Test
+  void oauthAuthorizeUsesPublicLimitNotTheLoginLimit() {
+    RateLimitFilter filter =
+        new RateLimitFilter(new ProblemResponseWriter(new ObjectMapper()), 2, 1, 10);
+
+    MockServerWebExchange first = authorizeExchange();
+    MockServerWebExchange second = authorizeExchange();
+    MockServerWebExchange third = authorizeExchange();
+
+    filter.filter(first, exchange -> Mono.empty()).block();
+    filter.filter(second, exchange -> Mono.empty()).block();
+    filter.filter(third, exchange -> Mono.empty()).block();
+
+    assertThat(first.getResponse().getStatusCode()).isNull();
+    assertThat(second.getResponse().getStatusCode()).isNull();
+    assertThat(third.getResponse().getStatusCode()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
+  }
+
+  @Test
   void authenticatedPrincipalUsesTheHigherLimit() {
     RateLimitFilter filter =
         new RateLimitFilter(new ProblemResponseWriter(new ObjectMapper()), 1, 10, 10);
@@ -92,6 +110,11 @@ class RateLimitFilterTest {
 
   private MockServerWebExchange exchange() {
     return MockServerWebExchange.from(MockServerHttpRequest.get("/api/v1/products").build());
+  }
+
+  private MockServerWebExchange authorizeExchange() {
+    return MockServerWebExchange.from(
+        MockServerHttpRequest.get("/oauth2/authorize?client_id=storefront").build());
   }
 
   private MockServerWebExchange authExchange() {

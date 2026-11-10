@@ -68,8 +68,8 @@ public class IndividualPlantService {
   }
 
   @Transactional(readOnly = true)
-  public IndividualPlantResponse get(UUID id) {
-    return toResponse(find(id));
+  public IndividualPlantResponse get(String idOrCode) {
+    return toResponse(find(idOrCode));
   }
 
   @Transactional
@@ -142,6 +142,24 @@ public class IndividualPlantService {
     return plantRepository
         .findById(id)
         .orElseThrow(() -> ApiException.notFound("Individual plant not found: " + id));
+  }
+
+  private IndividualPlantEntity find(String idOrCode) {
+    UUID id = parseUuid(idOrCode);
+    if (id != null) {
+      return find(id);
+    }
+    return plantRepository
+        .findByCode(idOrCode)
+        .orElseThrow(() -> ApiException.notFound("Individual plant not found: " + idOrCode));
+  }
+
+  private static UUID parseUuid(String value) {
+    try {
+      return UUID.fromString(value);
+    } catch (IllegalArgumentException exception) {
+      return null;
+    }
   }
 
   private ProductEntity findProduct(UUID id) {

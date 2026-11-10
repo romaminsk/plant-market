@@ -46,9 +46,9 @@ public class IndividualPlantController {
         page, size, sort, productId, status, light, variegated, maxPriceMinor, search);
   }
 
-  @GetMapping("/individual-plants/{id}")
-  public IndividualPlantResponse get(@PathVariable UUID id) {
-    return plantService.get(id);
+  @GetMapping("/individual-plants/{idOrCode}")
+  public IndividualPlantResponse get(@PathVariable String idOrCode) {
+    return plantService.get(idOrCode);
   }
 
   @PostMapping("/products/{productId}/individual-plants")

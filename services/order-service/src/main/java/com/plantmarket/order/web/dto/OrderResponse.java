@@ -1,7 +1,9 @@
 package com.plantmarket.order.web.dto;
 
+import com.plantmarket.order.domain.DeliveryWindow;
 import com.plantmarket.order.domain.OrderStatus;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -12,6 +14,8 @@ public record OrderResponse(
     UUID shippingZoneId,
     boolean thermalPack,
     String deliveryAddress,
+    LocalDate deliveryDate,
+    DeliveryWindow deliveryWindow,
     OrderStatus status,
     long subtotalMinor,
     long shippingMinor,
