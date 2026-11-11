@@ -17,12 +17,12 @@ invariants around it.
 
 ## Screens
 
-| Storefront | WYSIWYG plant page |
-| --- | --- |
+| Storefront                                    | WYSIWYG plant page                                 |
+| --------------------------------------------- | -------------------------------------------------- |
 | ![Catalog](docs/screenshots/catalog-hero.jpg) | ![Plant detail](docs/screenshots/plant-detail.jpg) |
 
-| Checkout with delivery window | Operations admin |
-| --- | --- |
+| Checkout with delivery window              | Operations admin                     |
+| ------------------------------------------ | ------------------------------------ |
 | ![Checkout](docs/screenshots/checkout.jpg) | ![Admin](docs/screenshots/admin.jpg) |
 
 ## What is WYSIWYG here
@@ -96,13 +96,13 @@ flowchart LR
 
 ## Testing
 
-| Layer | Count | What it proves |
-| --- | ---: | --- |
-| Backend unit/slice | 30 | UUIDv7, RFC 7807, pagination, rate limiting, webhook HMAC, secret policy |
-| Integration (Testcontainers) | 51 | real PostgreSQL, Flyway, auth, catalog, orders, payments, gateway authz, outbox, TTL |
-| E2E (Playwright) | 479 | storefront, admin, OAuth2 PKCE, checkout, delivery windows, claims, consent, a11y |
-| Layout audit | 2 | no control overlap/overflow at 1280 and 390 |
-| Mutation testing | 20/20 | PIT mutants killed |
+| Layer                        | Count | What it proves                                                                       |
+| ---------------------------- | ----: | ------------------------------------------------------------------------------------ |
+| Backend unit/slice           |    30 | UUIDv7, RFC 7807, pagination, rate limiting, webhook HMAC, secret policy             |
+| Integration (Testcontainers) |    51 | real PostgreSQL, Flyway, auth, catalog, orders, payments, gateway authz, outbox, TTL |
+| E2E (Playwright)             |   479 | storefront, admin, OAuth2 PKCE, checkout, delivery windows, claims, consent, a11y    |
+| Layout audit                 |     2 | no control overlap/overflow at 1280 and 390                                          |
+| Mutation testing             | 20/20 | PIT mutants killed                                                                   |
 
 The full E2E suite is deterministic: class order keeps seed-data assertions before the
 350-scenario journey suite, and long-running admin journeys mint fresh access tokens.
@@ -114,13 +114,13 @@ cp .env.example .env
 ./scripts/demo-up.sh
 ```
 
-| Surface | URL |
-| --- | --- |
-| Storefront | http://localhost:3100 |
-| Admin | http://localhost:5173 |
-| API gateway | http://localhost:8080 |
-| MailHog | http://localhost:8025 |
-| WireMock | http://localhost:8089/__admin |
+| Surface     | URL                           |
+| ----------- | ----------------------------- |
+| Storefront  | http://localhost:3100         |
+| Admin       | http://localhost:5173         |
+| API gateway | http://localhost:8080         |
+| MailHog     | http://localhost:8025         |
+| WireMock    | http://localhost:8089/__admin |
 
 Demo users:
 
