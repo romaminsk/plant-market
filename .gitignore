@@ -61,3 +61,5 @@ infra/mailhog/data/
 .playwright-mcp/
 
 infra/staging/seaweedfs-s3.json
+
+backups/

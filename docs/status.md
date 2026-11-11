@@ -272,12 +272,12 @@
 | `platform-common` |    19 |           83% |
 | `auth-service`    |     4 |           74% |
 | `catalog-service` |    14 |           84% |
-| `order-service`   |    17 |           83% |
+| `order-service`   |    18 |           83% |
 | `payment-service` |    12 |           77% |
 | `api-gateway`     |    14 |           85% |
 | `tests:e2e`       |   479 |             — |
 
-Итого **80 backend-тестов + 479 E2E = 559 тестов, 0 падений**. JaCoCo-порог 70% проходит.
+Итого **81 backend-тест + 479 E2E = 560 тестов, 0 падений**. JaCoCo-порог 70% проходит.
 
 ### UI-матрица (100 кейсов)
 
@@ -379,7 +379,11 @@
 - **Media:** S3-ключи принимаются только в формате UUID + png/jpg/webp; неизвестный ключ — 404.
 - **Storefront:** неизвестный slug/code отдаёт 404, а не 500; зимняя зона автоматически включает
   термоупаковку.
-- **Staging:** SeaweedFS/aws-cli запинены digest'ами; из init убраны неиспользуемые MinIO-переменные.
+- **Staging:** SeaweedFS/aws-cli запинены digest'ами; из init убраны неиспользуемые MinIO-переменные;
+  добавлены backup/restore Postgres + SeaweedFS + Caddy с retention 14 дней, s3-init проверяет
+  наличие bucket до старта catalog.
+- **Claims:** staff-эндпоинты проверяют роль на уровне order-service, а не только gateway;
+  customer получает 403 даже при прямом вызове.
 
 ### P1-хардening — второй и третий батчи (2026-11-09)
 
@@ -412,12 +416,13 @@
   окон — следующий шаг.
 - **Staging:** Caddy TLS (`app/admin/api.<domain>`), Docker secrets для JWT/БД/webhook,
   контейнерные storefront/admin, SeaweedFS S3 для media (ADR-0017); проверены HTTPS, OAuth с
-  `__Host-` cookie, загрузка/выдача media. Публичный DNS/ACME, бэкапы и Vault — дальше.
+  `__Host-` cookie, загрузка/выдача media. Добавлены backup/restore скрипты (Postgres + SeaweedFS +
+  Caddy, retention 14 дней); публичный DNS/ACME, Vault и нагрузочный A15 — дальше.
 
 ## Следующие 3 шага
 
 1. Storefront: отзывы.
-2. Staging hardening: публичный DNS/ACME, бэкапы, Vault/SOPS, нагрузочный A15.
+2. Staging hardening: публичный DNS/ACME, Vault/SOPS, нагрузочный A15 и restore-репетиция.
 3. Юридический A11 L1–L8; до подписи prod запрещён.
 
 ## Блокеры и риски

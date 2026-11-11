@@ -15,6 +15,7 @@ fi
 # Demo drives many catalog navigations; keep the public limit above the prod default.
 export RATE_LIMIT_PUBLIC_RPM="${RATE_LIMIT_PUBLIC_RPM:-2000}"
 export RATE_LIMIT_AUTH_RPM="${RATE_LIMIT_AUTH_RPM:-100}"
+export RATE_LIMIT_AUTHENTICATED_RPM="${RATE_LIMIT_AUTHENTICATED_RPM:-2000}"
 
 ./scripts/dev-up.sh
 if [[ "${DEMO_SKIP_SEED:-}" != "1" ]]; then

@@ -45,6 +45,9 @@ services:
     secrets:
       - JWT_SECRET
       - POSTGRES_PASSWORD
+    depends_on:
+      s3-init:
+        condition: service_healthy
 
   order-service:
     environment:
@@ -115,10 +118,15 @@ services:
         aws --endpoint-url http://seaweedfs:8333 s3 mb s3://plant-market-media || true
         sleep infinity
     healthcheck:
-      test: ['CMD', 'true']
-      interval: 30s
-      timeout: 3s
-      retries: 3
+      test:
+        [
+          'CMD-SHELL',
+          'aws --endpoint-url http://seaweedfs:8333 s3 ls s3://plant-market-media >/dev/null || exit 1',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
 
   caddy:
     image: caddy:2-alpine

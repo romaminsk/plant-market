@@ -427,6 +427,26 @@ class OrderFlowIntegrationTest {
   }
 
   @Test
+  void customerCannotListOrDecideClaims() {
+    HttpHeaders customer = headers(UUID.randomUUID());
+    assertThat(
+            restTemplate
+                .exchange(
+                    "/api/v1/claims", HttpMethod.GET, new HttpEntity<>(customer), String.class)
+                .getStatusCode())
+        .isEqualTo(HttpStatus.FORBIDDEN);
+    assertThat(
+            restTemplate
+                .exchange(
+                    "/api/v1/claims/" + UUID.randomUUID(),
+                    HttpMethod.GET,
+                    new HttpEntity<>(customer),
+                    String.class)
+                .getStatusCode())
+        .isEqualTo(HttpStatus.FORBIDDEN);
+  }
+
+  @Test
   void adminCanRedriveDeadOutboxEvent() {
     OutboxEventEntity event =
         new OutboxEventEntity(

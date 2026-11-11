@@ -1,5 +1,6 @@
 package com.plantmarket.order.web;
 
+import com.plantmarket.common.error.ApiException;
 import com.plantmarket.order.domain.ClaimStatus;
 import com.plantmarket.order.service.ClaimService;
 import com.plantmarket.order.web.dto.ClaimDecisionRequest;
@@ -7,6 +8,7 @@ import com.plantmarket.order.web.dto.ClaimRequest;
 import com.plantmarket.order.web.dto.ClaimResponse;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -46,22 +48,36 @@ public class ClaimController {
   }
 
   @GetMapping("/claims")
-  public List<ClaimResponse> list(@RequestParam(required = false) ClaimStatus status) {
+  public List<ClaimResponse> list(
+      @AuthenticationPrincipal Jwt jwt, @RequestParam(required = false) ClaimStatus status) {
+    requireStaff(jwt);
     return claimService.list(status);
   }
 
   @GetMapping("/claims/{id}")
-  public ClaimResponse get(@PathVariable UUID id) {
+  public ClaimResponse get(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
+    requireStaff(jwt);
     return claimService.get(id);
   }
 
   @PostMapping("/claims/{id}/decision")
   public ClaimResponse decide(
-      @PathVariable UUID id, @Valid @RequestBody ClaimDecisionRequest request) {
+      @AuthenticationPrincipal Jwt jwt,
+      @PathVariable UUID id,
+      @Valid @RequestBody ClaimDecisionRequest request) {
+    requireStaff(jwt);
     return claimService.decide(id, request);
   }
 
   private UUID customerId(Jwt jwt) {
     return UUID.fromString(jwt.getSubject());
+  }
+
+  private static void requireStaff(Jwt jwt) {
+    List<String> roles = jwt.getClaimAsStringList("roles");
+    if (roles == null
+        || roles.stream().noneMatch(Set.of("ADMIN", "OPERATOR", "MANAGER")::contains)) {
+      throw ApiException.forbidden("Staff role required");
+    }
   }
 }

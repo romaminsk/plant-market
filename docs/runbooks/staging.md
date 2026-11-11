@@ -71,6 +71,31 @@ ACME was not verified in this environment; ports 80/443 must be reachable.
 - SeaweedFS runs single-node with a named volume; it has no replication or backup. Before prod use
   a managed S3 or back up the volume.
 
+## Backup and restore
+
+Create a timestamped backup (Postgres dumps, SeaweedFS volume, Caddy data, manifest):
+
+```bash
+./scripts/staging-backup.sh
+```
+
+Backups go to `backups/staging/<UTC timestamp>/`, are git-ignored, and files older than 14 days are
+removed. Verify one archive before relying on it:
+
+```bash
+tar tzf backups/staging/<timestamp>/seaweedfs-data.tar.gz | head
+gzip -t backups/staging/<timestamp>/pm_orders.sql.gz
+```
+
+Restore is destructive and requires an explicit confirmation:
+
+```bash
+RESTORE_CONFIRM=yes ./scripts/staging-restore.sh backups/staging/<timestamp>
+```
+
+The restore stops the app services, recreates the four databases, restores SeaweedFS/Caddy volumes,
+then starts the stack. Rehearse this on a disposable staging host before prod.
+
 ## Stop / reset
 
 ```bash
