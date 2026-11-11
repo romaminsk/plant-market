@@ -1271,7 +1271,7 @@
               <span class="tag">Качество</span>
               <h4>Тесты</h4>
               <p>
-                77 backend-тестов, 479 E2E, 350 пользовательских сценариев, layout-аудит,
+                80 backend-тестов, 479 E2E, 350 пользовательских сценариев, layout-аудит,
                 мутационное тестирование.
               </p>
             </div>
@@ -3832,12 +3832,12 @@ const EVENT = 'pm-cart-changed';</code></pre>
           </h2>
 
           <p class="lead-in">
-            В проекте 556 тестов: 77 backend и 479 E2E. Это много для демо и мало для продакшена —
+            В проекте 559 тестов: 80 backend и 479 E2E. Это много для демо и мало для продакшена —
             важно не количество, а то, что именно каждый слой доказывает.
           </p>
 
           <div class="stats">
-            <div class="stat"><b>77</b><span>backend-тестов</span></div>
+            <div class="stat"><b>80</b><span>backend-тестов</span></div>
             <div class="stat"><b>479</b><span>E2E-тестов</span></div>
             <div class="stat"><b>350</b><span>пользовательских сценариев</span></div>
             <div class="stat"><b>100</b><span>UI-матрица</span></div>
@@ -3860,7 +3860,7 @@ const EVENT = 'pm-cart-changed';</code></pre>
                 <tr>
                   <td>Unit / slice</td>
                   <td>UUIDv7, пагинация, RFC 7807, request-id, rate limit, webhook HMAC.</td>
-                  <td>29</td>
+                  <td>30</td>
                   <td>JUnit 6, MockMvc</td>
                 </tr>
                 <tr>
@@ -3869,7 +3869,7 @@ const EVENT = 'pm-cart-changed';</code></pre>
                     Spring + Flyway + реальный PostgreSQL: auth, каталог, резервы, заказы, оплата,
                     TTL-отмена, webhook replay, outbox lease, gateway authz.
                   </td>
-                  <td>48</td>
+                  <td>50</td>
                   <td>Testcontainers <code>postgres:18.6</code>, WebTestClient</td>
                 </tr>
                 <tr>
@@ -4870,7 +4870,8 @@ SCENARIO_IDS=SC-028,SC-159 ./gradlew :tests:e2e:test --tests 'com.plantmarket.e2
                   </td>
                   <td>
                     Проверять через <code>new URL(returnTo, origin).origin === origin</code>,
-                    запрещать backslash/encoded variants.
+                    запрещать backslash/encoded variants и нормализованный pathname
+                    <code>//</code> (dot-segment <code>/..//evil</code>).
                   </td>
                 </tr>
                 <tr>

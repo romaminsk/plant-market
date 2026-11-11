@@ -1677,7 +1677,7 @@
       "id": "SC-043",
       "area": "checkout",
       "name": "Зимняя зона требует термоупаковку",
-      "expected": "Текст про термоупаковку и disabled-кнопка",
+      "expected": "Термоупаковка включается автоматически",
       "auth": "customer",
       "steps": [
         {
@@ -1722,7 +1722,7 @@
           "value": "Термоупаковка обязательна"
         },
         {
-          "action": "expectDisabled",
+          "action": "expectEnabled",
           "selector": "button:has-text('Оплатить')"
         }
       ]

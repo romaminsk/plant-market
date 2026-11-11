@@ -386,6 +386,47 @@ class OrderFlowIntegrationTest {
   }
 
   @Test
+  void idempotencyKeyCannotLeakAnotherCustomersOrder() {
+    String key = "shared-key-" + UUID.randomUUID();
+    HttpHeaders firstHeaders = headers(UUID.randomUUID());
+    firstHeaders.set("Idempotency-Key", key);
+    ResponseEntity<OrderResponse> first =
+        restTemplate.exchange(
+            "/api/v1/orders",
+            HttpMethod.POST,
+            new HttpEntity<>(
+                new CreateOrderRequest(List.of(new CreateOrderItemRequest(VARIANT_ID, null, 1))),
+                firstHeaders),
+            OrderResponse.class);
+    assertThat(first.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+    HttpHeaders otherHeaders = headers(UUID.randomUUID());
+    otherHeaders.set("Idempotency-Key", key);
+    ResponseEntity<String> other =
+        restTemplate.exchange(
+            "/api/v1/orders",
+            HttpMethod.POST,
+            new HttpEntity<>(
+                new CreateOrderRequest(List.of(new CreateOrderItemRequest(VARIANT_ID, null, 1))),
+                otherHeaders),
+            String.class);
+    assertThat(other.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+  }
+
+  @Test
+  void individualPlantQuantityMustBeOne() {
+    ResponseEntity<String> rejected =
+        restTemplate.exchange(
+            "/api/v1/orders",
+            HttpMethod.POST,
+            new HttpEntity<>(
+                new CreateOrderRequest(List.of(new CreateOrderItemRequest(null, PLANT_ID, 2))),
+                headers(UUID.randomUUID())),
+            String.class);
+    assertThat(rejected.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+  }
+
+  @Test
   void adminCanRedriveDeadOutboxEvent() {
     OutboxEventEntity event =
         new OutboxEventEntity(

@@ -57,15 +57,14 @@ class WinterCheckoutE2ETest extends PlaywrightTestBase {
     page.getByLabel("Адрес доставки").fill("Гомель, Советская 1");
     page.getByLabel("Зона доставки")
         .selectOption(new SelectOption().setLabel("Гомель (зима) · 2–4 дн."));
+    assertThat(page.locator("input[type='checkbox']").isChecked()).isTrue();
+    page.getByText("Термоупаковка обязательна для этой зоны").waitFor();
     assertThat(
             page.getByRole(
                     AriaRole.BUTTON,
                     new com.microsoft.playwright.Page.GetByRoleOptions().setName("Оплатить"))
                 .isDisabled())
-        .isTrue();
-    page.getByText("Для этой зоны обязательна термоупаковка.").waitFor();
-
-    page.locator("input[type='checkbox']").check();
+        .isFalse();
     page.getByRole(
             AriaRole.BUTTON,
             new com.microsoft.playwright.Page.GetByRoleOptions().setName("Оплатить"))

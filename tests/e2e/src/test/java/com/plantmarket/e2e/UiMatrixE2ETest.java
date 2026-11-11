@@ -185,6 +185,8 @@ class UiMatrixE2ETest {
     page.evaluate("() => { localStorage.clear(); sessionStorage.clear(); }");
 
     if (entry.path("admin").asBoolean(false)) {
+      // Access tokens live 10 minutes; the matrix runs longer, so mint a fresh one per admin case.
+      adminToken = ApiTokens.freshAdmin(apiUrl);
       context.addCookies(
           List.of(
               new Cookie("pm.admin.access", adminToken)

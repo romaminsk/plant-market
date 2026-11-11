@@ -14,7 +14,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const product = await fetchProduct(id);
+  const product = await fetchProduct(id).catch(() => notFound());
   if (product.status !== 'PUBLISHED') {
     notFound();
   }
@@ -33,7 +33,7 @@ export async function generateMetadata({
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const product = await fetchProduct(id);
+  const product = await fetchProduct(id).catch(() => notFound());
   if (product.status !== 'PUBLISHED') {
     notFound();
   }

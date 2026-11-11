@@ -33,6 +33,7 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,10 +76,11 @@ public class OrderService {
   public OrderResponse create(
       UUID customerId, String customerEmail, CreateOrderRequest request, String idempotencyKey) {
     if (idempotencyKey != null && !idempotencyKey.isBlank()) {
-      return orderRepository
-          .findByIdempotencyKey(idempotencyKey)
-          .map(this::toResponse)
-          .orElseGet(() -> createNew(customerId, customerEmail, request, idempotencyKey));
+      var existing = orderRepository.findByIdempotencyKey(idempotencyKey);
+      if (existing.isPresent()) {
+        return replay(existing.get(), customerId, customerEmail);
+      }
+      return createNew(customerId, customerEmail, request, idempotencyKey);
     }
     return createNew(customerId, customerEmail, request, null);
   }
@@ -106,6 +108,9 @@ public class OrderService {
                 variant.priceMinor(),
                 item.quantity()));
       } else {
+        if (item.quantity() != 1) {
+          throw ApiException.badRequest("Individual plant quantity must be 1");
+        }
         CatalogPlant plant = catalogClient.getPlant(item.individualPlantId());
         if (!"AVAILABLE".equals(plant.status())) {
           throw ApiException.conflict("Individual plant is not available: " + plant.code());
@@ -124,14 +129,21 @@ public class OrderService {
       orderRepository.saveAndFlush(order);
     } catch (DataIntegrityViolationException exception) {
       if (idempotencyKey != null && !idempotencyKey.isBlank()) {
-        return orderRepository
-            .findByIdempotencyKey(idempotencyKey)
-            .map(this::toResponse)
-            .orElseThrow(() -> exception);
+        OrderEntity existing =
+            orderRepository.findByIdempotencyKey(idempotencyKey).orElseThrow(() -> exception);
+        return replay(existing, customerId, customerEmail);
       }
       throw exception;
     }
     record(order, OrderStatus.DRAFT, "order.created");
+    return toResponse(order);
+  }
+
+  private OrderResponse replay(OrderEntity order, UUID customerId, String customerEmail) {
+    if (!Objects.equals(order.getCustomerId(), customerId)
+        || !Objects.equals(order.getCustomerEmail(), customerEmail)) {
+      throw ApiException.conflict("Idempotency key is already used by another order");
+    }
     return toResponse(order);
   }
 

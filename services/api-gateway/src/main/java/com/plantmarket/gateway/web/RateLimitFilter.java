@@ -25,6 +25,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
   private final int publicRequestsPerMinute;
   private final int authRequestsPerMinute;
   private final int authenticatedRequestsPerMinute;
+  private final boolean trustForwarded;
   private final RateLimitStore store;
 
   public RateLimitFilter(
@@ -37,6 +38,22 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
         publicRequestsPerMinute,
         authRequestsPerMinute,
         authenticatedRequestsPerMinute,
+        false,
+        new InMemoryRateLimitStore());
+  }
+
+  public RateLimitFilter(
+      ProblemResponseWriter responseWriter,
+      int publicRequestsPerMinute,
+      int authRequestsPerMinute,
+      int authenticatedRequestsPerMinute,
+      boolean trustForwarded) {
+    this(
+        responseWriter,
+        publicRequestsPerMinute,
+        authRequestsPerMinute,
+        authenticatedRequestsPerMinute,
+        trustForwarded,
         new InMemoryRateLimitStore());
   }
 
@@ -46,11 +63,13 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
       @Value("${app.rate-limit.public-rpm:60}") int publicRequestsPerMinute,
       @Value("${app.rate-limit.auth-rpm:10}") int authRequestsPerMinute,
       @Value("${app.rate-limit.authenticated-rpm:300}") int authenticatedRequestsPerMinute,
+      @Value("${app.rate-limit.trust-forwarded:false}") boolean trustForwarded,
       RateLimitStore store) {
     this.responseWriter = responseWriter;
     this.publicRequestsPerMinute = publicRequestsPerMinute;
     this.authRequestsPerMinute = authRequestsPerMinute;
     this.authenticatedRequestsPerMinute = authenticatedRequestsPerMinute;
+    this.trustForwarded = trustForwarded;
     this.store = store;
   }
 
@@ -104,6 +123,12 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
   }
 
   private String clientKey(ServerWebExchange exchange) {
+    if (trustForwarded) {
+      String forwarded = exchange.getRequest().getHeaders().getFirst("X-Forwarded-For");
+      if (forwarded != null && !forwarded.isBlank()) {
+        return forwarded.split(",")[0].trim();
+      }
+    }
     InetSocketAddress address = exchange.getRequest().getRemoteAddress();
     return address == null || address.getAddress() == null
         ? "unknown"

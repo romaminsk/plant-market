@@ -48,7 +48,7 @@ Single source of truth: `scripts/generate-user-scenarios.py`.
 | SC-040 | orders     | Детали заказа показывают адрес и статусы                             | Адрес доставки и timeline                                                   | customer |
 | SC-041 | checkout   | Checkout двух экземпляров оплачивает общий итог                      | «Заказ оплачен»                                                             | customer |
 | SC-042 | checkout   | Покупатель оплачивает вариант                                        | «Заказ оплачен»                                                             | customer |
-| SC-043 | checkout   | Зимняя зона требует термоупаковку                                    | Текст про термоупаковку и disabled-кнопка                                   | customer |
+| SC-043 | checkout   | Зимняя зона требует термоупаковку                                    | Термоупаковка включается автоматически                                      | customer |
 | SC-044 | checkout   | Бесплатная доставка от 100 BYN                                       | Доставка 0,00                                                               | customer |
 | SC-045 | checkout   | Термоупаковка добавляет стоимость                                    | Итого 132,00 для Гомеля                                                     | customer |
 | SC-046 | checkout   | Кнопка оплаты заблокирована без адреса                               | disabled до адреса, enabled после                                           | customer |

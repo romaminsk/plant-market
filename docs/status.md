@@ -272,12 +272,12 @@
 | `platform-common` |    19 |           83% |
 | `auth-service`    |     4 |           74% |
 | `catalog-service` |    14 |           84% |
-| `order-service`   |    15 |           83% |
+| `order-service`   |    17 |           83% |
 | `payment-service` |    12 |           77% |
-| `api-gateway`     |    13 |           85% |
+| `api-gateway`     |    14 |           85% |
 | `tests:e2e`       |   479 |             — |
 
-Итого **77 backend-тестов + 479 E2E = 556 тестов, 0 падений**. JaCoCo-порог 70% проходит.
+Итого **80 backend-тестов + 479 E2E = 559 тестов, 0 падений**. JaCoCo-порог 70% проходит.
 
 ### UI-матрица (100 кейсов)
 
@@ -358,13 +358,28 @@
   не даёт стартовать с dev-секретом при `APP_ENV=prod`; dev-значения остаются только для demo.
 - **P0-4:** admin-сессия в httpOnly cookie, gateway cookie→bearer, refresh/logout, CSRF-барьер
   `X-Admin-Request` для не-GET; localStorage-токен удалён.
-- **P0-5:** `safeReturnTo` отклоняет `//`, `\`, encoded-backslash и внешние origin; покрыт
-  unit-тестами Node.
+- **P0-5:** `safeReturnTo` отклоняет `//`, `\`, encoded-backslash, dot-segment
+  (`/..//evil`) и внешние origin; покрыт unit-тестами Node.
 - **P0-6:** `@Version` на products/variants/plants/batches + миграция V6; конфликт обновления — 409.
 - **P0-7:** `PlantGalleryEditor` ключуется по `plant.id`; переключение растения больше не тащит
   фото предыдущего.
 - Проверено: backend integration-тесты, admin login/gallery E2E, guest checkout с SYSTEM-токенами,
   повтор guest checkout с тем же `Idempotency-Key`, media upload/download через gateway.
+
+### Постревью и техдолг (2026-11-10)
+
+- **Open redirect:** `safeReturnTo` теперь отклоняет dot-segment вариант `/..//evil.example`,
+  который URL-парсер нормализовал в protocol-relative путь.
+- **Идемпотентность:** ключ заказа проверяется вместе с владельцем (customerId/email); чужой
+  ключ даёт 409, а не чужой заказ. BFF выводит стабильный ключ из корзины/доставки/сессии,
+  поэтому double-click и retry не создают дубли.
+- **Индивидуальные растения:** API отклоняет quantity > 1, BFF всегда отправляет 1.
+- **Rate limit за прокси:** при `RATE_LIMIT_TRUST_FORWARDED=true` ключ берётся из первого
+  `X-Forwarded-For`; staging включает это, иначе все клиенты делили bucket Caddy.
+- **Media:** S3-ключи принимаются только в формате UUID + png/jpg/webp; неизвестный ключ — 404.
+- **Storefront:** неизвестный slug/code отдаёт 404, а не 500; зимняя зона автоматически включает
+  термоупаковку.
+- **Staging:** SeaweedFS/aws-cli запинены digest'ами; из init убраны неиспользуемые MinIO-переменные.
 
 ### P1-хардening — второй и третий батчи (2026-11-09)
 

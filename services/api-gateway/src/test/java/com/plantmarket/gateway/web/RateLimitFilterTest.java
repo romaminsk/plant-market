@@ -61,6 +61,24 @@ class RateLimitFilterTest {
   }
 
   @Test
+  void trustedForwardedForSeparatesClientsBehindAProxy() {
+    RateLimitFilter filter =
+        new RateLimitFilter(new ProblemResponseWriter(new ObjectMapper()), 1, 10, 10, true);
+
+    MockServerWebExchange first = forwardedExchange("203.0.113.1");
+    MockServerWebExchange second = forwardedExchange("203.0.113.1");
+    MockServerWebExchange third = forwardedExchange("203.0.113.2");
+
+    filter.filter(first, exchange -> Mono.empty()).block();
+    filter.filter(second, exchange -> Mono.empty()).block();
+    filter.filter(third, exchange -> Mono.empty()).block();
+
+    assertThat(first.getResponse().getStatusCode()).isNull();
+    assertThat(second.getResponse().getStatusCode()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
+    assertThat(third.getResponse().getStatusCode()).isNull();
+  }
+
+  @Test
   void oauthAuthorizeUsesPublicLimitNotTheLoginLimit() {
     RateLimitFilter filter =
         new RateLimitFilter(new ProblemResponseWriter(new ObjectMapper()), 2, 1, 10);
@@ -110,6 +128,11 @@ class RateLimitFilterTest {
 
   private MockServerWebExchange exchange() {
     return MockServerWebExchange.from(MockServerHttpRequest.get("/api/v1/products").build());
+  }
+
+  private MockServerWebExchange forwardedExchange(String clientIp) {
+    return MockServerWebExchange.from(
+        MockServerHttpRequest.get("/api/v1/products").header("X-Forwarded-For", clientIp).build());
   }
 
   private MockServerWebExchange authorizeExchange() {

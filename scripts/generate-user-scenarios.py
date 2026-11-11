@@ -866,7 +866,7 @@ sc(
     "SC-043",
     "checkout",
     "Зимняя зона требует термоупаковку",
-    "Текст про термоупаковку и disabled-кнопка",
+    "Термоупаковка включается автоматически",
     [
         plant_fixture(),
         cart_plant(),
@@ -874,7 +874,7 @@ sc(
         fill(".checkout-form textarea", "Гомель, Советская 1"),
         select(".checkout-form select", "Гомель (зима) · 2–4 дн."),
         text("Термоупаковка обязательна"),
-        disabled("button:has-text('Оплатить')"),
+        enabled("button:has-text('Оплатить')"),
     ],
     auth="customer",
 )

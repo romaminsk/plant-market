@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { ACCESS_COOKIE, COOKIE_SECURE, REFRESH_COOKIE, apiUrl, authServiceUrl } from '@/lib/auth';
@@ -43,22 +44,37 @@ export async function POST(request: NextRequest) {
   if (!deliveryAddress || deliveryAddress.length > 500) {
     return NextResponse.json({ detail: 'deliveryAddress is required (max 500)' }, { status: 400 });
   }
-  const orderItems = [];
+  const orderItems: Array<Record<string, string | number>> = [];
   for (const item of items) {
     if (!item.id || (item.type !== 'VARIANT' && item.type !== 'INDIVIDUAL_PLANT')) {
       return NextResponse.json({ detail: 'Invalid cart item' }, { status: 400 });
     }
-    const quantity = Math.max(1, Math.min(10, item.quantity ?? 1));
-    orderItems.push(
-      item.type === 'VARIANT'
-        ? { variantId: item.id, quantity }
-        : { individualPlantId: item.id, quantity },
-    );
+    if (item.type === 'VARIANT') {
+      orderItems.push({
+        variantId: item.id,
+        quantity: Math.max(1, Math.min(10, item.quantity ?? 1)),
+      });
+    } else {
+      orderItems.push({ individualPlantId: item.id, quantity: 1 });
+    }
   }
 
   const base = apiUrl();
-  const idempotencyKey = crypto.randomUUID();
   let token = request.cookies.get(ACCESS_COOKIE)?.value;
+  // Stable across retries/double-clicks, but changes when the cart or delivery changes.
+  const idempotencyKey = createHash('sha256')
+    .update(
+      JSON.stringify({
+        token: token ?? null,
+        guestEmail: payload.guestEmail?.trim() ?? null,
+        items: orderItems,
+        shippingZoneId,
+        deliveryAddress,
+        deliveryDate: payload.deliveryDate ?? null,
+        deliveryWindow: payload.deliveryWindow ?? null,
+      }),
+    )
+    .digest('hex');
   if (!token) {
     const guestEmail = payload.guestEmail?.trim();
     if (!guestEmail || guestEmail.length > 254 || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(guestEmail)) {

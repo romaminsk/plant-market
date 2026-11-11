@@ -46,3 +46,4 @@ app:
     auth-rpm: ${RATE_LIMIT_AUTH_RPM:10}
     authenticated-rpm: ${RATE_LIMIT_AUTHENTICATED_RPM:300}
     redis-url: ${RATE_LIMIT_REDIS_URL:}
+    trust-forwarded: ${RATE_LIMIT_TRUST_FORWARDED:false}

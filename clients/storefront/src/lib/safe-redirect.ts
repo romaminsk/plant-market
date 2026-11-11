@@ -32,7 +32,11 @@ export function safeReturnTo(value: string | null | undefined, fallback = FALLBA
   }
   try {
     const url = new URL(value, 'http://localhost');
-    if (url.origin !== 'http://localhost') {
+    if (
+      url.origin !== 'http://localhost' ||
+      !url.pathname.startsWith('/') ||
+      url.pathname.startsWith('//')
+    ) {
       return fallback;
     }
     return url.pathname + url.search + url.hash;

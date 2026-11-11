@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { fetchIndividualPlant, formatPrice } from '@/lib/api';
 import { PlantGallery } from './PlantGallery';
 import { safeJsonLd } from '@/lib/seo';
@@ -15,7 +16,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const plant = await fetchIndividualPlant(id);
+  const plant = await fetchIndividualPlant(id).catch(() => notFound());
   return {
     title: `${plant.productName} (${plant.code}) — Plant Market`,
     description:
@@ -27,7 +28,7 @@ export async function generateMetadata({
 
 export default async function IndividualPlantPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const plant = await fetchIndividualPlant(id);
+  const plant = await fetchIndividualPlant(id).catch(() => notFound());
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',

@@ -65,6 +65,7 @@ services:
     environment:
       APP_ENV: staging
       CORS_ALLOWED_ORIGINS: https://${STAGING_DOMAIN},https://admin.${STAGING_DOMAIN}
+      RATE_LIMIT_TRUST_FORWARDED: 'true'
     secrets:
       - JWT_SECRET
 
@@ -93,14 +94,14 @@ services:
         VITE_API_URL: https://${STAGING_DOMAIN}
 
   seaweedfs:
-    image: chrislusf/seaweedfs:latest
+    image: chrislusf/seaweedfs@sha256:ccad23e18639c8b98cee17e7100b95830a06077b56d8e5b006d6dcf8ec5e94a0
     command: server -s3 -s3.port=8333 -s3.config=/etc/seaweedfs/s3.json -dir=/data
     volumes:
       - seaweedfs-data:/data
       - ./infra/staging/seaweedfs-s3.json:/etc/seaweedfs/s3.json:ro
 
   s3-init:
-    image: amazon/aws-cli:latest
+    image: amazon/aws-cli@sha256:bba262340b0bc7cbf3a8a48612531263b56f4b280c4f036a07816af1b271bda0
     depends_on:
       - seaweedfs
     environment:

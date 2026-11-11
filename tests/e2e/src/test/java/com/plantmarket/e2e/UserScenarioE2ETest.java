@@ -602,7 +602,7 @@ class UserScenarioE2ETest {
 
   private String adminToken() throws Exception {
     long now = System.currentTimeMillis();
-    if (cachedAdminToken == null || now - cachedAdminAt > 8 * 60_000L) {
+    if (cachedAdminToken == null || now - cachedAdminAt > 5 * 60_000L) {
       cachedAdminToken = ApiTokens.freshAdmin(apiUrl);
       cachedAdminAt = now;
     }
@@ -611,7 +611,7 @@ class UserScenarioE2ETest {
 
   private String customerToken() throws Exception {
     long now = System.currentTimeMillis();
-    if (cachedCustomerToken == null || now - cachedCustomerAt > 8 * 60_000L) {
+    if (cachedCustomerToken == null || now - cachedCustomerAt > 5 * 60_000L) {
       cachedCustomerToken = ApiTokens.freshCustomer(apiUrl);
       cachedCustomerAt = now;
     }

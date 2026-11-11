@@ -24,6 +24,9 @@ public class MediaReadController {
 
   @GetMapping("/media/{key}")
   public ResponseEntity<byte[]> read(@PathVariable String key) {
+    if (!key.matches("[0-9a-f-]{36}\\.(png|jpg|webp)")) {
+      throw ApiException.notFound("Media not found: " + key);
+    }
     MediaStorage.StoredMedia media =
         mediaStorage.load(key).orElseThrow(() -> ApiException.notFound("Media not found: " + key));
     return ResponseEntity.ok()

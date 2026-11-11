@@ -27,6 +27,10 @@ test('falls back for encoded protocol-relative URL', () => {
   assert.equal(safeReturnTo('/%2F%2Fevil.example/phish'), '/checkout');
 });
 
+test('falls back for dot-segment protocol-relative trick', () => {
+  assert.equal(safeReturnTo('/..//evil.example/phish'), '/checkout');
+});
+
 test('falls back for empty and missing values', () => {
   assert.equal(safeReturnTo(null), '/checkout');
   assert.equal(safeReturnTo(''), '/checkout');

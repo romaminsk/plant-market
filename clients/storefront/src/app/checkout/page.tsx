@@ -64,7 +64,10 @@ export default function CheckoutPage() {
     const min = isoDate(zone.minDays);
     const max = isoDate(zone.maxDays);
     setDeliveryDate((current) => (!current || current < min || current > max ? min : current));
-  }, [zone?.id, zone?.minDays, zone?.maxDays]);
+    if (zone.winterRequiresThermal) {
+      setThermal(true);
+    }
+  }, [zone?.id, zone?.minDays, zone?.maxDays, zone?.winterRequiresThermal]);
 
   const shipping = zone
     ? (subtotal >= zone.freeFromMinor ? 0 : zone.priceMinor) + (thermal ? zone.thermalPackMinor : 0)
